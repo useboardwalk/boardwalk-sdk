@@ -1,21 +1,8 @@
 // Ported from token-launcher/hooks/contracts/useContribute.ts.
-import type { Address, PublicClient } from "viem";
 import { presaleManagerAbi } from "../registry/abis";
 import { getContracts } from "../registry/contracts";
 import { buildConditionalApproveStep } from "../flow/erc20";
-import type { TxStep } from "../flow/types";
-
-export interface ContributeParams {
-  client: PublicClient;
-  account: Address;
-  chainId: number;
-  /** PresaleManager address for the launch (see `getLaunch().presaleManager`). */
-  presale: Address;
-  /** Raise amount in wei. */
-  amount: bigint;
-  /** Raise token. Defaults to the chain's canonical raise token. */
-  raiseToken?: Address;
-}
+import type { ContributeParams, TxStep } from "../types";
 
 /** Conditional approve raiseToken → presale, then `contribute(amount)`. */
 export async function buildContributeSteps(
@@ -27,14 +14,18 @@ export async function buildContributeSteps(
   const raiseToken = params.raiseToken ?? getContracts(chainId).raiseToken;
 
   const steps: TxStep[] = [];
-  const approve = await buildConditionalApproveStep(client, {
-    id: "approve-raise-token",
-    label: "Approve token",
-    token: raiseToken,
-    owner: account,
-    spender: presale,
-    amount,
-  });
+  const approve = await buildConditionalApproveStep(
+    client,
+    {
+      id: "approve-raise-token",
+      label: "Approve token",
+      token: raiseToken,
+      owner: account,
+      spender: presale,
+      amount,
+    },
+    params.currentAllowance,
+  );
   if (approve) steps.push(approve);
 
   steps.push({

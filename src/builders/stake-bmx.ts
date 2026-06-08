@@ -1,17 +1,8 @@
 // Ported from token-launcher/hooks/contracts/useStakeBmx.ts.
-import type { Address, PublicClient } from "viem";
 import { rewardRouterAbi } from "../registry/abis";
 import { assertDeployed, getContracts } from "../registry/contracts";
 import { buildConditionalApproveStep } from "../flow/erc20";
-import type { TxStep } from "../flow/types";
-
-export interface StakeBmxParams {
-  client: PublicClient;
-  account: Address;
-  chainId: number;
-  /** BMX amount in wei. */
-  amount: bigint;
-}
+import type { StakeBmxParams, TxStep } from "../types";
 
 /** Conditional approve BMX → stakedBmxTracker, then `stakeBmx(amount)`. Base-only today. */
 export async function buildStakeBmxSteps(

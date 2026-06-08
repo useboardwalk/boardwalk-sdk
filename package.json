@@ -3,6 +3,25 @@
   "version": "0.1.0",
   "description": "Framework-agnostic SDK + CLI for building unsigned Boardwalk transactions (launch, contribute, claim, stake BMX, vote).",
   "license": "MIT",
+  "author": "Boardwalk",
+  "homepage": "https://www.useboardwalk.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/useboardwalk/boardwalk-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/useboardwalk/boardwalk-sdk/issues"
+  },
+  "keywords": [
+    "boardwalk",
+    "erc-8021",
+    "base",
+    "viem",
+    "agent",
+    "non-custodial",
+    "token-launch",
+    "defi"
+  ],
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -22,14 +41,19 @@
   },
   "files": [
     "dist",
-    "skill"
+    "skill",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "cli": "tsx src/cli.ts"
+    "cli": "tsx src/cli.ts",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "commander": "^12.1.0",

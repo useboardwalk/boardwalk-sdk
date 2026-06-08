@@ -1,79 +1,52 @@
 import { describe, it, expect } from "vitest";
 import { concatHex, encodeFunctionData, erc20Abi, type Address } from "viem";
-import { Attribution } from "ox/erc8021";
 import { encodeRequest, encodeStep } from "../src/flow/encode";
+import { BUILDER_CODE_SUFFIX } from "../src/flow/encode";
 
 const TOKEN = "0x4200000000000000000000000000000000000006" as Address;
 const SPENDER = "0x2222222222222222222222222222222222222222" as Address;
 
 describe("encodeRequest", () => {
-  it("encodes a write request to calldata matching viem", () => {
-    const { to, data, value } = encodeRequest(
-      {
-        abi: erc20Abi,
-        address: TOKEN,
-        functionName: "approve",
-        args: [SPENDER, BigInt(5)],
-      },
-      { builderCode: "" }, // disable attribution for a deterministic comparison
-    );
-    expect(to).toBe(TOKEN);
-    expect(value).toBe(BigInt(0));
-    expect(data).toBe(
-      encodeFunctionData({
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [SPENDER, BigInt(5)],
-      }),
-    );
-  });
-
-  it("appends an ERC-8021 builder-code suffix to data", () => {
+  it("encodes a write request to calldata + the enforced builder-code suffix", () => {
     const base = encodeFunctionData({
       abi: erc20Abi,
       functionName: "approve",
       args: [SPENDER, BigInt(5)],
     });
-    const code = "bc_test1234";
-    const { data } = encodeRequest(
-      {
-        abi: erc20Abi,
-        address: TOKEN,
-        functionName: "approve",
-        args: [SPENDER, BigInt(5)],
-      },
-      { builderCode: code },
-    );
-    const suffix = Attribution.toDataSuffix({ codes: [code] });
-    expect(data).toBe(concatHex([base, suffix]));
+    const { to, data, value } = encodeRequest({
+      abi: erc20Abi,
+      address: TOKEN,
+      functionName: "approve",
+      args: [SPENDER, BigInt(5)],
+    });
+    expect(to).toBe(TOKEN);
+    expect(value).toBe(BigInt(0));
+    expect(data).toBe(concatHex([base, BUILDER_CODE_SUFFIX]));
+  });
+
+  it("always appends the builder-code suffix (it is enforced, not overridable)", () => {
+    const base = encodeFunctionData({
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [SPENDER, BigInt(5)],
+    });
+    const { data } = encodeRequest({
+      abi: erc20Abi,
+      address: TOKEN,
+      functionName: "approve",
+      args: [SPENDER, BigInt(5)],
+    });
+    expect(data.endsWith(BUILDER_CODE_SUFFIX.slice(2))).toBe(true);
     expect(data.length).toBeGreaterThan(base.length);
   });
 
-  it("omits the suffix when builderCode is empty", () => {
-    const base = encodeFunctionData({
-      abi: erc20Abi,
-      functionName: "approve",
-      args: [SPENDER, BigInt(5)],
+  it("appends the suffix to a raw send too", () => {
+    const { to, data, value } = encodeRequest({
+      to: SPENDER,
+      value: BigInt(7),
     });
-    const { data } = encodeRequest(
-      {
-        abi: erc20Abi,
-        address: TOKEN,
-        functionName: "approve",
-        args: [SPENDER, BigInt(5)],
-      },
-      { builderCode: "" },
-    );
-    expect(data).toBe(base);
-  });
-
-  it("passes through a raw send request", () => {
-    const { to, data, value } = encodeRequest(
-      { to: SPENDER, value: BigInt(7) },
-      { builderCode: "" },
-    );
     expect(to).toBe(SPENDER);
-    expect(data).toBe("0x");
+    expect(data).toBe(concatHex(["0x", BUILDER_CODE_SUFFIX]));
     expect(value).toBe(BigInt(7));
   });
 });
@@ -83,7 +56,6 @@ describe("encodeStep", () => {
     const call = encodeStep(
       { id: "x", label: "X", request: { to: SPENDER, value: BigInt(7) } },
       8453,
-      { builderCode: "" },
     );
     expect(call).toMatchObject({
       id: "x",

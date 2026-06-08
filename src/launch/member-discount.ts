@@ -5,7 +5,7 @@
  * a member, the effective cost is `base * (10_000 - bps) / 10_000`. Non-members
  * pay the full `base`.
  */
-import { BPS_DENOMINATOR } from "../registry/constants";
+import { BPS_DENOMINATOR } from "../constants";
 
 export function effectiveCost(
   base: bigint,

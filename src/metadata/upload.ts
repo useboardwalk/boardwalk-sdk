@@ -1,32 +1,8 @@
 // Isomorphic logo upload — generalizes token-launcher/lib/api/mutations.ts
 // `uploadLogo(File)` to accept a Blob, raw bytes, or a data URL. The backend
 // hard-caps at 1MB; compress (e.g. sharp) before calling if larger.
-import { DEFAULT_API_BASE_URL } from "../read/client";
-
-export const LOGO_MAX_SIZE = 1 * 1024 * 1024; // 1 MB (backend cap)
-
-export const LOGO_ALLOWED_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/gif",
-  "image/webp",
-  "image/svg+xml",
-  "image/heic",
-  "image/heif",
-  "image/tiff",
-] as const;
-
-export interface UploadLogoResult {
-  url: string;
-  existed: boolean;
-}
-
-export interface UploadLogoOptions {
-  filename?: string;
-  /** MIME type — required for raw `Uint8Array`; inferred otherwise. */
-  mime?: string;
-  baseUrl?: string;
-}
+import { API_BASE_URL, LOGO_ALLOWED_TYPES, LOGO_MAX_SIZE } from "../constants";
+import type { UploadLogoOptions, UploadLogoResult } from "../types";
 
 /** Copy bytes into a fresh ArrayBuffer so the Blob part is `ArrayBuffer`, not
  *  `ArrayBufferLike` (avoids the SharedArrayBuffer-union mismatch with BlobPart). */
@@ -94,7 +70,7 @@ export async function uploadLogo(
 
   const url = new URL(
     "/boardwalk-upload-logo",
-    options.baseUrl ?? DEFAULT_API_BASE_URL,
+    options.baseUrl ?? API_BASE_URL,
   );
   const res = await fetch(url, { method: "POST", body: form });
   if (!res.ok) {

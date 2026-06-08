@@ -1,15 +1,23 @@
+import { Attribution } from "ox/erc8021";
 import { concatHex, encodeFunctionData, type Address, type Hex } from "viem";
-import {
-  isWriteRequest,
-  type EncodedCall,
-  type TxRequest,
-  type TxStep,
-} from "./types";
-import { builderCodeSuffix } from "./attribution";
+import { BUILDER_CODE } from "../constants";
+import type { EncodedCall, TxRequest, TxStep, TxWriteRequest } from "../types";
 
-export interface EncodeOptions {
-  /** ERC-8021 builder code. Omit to use `BOARDWALK_BUILDER_CODE`; pass `""` to disable. */
-  builderCode?: string;
+/**
+ * ERC-8021 builder-code suffix — ENFORCED on every SDK-built transaction.
+ *
+ * The frontend appends this at the wagmi send chokepoint; agents submit through
+ * their own wallet (e.g. `send_calls`), so the SDK appends it directly to `data`
+ * — the only way attribution survives an arbitrary submit path. The code is
+ * fixed in `constants.ts` (`BUILDER_CODE`); there is intentionally no per-call,
+ * CLI, or env override.
+ */
+export const BUILDER_CODE_SUFFIX: Hex = Attribution.toDataSuffix({
+  codes: [BUILDER_CODE],
+});
+
+function isWriteRequest(req: TxRequest): req is TxWriteRequest {
+  return "abi" in req;
 }
 
 interface RawCall {
@@ -18,11 +26,8 @@ interface RawCall {
   value: bigint;
 }
 
-/** Encode a single request to `{to,data,value}`, appending the builder-code suffix. */
-export function encodeRequest(
-  req: TxRequest,
-  options: EncodeOptions = {},
-): RawCall {
+/** Encode a single request to `{to,data,value}`, appending the enforced builder-code suffix. */
+export function encodeRequest(req: TxRequest): RawCall {
   let to: Address;
   let data: Hex;
   let value: bigint;
@@ -41,21 +46,16 @@ export function encodeRequest(
     value = req.value ?? BigInt(0);
   }
 
-  const suffix = builderCodeSuffix(options.builderCode);
-  if (suffix && suffix !== "0x") {
-    data = concatHex([data, suffix]);
+  if (BUILDER_CODE_SUFFIX && BUILDER_CODE_SUFFIX !== "0x") {
+    data = concatHex([data, BUILDER_CODE_SUFFIX]);
   }
 
   return { to, data, value };
 }
 
 /** Encode a step to a ready-to-submit `EncodedCall` (value as a decimal wei string). */
-export function encodeStep(
-  step: TxStep,
-  chainId: number,
-  options: EncodeOptions = {},
-): EncodedCall {
-  const { to, data, value } = encodeRequest(step.request, options);
+export function encodeStep(step: TxStep, chainId: number): EncodedCall {
+  const { to, data, value } = encodeRequest(step.request);
   return {
     id: step.id,
     label: step.label,
@@ -66,11 +66,7 @@ export function encodeStep(
   };
 }
 
-/** Encode an ordered list of steps (e.g. approve → action) for `send_calls`. */
-export function encodeSteps(
-  steps: TxStep[],
-  chainId: number,
-  options: EncodeOptions = {},
-): EncodedCall[] {
-  return steps.map((step) => encodeStep(step, chainId, options));
+/** Encode an ordered list of steps (e.g. approve → action) for batched submission. */
+export function encodeSteps(steps: TxStep[], chainId: number): EncodedCall[] {
+  return steps.map((step) => encodeStep(step, chainId));
 }

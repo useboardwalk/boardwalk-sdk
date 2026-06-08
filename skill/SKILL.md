@@ -1,7 +1,7 @@
 ---
 name: boardwalk
 description: >-
-  Build and submit onchain Boardwalk actions from natural language: launch a token, contribute to / join a presale auction, claim presale tokens after a successful launch, stake BMX, vote on fee direction, and check launch status or cost. Boardwalk is a fee-protection token-launch platform (permanently-locked liquidity + a built-in swap-fee equivalent). This skill drives the @boardwalk/cli, which prints UNSIGNED transaction calldata (and EIP-712 payloads to sign) — the user's own wallet signs and submits. Works on Base (full feature parity) plus Ethereum, Fraxtal, Katana, and Ink (launch/contribute/claim); stake-bmx and vote are Base-only. Use whenever a user wants to create, fund, or manage a Boardwalk launch onchain.
+  Build and submit onchain Boardwalk actions from natural language: launch a token, contribute to / join a presale auction, claim presale tokens after a successful launch, stake BMX, vote on fee direction, and check launch status or cost. Boardwalk is a fee-protection token-launch platform (permanently-locked liquidity + a built-in swap-fee equivalent). This skill drives the boardwalk CLI (npm package @boardwalk/sdk), which prints UNSIGNED transaction calldata (and EIP-712 payloads to sign) — the user's own wallet signs and submits. Works on Base (full feature parity) plus Ethereum, Fraxtal, Katana, and Ink (launch/contribute/claim); stake-bmx and vote are Base-only. Use whenever a user wants to create, fund, or manage a Boardwalk launch onchain.
 metadata:
   homepage: https://www.useboardwalk.com
 ---
@@ -10,7 +10,7 @@ metadata:
 
 **Boardwalk** is a fee-protection token-launch platform. Every token launched on Boardwalk gets **permanently-locked liquidity** (the LP can never be pulled) plus a **built-in swap-fee equivalent** that routes ongoing trading fees back to the issuer, BMX stakers, liquidity, and platform participation — so creators keep earning after launch and buyers are protected from rug pulls. Launches run as fixed-window **presale auctions**: contributors deposit a raise token (e.g. WETH) during the presale, and on a successful close the contract seeds permanent liquidity and lets contributors claim their tokens.
 
-This skill is the **executable layer** for Boardwalk. It drives the `@boardwalk/cli`, which turns a natural-language intent into **UNSIGNED transaction calldata** — an ordered array of `{to, data, value}` calls (plus, for launch metadata, an **EIP-712** payload to sign). The CLI never touches a private key. **The user's wallet signs and submits.**
+This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` CLI (the `@boardwalk/sdk` npm package), which turns a natural-language intent into **UNSIGNED transaction calldata** — an ordered array of `{to, data, value}` calls (plus, for launch metadata, an **EIP-712** payload to sign). The CLI never touches a private key. **The user's wallet signs and submits.**
 
 > **Conceptual docs** (auction mechanics, the fee model, governance/voting, vesting) live at
 > <https://www.useboardwalk.com/docs> and <https://www.useboardwalk.com/llms.txt>.
@@ -21,11 +21,11 @@ This skill is the **executable layer** for Boardwalk. It drives the `@boardwalk/
 ## Install & run
 
 ```bash
-npx @boardwalk/cli <command> [flags]      # zero-install
-boardwalk <command> [flags]               # if installed globally
+boardwalk <command> [flags]                          # after: npm i -g @boardwalk/sdk
+npx -p @boardwalk/sdk boardwalk <command> [flags]    # …or zero-install
 ```
 
-- The CLI is **v0.1.0**. Reads use a public RPC by default; override per-command with `--rpc <url>`.
+- The CLI is **v0.1.0** (bin `boardwalk`, package `@boardwalk/sdk`). Reads use a public RPC by default; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint (only Base has a built-in default RPC).
 - The user supplies their own wallet address with `--wallet <addr>` (BYO wallet — get it from your harness, e.g. Base MCP `get_wallets`). The CLI builds calldata **for** that address; it never asks for a key.
 - **Every transaction command prints JSON** of this shape:
 
@@ -54,6 +54,7 @@ boardwalk <command> [flags]               # if installed globally
 ```
 
 - `calls` is an **ORDERED array**. When an ERC-20 allowance is insufficient, a **conditional approve is element 0** and the action follows. Feed the **whole array** to a batched submit so the user approves once. If the allowance is already sufficient, the approve step is **omitted** and you get just the action call.
+- Every call's `data` ends with Boardwalk's **enforced ERC-8021 builder-code suffix** — submit `data` exactly as printed.
 - `value` is a **decimal wei string** and is `"0"` for **every** v1 action (no native value is ever attached).
 - Read commands (`status`, `launch-cost`) print a plain JSON object (no `calls`).
 
@@ -74,17 +75,17 @@ There is **no login** required for onchain actions — no Privy, no session. The
 
 ## Command reference
 
-| Command           | What it does                                                                   | Key flags                                                                                                                                                                     | Chain scope   |
-| ----------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `launch`          | Create a launch: emits conditional BMX approve + `create-launch`               | `--chain --wallet --name --ticker --category` · opt: `--path --description --issuer-fee --presale-percent --referrer --builder-code --rpc`                                    | multi-chain   |
-| `launch-metadata` | Upload logo to CDN, then print an EIP-712 payload to sign + the submit request | `--token --chain` · logo: `--logo \| --logo-data \| --logo-url` · opt: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version` | multi-chain   |
-| `submit-metadata` | POST the signed metadata (auto-retries on 404 for indexer lag)                 | `--token --chain --signature --message`                                                                                                                                       | multi-chain   |
-| `contribute`      | Join a presale: conditional raise-token approve + `contribute`                 | `--token --amount --chain --wallet` · opt: `--builder-code --rpc`                                                                                                             | multi-chain   |
-| `claim`           | Claim presale tokens after a successful launch                                 | `--token --chain --wallet` · opt: `--builder-code`                                                                                                                            | multi-chain   |
-| `stake-bmx`       | Stake BMX: conditional BMX approve + `stake-bmx`                               | `--amount --wallet` · opt: `--chain base --builder-code --rpc`                                                                                                                | **Base only** |
-| `vote`            | Vote on fee direction (optional BMX approve if burn>0) + `vote`                | `--option <1-4> --wallet` · opt: `--chain base --builder-code --rpc`                                                                                                          | **Base only** |
-| `launch-cost`     | Read the BMX burn cost to launch (with member discount)                        | `--chain --wallet` · opt: `--rpc`                                                                                                                                             | read-only     |
-| `status`          | Read a launch's status / path / presale manager / raise token                  | `--token --chain`                                                                                                                                                             | read-only     |
+| Command           | What it does                                                                   | Key flags                                                                                                                                                                                                                             | Chain scope   |
+| ----------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `launch`          | Create a launch: emits conditional BMX approve + `create-launch`               | `--chain --wallet --name --ticker --category` · opt: `--path --description --issuer-fee --presale-percent --referrer --rpc` · advanced: `--fee <label:address:percent>` (repeatable) `--vesting <label:address:percent>` (repeatable) | multi-chain   |
+| `launch-metadata` | Upload logo to CDN, then print an EIP-712 payload to sign + the submit request | `--token --chain` · logo: `--logo \| --logo-data \| --logo-url` · opt: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`                                                         | multi-chain   |
+| `submit-metadata` | POST the signed metadata (auto-retries on 404 for indexer lag)                 | `--token --chain --signature --message`                                                                                                                                                                                               | multi-chain   |
+| `contribute`      | Join a presale: conditional raise-token approve + `contribute`                 | `--token --amount --chain --wallet` · opt: `--rpc`                                                                                                                                                                                    | multi-chain   |
+| `claim`           | Claim presale tokens (only after seeded + 7-day post-seed cliff)               | `--token --chain --wallet` · opt: `--rpc`                                                                                                                                                                                             | multi-chain   |
+| `stake-bmx`       | Stake BMX: conditional BMX approve + `stake-bmx`                               | `--amount --wallet` · opt: `--chain base --rpc`                                                                                                                                                                                       | **Base only** |
+| `vote`            | Vote on fee direction (optional BMX approve if burn>0) + `vote`                | `--option <1-4> --wallet` · opt: `--chain base --rpc`                                                                                                                                                                                 | **Base only** |
+| `launch-cost`     | Read the BMX burn cost to launch (with member discount)                        | `--chain --wallet` · opt: `--rpc`                                                                                                                                                                                                     | read-only     |
+| `status`          | Read a launch's status / path / presale manager / raise token                  | `--token --chain`                                                                                                                                                                                                                     | read-only     |
 
 `--amount` is in **human units** (e.g. `0.01` WETH, `100` BMX); the CLI scales to wei. Categories are slugs (e.g. `meme-culture`). `--option` for `vote`: **1 = Treasury, 2 = Buy & Burn BMX, 3 = Buy & Burn LP, 4 = Participation**.
 
@@ -96,13 +97,27 @@ Builds the launch transaction. Boardwalk requires **burning BMX** to launch (the
 
 - **Paths:** `--path express` (24-hour auction, simpler fees, fully distributed supply) or `--path advanced` (7-day auction, customizable fee breakdown + token vesting).
 - **Prereqs:** the wallet holds **≥ bmxBurnCost** BMX, on the right chain.
+- **Advanced-path params:**
+  - `--fee <label:address:percent>` (**repeatable**) — the issuer-fee split across recipients; valid labels: `individual` | `entity` | `publicGood` | `growthTeam`. **At least one is required** for `--path advanced`.
+  - `--vesting <label:address:percent>` (**repeatable**) — token vesting recipients; valid labels: `individual` | `entity` | `referrer` | `publicGood` | `growthTeam`. **Required when `--presale-percent` < 50.**
+  - `--presale-percent` is **25–50 in steps of 5**.
+- The `launch` output `meta` now includes `graduationThreshold { wei, display }`.
 
 ```bash
-npx @boardwalk/cli launch \
+boardwalk launch \
   --chain base --wallet 0x3666…1CA3 \
   --name "Agent Test Token" --ticker AGENTX \
   --category meme-culture --path express \
   --issuer-fee 0x3666…1CA3
+```
+
+```bash
+# advanced path: issuer-fee split + vesting (presale-percent < 50 requires vesting)
+boardwalk launch --chain base --wallet 0xYou \
+  --name "My Token" --ticker MYT --category ai-agents \
+  --path advanced --presale-percent 40 \
+  --fee individual:0xYou:60 --fee entity:0xCo:40 \
+  --vesting individual:0xYou:100
 ```
 
 ```jsonc
@@ -124,7 +139,7 @@ npx @boardwalk/cli launch \
       "chainId": 8453,
     },
   ],
-  // meta: { bmxBurnCost: "100000000000000000000", config: <createLaunch tuple>, note }
+  // meta: { bmxBurnCost: "100000000000000000000", config: <createLaunch tuple>, graduationThreshold: { wei, display }, note }
 }
 ```
 
@@ -132,24 +147,25 @@ npx @boardwalk/cli launch \
 
 After `create-launch` lands, attach the token's public metadata. This is a **three-step** flow because the metadata is gated by an issuer **EIP-712 signature**:
 
-1. **`launch-metadata`** — uploads the logo to the CDN, then prints `{ sign, submit, note }`.
+1. **`launch-metadata --tx <create-launch tx hash>`** — resolves the launched **token** from the tx receipt (no log-parsing), uploads the logo to the CDN, and prints `{ token, auctionUrl, sign, next }`.
    - `sign` is the EIP-712 typed data: `{ domain, types, primaryType, message }`.
-   - `submit` is the request to send afterward: `{ method, path, body }`.
    - **Logo** is provided one of three ways: `--logo <file>`, `--logo-data <base64-or-dataURL>`, or `--logo-url <url>`.
-   - Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`.
+   - Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`. (Already have the token address? Use `--token <addr>` instead of `--tx`.)
+   - **`--raise-goal` (advanced) must EXCEED the chain's graduation threshold** — the CLI validates it and errors otherwise. Thresholds: **10 wETH** on Base / Mainnet / Ink, **20000 frxUSD** on Fraxtal, **2000000 KAT** on Katana. Set advanced `--raise-goal` above the graduation threshold (which the `launch` output surfaces via `meta.graduationThreshold`).
 2. **Sign** the `sign` payload (EIP-712 typed-data signing) with the **issuer wallet** — the same wallet that launched. (Base MCP can sign typed data.)
-3. **`submit-metadata`** — POSTs the signed metadata. Pass `--signature <hex>` and `--message <wireMessage-json>` (the exact `message` you signed). It **auto-retries on 404** to ride out backend indexer lag, so a transient 404 right after launch is expected, not a failure.
+3. **`submit-metadata`** — POSTs the signed metadata. Pass `--token <token>`, `--signature <hex>`, and `--message <sign.message-json>`. It **auto-retries on 404** to ride out backend indexer lag, so a transient 404 right after launch is expected, not a failure.
 
 ```bash
-# 1) build the EIP-712 payload (+ upload logo)
-npx @boardwalk/cli launch-metadata --token 0x4C86…BA48 --chain base \
+# 1) resolve the token + build the EIP-712 payload (+ upload logo)
+boardwalk launch-metadata --tx 0x<create-launch tx hash> --chain base \
   --logo ./logo.png --twitter boardwalk --homepage https://example.com
+# → { token, auctionUrl, sign, next }
 
 # 2) sign sign.message (issuer wallet, typed data) → <hex signature>
 
 # 3) submit
-npx @boardwalk/cli submit-metadata --token 0x4C86…BA48 --chain base \
-  --signature 0x<hex> --message '<the signed message JSON>'
+boardwalk submit-metadata --token 0x<token> --chain base \
+  --signature 0x<hex> --message '<sign.message JSON>'
 ```
 
 ---
@@ -161,7 +177,7 @@ Deposits a raise token into the launch's presale. The CLI emits a conditional `a
 - **Prereqs:** the wallet holds **≥ amount** of the raise token (find it via `status` → `raiseToken`), on the right chain.
 
 ```bash
-npx @boardwalk/cli contribute \
+boardwalk contribute \
   --token 0x4C867B5320760BE4AD944222178FC3D344d1BA48 \
   --amount 0.01 --chain base --wallet 0x3666…1CA3
 ```
@@ -174,7 +190,7 @@ npx @boardwalk/cli contribute \
       "id": "approve-raise-token",
       "label": "Approve token",
       "to": "0x4200000000000000000000000000000000000006",
-      "data": "0x095ea7b3000000000000000000000000de88ff82a8aa7dd1015e554bd3d5431838b63473000000000000000000000000000000000000000000000000002386f26fc10000",
+      "data": "0x095ea7b3…",
       "value": "0",
       "chainId": 8453,
     },
@@ -182,7 +198,7 @@ npx @boardwalk/cli contribute \
       "id": "contribute",
       "label": "Contribute",
       "to": "0xde88fF82A8aA7DD1015E554BD3d5431838b63473",
-      "data": "0xc1cbbca7000000000000000000000000000000000000000000000000002386f26fc10000",
+      "data": "0xc1cbbca7…",
       "value": "0",
       "chainId": 8453,
     },
@@ -198,10 +214,10 @@ npx @boardwalk/cli contribute \
 
 ### `claim` — claim presale tokens
 
-After a launch **succeeds** (status `seeded` or `pending_seed`), contributors claim their allocation. Emits a single `claim` call (`claimTokens`). It is **only valid after success** — claiming during `presale` will not be appropriate.
+Contributors claim their allocation **only after the auction is `seeded` AND the 7-day post-seed cliff has ended**. Emits a single `claim` call (`claimTokens`). The CLI gates strictly: it requires `status === "seeded"` (**not** `pending_seed`), then reads `PresaleManager.cliffEnd()` and **refuses to emit any call — surfacing the `cliffEnd` timestamp — until the cliff has passed** (so you never broadcast a doomed/reverting tx). On success the output includes `cliffEnd`. Add `--rpc <url>` if the default RPC rate-limits the `cliffEnd` read.
 
 ```bash
-npx @boardwalk/cli claim --token 0x4C86…BA48 --chain base --wallet 0x3666…1CA3
+boardwalk claim --token 0x4C86…BA48 --chain base --wallet 0x3666…1CA3
 ```
 
 ---
@@ -213,7 +229,7 @@ Stakes BMX to earn a share of platform fees and accrue **Voting Power**. Emits a
 - **Prereqs:** the wallet holds **≥ amount** BMX on Base.
 
 ```bash
-npx @boardwalk/cli stake-bmx --amount 100 --wallet 0x3666…1CA3 --chain base
+boardwalk stake-bmx --amount 100 --wallet 0x3666…1CA3 --chain base
 ```
 
 ---
@@ -232,7 +248,7 @@ Casts a Boardwalk governance vote that directs where protocol swap fees flow. Pi
 If the configured `governanceBurnAmount` is **> 0**, the CLI prepends a conditional `approve-bmx`; when it is `0`, you get **just** the `vote` call (as below). **Base only.**
 
 ```bash
-npx @boardwalk/cli vote --option 1 --wallet 0x3666…1CA3 --chain base
+boardwalk vote --option 1 --wallet 0x3666…1CA3 --chain base
 ```
 
 ```jsonc
@@ -243,7 +259,7 @@ npx @boardwalk/cli vote --option 1 --wallet 0x3666…1CA3 --chain base
       "id": "vote",
       "label": "Cast vote",
       "to": "0x487451487ed87aB447ec12B5627A4ff7c4c4974C",
-      "data": "0xb3f98adc0000000000000000000000000000000000000000000000000000000000000001",
+      "data": "0xb3f98adc…",
       "value": "0",
       "chainId": 8453,
     },
@@ -260,7 +276,7 @@ npx @boardwalk/cli vote --option 1 --wallet 0x3666…1CA3 --chain base
 **`status`** — what state is a launch in?
 
 ```bash
-npx @boardwalk/cli status --token 0x4C86…BA48 --chain base
+boardwalk status --token 0x4C86…BA48 --chain base
 ```
 
 ```jsonc
@@ -268,7 +284,7 @@ npx @boardwalk/cli status --token 0x4C86…BA48 --chain base
 {
   "token": "0x4C867B5320760BE4AD944222178FC3D344d1BA48",
   "chainId": 8453,
-  "status": "presale", // gate: presale → contribute; seeded/pending_seed → claim
+  "status": "presale", // gate: presale → contribute; seeded (+ 7-day post-seed cliff) → claim
   "path": "ADVANCED",
   "presaleManager": "0xde88fF82A8aA7DD1015E554BD3d5431838b63473",
   "raiseToken": "0x4200000000000000000000000000000000000006",
@@ -279,7 +295,7 @@ npx @boardwalk/cli status --token 0x4C86…BA48 --chain base
 **`launch-cost`** — how much BMX does it cost me to launch?
 
 ```bash
-npx @boardwalk/cli launch-cost --chain base --wallet 0x3666…1CA3
+boardwalk launch-cost --chain base --wallet 0x3666…1CA3
 ```
 
 ```jsonc
@@ -328,14 +344,7 @@ launch → send_calls([approve-bmx, create-launch]) → poll get_request_status
 
 ## Attribution
 
-Every action can be **attributed** so the volume counts toward a builder even when it's submitted via the agent's own wallet. Pass `--builder-code <code>` (or set `BOARDWALK_BUILDER_CODE` in the environment). The SDK appends an **ERC-8021** data-suffix to the calldata; it does not change the action, recipient, or amount.
-
-```bash
-npx @boardwalk/cli contribute --token 0x4C86…BA48 --amount 0.01 \
-  --chain base --wallet 0x3666…1CA3 --builder-code my-app
-# or:
-BOARDWALK_BUILDER_CODE=my-app npx @boardwalk/cli contribute …
-```
+Attribution is **automatic and enforced**: every transaction the SDK builds carries Boardwalk's **ERC-8021** builder-code suffix on its calldata, so volume is attributed even when submitted through the agent's own wallet. There is no flag to set or change, and it does not alter the action, recipient, or amount.
 
 ---
 
@@ -355,12 +364,12 @@ BOARDWALK_BUILDER_CODE=my-app npx @boardwalk/cli contribute …
 - "Contribute 0.01 WETH to the BARRY presale on Base." → `status` (confirm `presale`) → `contribute --token … --amount 0.01 --chain base --wallet <addr>`.
 - "Join this auction with 0.5 of the raise token." → `contribute --amount 0.5 …`.
 - "Is this launch still open to contribute?" → `status --token … --chain …` (look for `status: "presale"`).
-- "Ape into token 0x… for 1 WETH and credit my builder code." → `contribute --amount 1 … --builder-code <code>`.
+- "Ape into token 0x… for 1 WETH." → `contribute --token 0x… --amount 1 --chain base --wallet <addr>` (attribution is automatic).
 
 **Post-launch**
 
 - "Did my launch succeed and what's its state?" → `status --token … --chain …`.
-- "Claim my presale tokens for 0x4C86…BA48 on Base." → `status` (expect `seeded`/`pending_seed`) → `claim --token … --chain base --wallet <addr>`.
+- "Claim my presale tokens for 0x4C86…BA48 on Base." → `status` (expect `seeded`, and only after the 7-day post-seed cliff) → `claim --token … --chain base --wallet <addr>`.
 - "Stake 100 BMX." → `stake-bmx --amount 100 --wallet <addr>` (Base only).
 - "Vote to route fees to Treasury." → `vote --option 1 --wallet <addr>` (Base only).
 - "Vote to Buy & Burn BMX with the protocol fees." → `vote --option 2 …`.

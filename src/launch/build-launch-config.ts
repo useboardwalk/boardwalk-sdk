@@ -2,7 +2,7 @@
 // `FormStateByPath` input is replaced with a clean `LaunchInput`; the
 // proportional-bps math and normalization/validation are unchanged.
 import { isAddress, zeroAddress, type Address } from "viem";
-import type { LaunchConfig } from "./launch-config";
+import type { FeeRecipientInput, LaunchConfig, LaunchInput } from "../types";
 import { resolveDescription } from "./description";
 import {
   normalizeTokenName,
@@ -11,34 +11,6 @@ import {
   validateTokenName,
   validateTokenTicker,
 } from "./token-identity";
-
-export interface FeeRecipientInput {
-  address: Address;
-  /** Relative weight; recipients are normalized to bps summing to 10000. */
-  percent: number;
-  label?: string;
-}
-
-export interface LaunchInput {
-  name: string;
-  ticker: string;
-  category: string;
-  description?: string;
-  path: "express" | "advanced";
-  /** Numeric chain id — used only to validate chain-reserved tickers. */
-  chainId?: number;
-
-  // Express
-  /** Single issuer-fee recipient (receives 100% of the issuer fee). */
-  issuerFeeRecipient?: Address;
-
-  // Advanced
-  /** Presale supply percent (default 50). */
-  presaleSupplyPercent?: number;
-  issuerFee?: FeeRecipientInput[];
-  vesting?: FeeRecipientInput[];
-  referrer?: Address;
-}
 
 /** Converts relative percents among valid-address recipients to bps summing to 10000. */
 function toProportionalBps(entries: FeeRecipientInput[]): {
@@ -97,7 +69,13 @@ export function buildLaunchConfig(input: LaunchInput): LaunchConfig {
     presalePercent = BigInt(5000); // fixed 50%
   } else {
     const pct = Number(input.presaleSupplyPercent ?? 50);
-    presalePercent = BigInt(Math.round(pct * 100));
+    // Contract enforces 2500–5000 bps, divisible by 500 (the FE offers 25–50 step 5).
+    if (!Number.isInteger(pct) || pct < 25 || pct > 50 || pct % 5 !== 0) {
+      throw new Error(
+        `Invalid presaleSupplyPercent "${input.presaleSupplyPercent}": advanced launches require an integer 25–50 divisible by 5`,
+      );
+    }
+    presalePercent = BigInt(pct * 100);
   }
 
   let issuerFee: { addresses: Address[]; splits: bigint[]; labels: string[] };
@@ -118,6 +96,26 @@ export function buildLaunchConfig(input: LaunchInput): LaunchConfig {
   const vesting = isExpress
     ? { addresses: [], splits: [], labels: [] }
     : toProportionalBps(input.vesting ?? []);
+
+  // Advanced launches split the issuer fee across recipients — at least one is
+  // required (mirrors the FE fee-breakdown step's "hasAnyRecipient" gate).
+  if (!isExpress && issuerFee.addresses.length === 0) {
+    throw new Error(
+      "Advanced launches require at least one issuer-fee recipient (--fee)",
+    );
+  }
+
+  // Contract requires vesting recipients when the presale doesn't distribute the
+  // full supply (advanced + presalePercent < 50) — IssuerVestingRecipientsRequired.
+  if (
+    !isExpress &&
+    presalePercent < BigInt(5000) &&
+    vesting.addresses.length === 0
+  ) {
+    throw new Error(
+      "Advanced launches with presaleSupplyPercent < 50 require at least one vesting recipient",
+    );
+  }
 
   const referrerRaw = input.referrer?.trim() ?? "";
   const referrer: Address =

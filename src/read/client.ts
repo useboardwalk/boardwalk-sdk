@@ -1,6 +1,4 @@
-/** Default Boardwalk backend base URL; override with `BOARDWALK_API_URL`. */
-export const DEFAULT_API_BASE_URL =
-  process.env.BOARDWALK_API_URL ?? "https://api.useboardwalk.com";
+import { API_BASE_URL } from "../constants";
 
 export class ApiError extends Error {
   constructor(
@@ -17,7 +15,7 @@ export class ApiError extends Error {
 export async function apiGet<T>(
   path: string,
   params: Record<string, string | number | undefined> = {},
-  baseUrl: string = DEFAULT_API_BASE_URL,
+  baseUrl: string = API_BASE_URL,
 ): Promise<T> {
   const url = new URL(path, baseUrl);
   for (const [key, value] of Object.entries(params)) {

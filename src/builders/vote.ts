@@ -1,20 +1,9 @@
 // Ported from token-launcher/hooks/contracts/useGovernanceVote.ts.
 import { base } from "viem/chains";
-import type { Address, PublicClient } from "viem";
 import { governanceVoterAbi } from "../registry/abis";
 import { assertDeployed, getContracts } from "../registry/contracts";
 import { buildConditionalApproveStep } from "../flow/erc20";
-import type { TxStep } from "../flow/types";
-
-/** 1 = Treasury, 2 = Buy & Burn BMX, 3 = Buy & Burn LP, 4 = Participation. */
-export type VoteOption = 1 | 2 | 3 | 4;
-
-export interface VoteParams {
-  client: PublicClient;
-  account: Address;
-  chainId: number;
-  option: VoteOption;
-}
+import type { TxStep, VoteParams } from "../types";
 
 /** Conditional approve BMX → governanceVoter (only if burn > 0), then `vote(option)`. Base-only. */
 export async function buildVoteSteps(params: VoteParams): Promise<TxStep[]> {

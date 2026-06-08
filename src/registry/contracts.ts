@@ -169,22 +169,3 @@ export function assertDeployed(
   }
   return addr;
 }
-
-/** True when every field on the chain's `ChainContracts` is the placeholder address. */
-export function isChainContractsPlaceholder(chainId: number): boolean {
-  const contracts = chainContracts[chainId];
-  if (!contracts) return true;
-  return Object.values(contracts).every((addr) => addr === PLACEHOLDER);
-}
-
-/** True when both router and factory are deployed on this chain — gates the
- *  V2 swap path. Used by `useV2Swap` and the swap UI's "supported chain" gate. */
-export function hasUniswapV2Deployed(chainId: number | undefined): boolean {
-  if (!chainId) return false;
-  const contracts = chainContracts[chainId];
-  if (!contracts) return false;
-  return (
-    contracts.uniswapV2Router !== PLACEHOLDER &&
-    contracts.uniswapV2Factory !== PLACEHOLDER
-  );
-}

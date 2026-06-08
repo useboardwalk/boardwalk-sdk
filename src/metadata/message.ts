@@ -1,9 +1,12 @@
 // EIP-712 launch metadata — ported from token-launcher/lib/api/mutations.ts.
 // The SDK only BUILDS the typed data; the agent's wallet signs it.
-import type { Address } from "viem";
-
-export const METADATA_DOMAIN_NAME = "BoardwalkLaunchMetadata";
-export const METADATA_DOMAIN_VERSION = "1";
+import { METADATA_DOMAIN_NAME, METADATA_DOMAIN_VERSION } from "../constants";
+import type {
+  LaunchMetadataMessage,
+  LaunchMetadataTypedData,
+  MetadataInput,
+  MetadataWireMessage,
+} from "../types";
 
 export function getMetadataDomain(chainId: number): {
   name: string;
@@ -34,71 +37,6 @@ export const METADATA_TYPES = {
     { name: "deadline", type: "uint256" },
   ],
 } as const;
-
-export interface MetadataInput {
-  token: Address;
-  logoUrl?: string;
-  twitterUrl?: string;
-  homepageUrl?: string;
-  discordUrl?: string;
-  telegramUrl?: string;
-  description?: string;
-  videoUrl?: string;
-  /** URI of the Terms of Service the issuer agrees to (signed into metadata). */
-  tosUri: string;
-  /** ToS revision string the issuer agrees to (signed into metadata). */
-  tosVersion: string;
-  /** Wei-string raise goal; "0" when omitted. */
-  raiseGoalWei?: string;
-  /** Deadline in minutes from now (default 30). */
-  deadlineMinutes?: number;
-  /** Override the nonce (default `crypto.randomUUID()`). */
-  nonce?: string;
-}
-
-/** EIP-712 message with bigint fields — pass to the wallet's `signTypedData`. */
-export interface LaunchMetadataMessage {
-  token: Address;
-  logo_url: string;
-  twitter_url: string;
-  homepage_url: string;
-  discord_url: string;
-  telegram_url: string;
-  description: string;
-  video_url: string;
-  tos_uri: string;
-  tos_version: string;
-  raise_goal: bigint;
-  nonce: string;
-  deadline: bigint;
-}
-
-/** Wire form (uint256s as strings) — POST this with the signature. */
-export interface MetadataWireMessage {
-  token: Address;
-  logo_url: string;
-  twitter_url: string;
-  homepage_url: string;
-  discord_url: string;
-  telegram_url: string;
-  description: string;
-  video_url: string;
-  tos_uri: string;
-  tos_version: string;
-  raise_goal: string;
-  nonce: string;
-  deadline: string;
-}
-
-export interface LaunchMetadataTypedData {
-  domain: { name: string; version: string; chainId: number };
-  types: typeof METADATA_TYPES;
-  primaryType: "LaunchMetadata";
-  message: LaunchMetadataMessage;
-  wireMessage: MetadataWireMessage;
-  nonce: string;
-  deadline: string;
-}
 
 /**
  * Build the full EIP-712 payload an agent signs to publish launch metadata.

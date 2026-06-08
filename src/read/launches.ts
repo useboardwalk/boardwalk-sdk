@@ -1,27 +1,10 @@
 // Minimal read client over GET /boardwalk-launches/:token — surfaces only the
 // facts the builders/CLI need (presale address, status, path).
-import type { Address } from "viem";
+import { isAddress, type Address } from "viem";
+import { APP_BASE_URL } from "../constants";
 import { getContracts } from "../registry/contracts";
 import { apiGet } from "./client";
-
-export type LaunchStatus =
-  | "presale"
-  | "seeded"
-  | "failed"
-  | "pending_seed"
-  | "unknown";
-
-export interface LaunchSummary {
-  token: Address;
-  chainId: number;
-  status: LaunchStatus;
-  path: "EXPRESS" | "ADVANCED";
-  /** PresaleManager address; null until the launch is indexed. */
-  presaleManager: Address | null;
-  /** Per-chain canonical raise token (approve target for contribute). */
-  raiseToken: Address;
-  seeded: boolean;
-}
+import type { LaunchStatus, LaunchSummary } from "../types";
 
 interface LaunchDetailResponse {
   token: string;
@@ -38,6 +21,8 @@ export async function getLaunch(
   chainId: number,
   baseUrl?: string,
 ): Promise<LaunchSummary> {
+  if (!isAddress(token))
+    throw new Error(`getLaunch: invalid token address "${token}"`);
   const data = await apiGet<LaunchDetailResponse>(
     `/boardwalk-launches/${token}`,
     { chainId },
@@ -52,4 +37,9 @@ export async function getLaunch(
     raiseToken: getContracts(chainId).raiseToken,
     seeded: data.seeded,
   };
+}
+
+/** Canonical Boardwalk auction/profile URL for a launched token. */
+export function getAuctionUrl(token: string, chainId: number): string {
+  return `${APP_BASE_URL}/discover/token/auction/${token}?chain=${chainId}`;
 }

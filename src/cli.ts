@@ -1,52 +1,52 @@
 #!/usr/bin/env node
 // boardwalk CLI — prints UNSIGNED calldata as JSON. Never accepts private keys;
-// the agent's wallet signs + submits (e.g. Base MCP `send_calls`).
+// the agent's wallet signs + submits (e.g. Base MCP `send_calls`). Boardwalk's
+// ERC-8021 builder code is enforced on every built transaction.
 import { readFile } from "node:fs/promises";
 import { Command } from "commander";
 import {
   createPublicClient,
   http,
   parseUnits,
+  formatUnits,
   isAddress,
-  zeroAddress,
   erc20Abi,
   type Address,
+  type Hash,
   type PublicClient,
 } from "viem";
 
+import {
+  MIME_BY_EXT,
+  TOS_URI,
+  TOS_VERSION,
+  DEFAULT_RPC_BY_CHAIN,
+  MULTICALL3_ADDRESS,
+} from "./constants";
 import { SUPPORTED_CHAINS, toNumericChainId } from "./registry/chains";
-import { getContracts } from "./registry/contracts";
-import { launchFactoryAbi, erc721Abi } from "./registry/abis";
-import { effectiveCost } from "./launch/member-discount";
-import type { LaunchConfig } from "./launch/launch-config";
-import { buildLaunchSteps } from "./builders/launch";
+import { getLaunchConfig } from "./registry/launch-config";
+import {
+  buildLaunchSteps,
+  readLaunchCost,
+  resolveLaunchedToken,
+} from "./builders/launch";
 import { buildContributeSteps } from "./builders/contribute";
 import { buildClaimSteps } from "./builders/claim";
 import { buildStakeBmxSteps } from "./builders/stake-bmx";
-import { buildVoteSteps, type VoteOption } from "./builders/vote";
-import { encodeSteps, type EncodeOptions } from "./flow/encode";
-import type { TxStep } from "./flow/types";
-import { getLaunch } from "./read/launches";
+import { buildVoteSteps } from "./builders/vote";
+import { presaleManagerAbi } from "./registry/abis";
+import { encodeSteps } from "./flow/encode";
+import { getAuctionUrl, getLaunch } from "./read/launches";
 import { buildLaunchMetadataTypedData } from "./metadata/message";
 import { uploadLogo } from "./metadata/upload";
 import { postSignedMetadata } from "./metadata/post";
-import type { MetadataWireMessage } from "./metadata/message";
-
-const DEFAULT_TOS_URI = "https://www.useboardwalk.com/docs/terms";
-const DEFAULT_TOS_VERSION = "1";
-
-const MIME_BY_EXT: Record<string, string> = {
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  webp: "image/webp",
-  svg: "image/svg+xml",
-  heic: "image/heic",
-  heif: "image/heif",
-  tif: "image/tiff",
-  tiff: "image/tiff",
-};
+import type {
+  FeeRecipientInput,
+  LaunchConfig,
+  MetadataWireMessage,
+  TxStep,
+  VoteOption,
+} from "./types";
 
 function fail(message: string): never {
   console.error(`Error: ${message}`);
@@ -60,6 +60,13 @@ function errMsg(e: unknown): string {
 function requireAddress(value: string | undefined, name: string): Address {
   if (!value || !isAddress(value)) fail(`--${name} must be a valid address`);
   return value as Address;
+}
+
+function requireTxHash(value: string | undefined): Hash {
+  if (!value || !/^0x[0-9a-fA-F]{64}$/.test(value)) {
+    fail("--tx must be a 0x-prefixed 32-byte transaction hash");
+  }
+  return value as Hash;
 }
 
 function chainIdOf(input: string): number {
@@ -81,7 +88,7 @@ function makeClient(
   const entry = SUPPORTED_CHAINS.find((c) => c.numericId === chainId)!;
   const client = createPublicClient({
     chain: entry.chain,
-    transport: http(rpc),
+    transport: http(rpc ?? DEFAULT_RPC_BY_CHAIN[chainId]),
   }) as unknown as PublicClient;
   return { client, chainId };
 }
@@ -93,13 +100,9 @@ function print(payload: unknown): void {
 function emitCalls(
   steps: TxStep[],
   chainId: number,
-  builderCode: string | undefined,
   meta: Record<string, unknown> = {},
 ): void {
-  const options: EncodeOptions = {};
-  if (builderCode !== undefined) options.builderCode = builderCode;
-  const calls = encodeSteps(steps, chainId, options);
-  print({ calls, ...meta });
+  print({ calls: encodeSteps(steps, chainId), ...meta });
 }
 
 function serializeConfig(config: LaunchConfig) {
@@ -113,37 +116,91 @@ function serializeConfig(config: LaunchConfig) {
 
 const stripAt = (handle: string) => handle.replace(/^@/, "");
 
+/** Commander collector for repeatable `--fee`/`--vesting <label>:<address>:<percent>`. */
+function collectRecipient(
+  value: string,
+  prev: FeeRecipientInput[],
+): FeeRecipientInput[] {
+  const parts = value.split(":");
+  const label = (parts[0] ?? "").trim();
+  const address = (parts[1] ?? "").trim();
+  const percent = Number(parts[2]);
+  if (
+    !label ||
+    !isAddress(address) ||
+    !Number.isFinite(percent) ||
+    percent <= 0
+  ) {
+    fail(
+      `invalid recipient "${value}" — expected <label>:<address>:<percent> (e.g. individual:0xAbc…:40)`,
+    );
+  }
+  return [...prev, { label, address: address as Address, percent }];
+}
+
 const program = new Command();
 program
   .name("boardwalk")
   .description(
-    "Build unsigned Boardwalk transactions for an agent to sign + submit.",
+    "Build UNSIGNED Boardwalk transactions for an agent to sign + submit.\n" +
+      "Every tx command prints { calls: [{to,data,value,chainId}], ...meta }; submit\n" +
+      "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
+      "Boardwalk's ERC-8021 builder code is enforced on every built transaction.",
   )
-  .version("0.1.0");
+  .version("0.1.0")
+  .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
 
 program
   .command("launch")
+  .summary("Build a token launch (approve BMX + createLaunch)")
   .description(
-    "Build the launch flow (approve BMX → createLaunch). Run launch-metadata after it confirms.",
+    "Build the launch flow (approve BMX → createLaunch). Then run launch-metadata with the tx hash.",
   )
-  .requiredOption("--chain <chain>", "chain slug or id")
+  .requiredOption(
+    "--chain <chain>",
+    "chain slug (base|ethereum|fraxtal|katana|ink) or numeric id",
+  )
   .requiredOption(
     "--wallet <address>",
     "issuer wallet address (BYO; never a private key)",
   )
-  .requiredOption("--name <name>", "token name")
-  .requiredOption("--ticker <ticker>", "token ticker")
+  .requiredOption("--name <name>", "token name (3–32 chars)")
+  .requiredOption("--ticker <ticker>", "token ticker (2–10 chars, A–Z 0–9)")
   .requiredOption(
     "--category <category>",
-    "category slug (e.g. meme-culture, ai-agents)",
+    "category slug (e.g. meme-culture, ai-agents, gaming)",
   )
-  .option("--path <path>", "express | advanced", "express")
-  .option("--description <text>", "token description")
-  .option("--issuer-fee <address>", "issuer fee recipient (express path)")
-  .option("--presale-percent <n>", "presale supply percent (advanced path)")
+  .option(
+    "--path <path>",
+    "launch path: express (24h) | advanced (7d)",
+    "express",
+  )
+  .option(
+    "--description <text>",
+    "token description (defaults to Boardwalk boilerplate)",
+  )
+  .option(
+    "--issuer-fee <address>",
+    "issuer fee recipient (express path: receives 100%)",
+  )
+  .option(
+    "--fee <spec>",
+    "advanced issuer-fee recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|publicGood|growthTeam)",
+    collectRecipient,
+    [] as FeeRecipientInput[],
+  )
+  .option(
+    "--vesting <spec>",
+    "advanced vesting recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|referrer|publicGood|growthTeam)",
+    collectRecipient,
+    [] as FeeRecipientInput[],
+  )
+  .option(
+    "--presale-percent <n>",
+    "presale supply percent (advanced path; 25–50 in steps of 5; default 50)",
+  )
   .option("--referrer <address>", "referrer address (advanced path)")
-  .option("--builder-code <code>", "ERC-8021 builder code override")
-  .option("--rpc <url>", "RPC override")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
   .action(async (opts) => {
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
     const account = requireAddress(opts.wallet, "wallet");
@@ -158,31 +215,48 @@ program
         description: opts.description,
         path: opts.path,
         issuerFeeRecipient: opts.issuerFee,
+        issuerFee: opts.fee.length ? opts.fee : undefined,
+        vesting: opts.vesting.length ? opts.vesting : undefined,
         presaleSupplyPercent:
           opts.presalePercent != null ? Number(opts.presalePercent) : undefined,
         referrer: opts.referrer,
       },
     });
-    emitCalls(result.steps, chainId, opts.builderCode, {
+    const grad = getLaunchConfig(chainId);
+    const advanced = opts.path === "advanced";
+    emitCalls(result.steps, chainId, {
       action: "launch",
       bmxBurnCost: result.bmxBurnCost.toString(),
       config: serializeConfig(result.config),
-      note: "After create-launch confirms, read the token from the LaunchCreated log, then run `boardwalk launch-metadata`.",
+      graduationThreshold: {
+        wei: grad.graduationThresholdWei.toString(),
+        display: `${formatUnits(grad.graduationThresholdWei, 18)} ${grad.raiseTokenSymbol}`,
+      },
+      next: {
+        note:
+          "Submit `calls` (batched: approve + createLaunch). After the create-launch tx confirms, finalize metadata — the token is resolved from the tx automatically." +
+          (advanced
+            ? " Advanced launches must set --raise-goal greater than the graduation threshold above."
+            : ""),
+        command: `boardwalk launch-metadata --tx <create-launch tx hash> --chain ${opts.chain} [--logo <file>] [--twitter <handle>]${advanced ? " --raise-goal <amount>" : ""}`,
+      },
     });
   });
 
 program
   .command("contribute")
-  .description("Build approve + contribute for an active presale.")
+  .summary("Join a presale (approve raise token + contribute)")
+  .description(
+    "Build approve + contribute for an active presale (status must be `presale`).",
+  )
   .requiredOption("--token <address>", "launch token address")
   .requiredOption(
     "--amount <amount>",
-    "amount in human units of the raise token",
+    "amount in human units of the raise token (e.g. 0.01)",
   )
-  .requiredOption("--chain <chain>", "chain slug or id")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
   .requiredOption("--wallet <address>", "contributor wallet address")
-  .option("--builder-code <code>", "ERC-8021 builder code override")
-  .option("--rpc <url>", "RPC override")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
   .action(async (opts) => {
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
     const account = requireAddress(opts.wallet, "wallet");
@@ -196,10 +270,20 @@ program
     if (!launch.presaleManager) {
       fail("presale manager not indexed yet for this token; retry shortly");
     }
-    const decimals = await client.readContract({
-      abi: erc20Abi,
-      address: launch.raiseToken,
-      functionName: "decimals",
+    // One multicall for decimals + allowance (both on the raise token) instead
+    // of two sequential reads — fewer adjacent calls against rate-limited RPCs.
+    const [decimals, currentAllowance] = await client.multicall({
+      allowFailure: false,
+      multicallAddress: MULTICALL3_ADDRESS,
+      contracts: [
+        { abi: erc20Abi, address: launch.raiseToken, functionName: "decimals" },
+        {
+          abi: erc20Abi,
+          address: launch.raiseToken,
+          functionName: "allowance",
+          args: [account, launch.presaleManager],
+        },
+      ],
     });
     const amount = parseUnits(opts.amount, decimals);
     const steps = await buildContributeSteps({
@@ -208,8 +292,9 @@ program
       chainId,
       presale: launch.presaleManager,
       amount,
+      currentAllowance,
     });
-    emitCalls(steps, chainId, opts.builderCode, {
+    emitCalls(steps, chainId, {
       action: "contribute",
       token,
       amount: amount.toString(),
@@ -219,35 +304,56 @@ program
 
 program
   .command("claim")
-  .description("Build claimTokens for a successful (seeded) auction.")
+  .summary("Claim presale tokens after a successful auction")
+  .description(
+    "Build claimTokens for a seeded auction whose 7-day post-seed cliff has ended.",
+  )
   .requiredOption("--token <address>", "launch token address")
-  .requiredOption("--chain <chain>", "chain slug or id")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
   .requiredOption("--wallet <address>", "contributor wallet address")
-  .option("--builder-code <code>", "ERC-8021 builder code override")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
   .action(async (opts) => {
-    const chainId = chainIdOf(opts.chain);
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
     const token = requireAddress(opts.token, "token");
     requireAddress(opts.wallet, "wallet");
     const launch = await getLaunch(token, chainId);
-    if (launch.status !== "seeded" && launch.status !== "pending_seed") {
+    if (launch.status !== "seeded") {
       fail(
-        `tokens are claimable only after the auction succeeds (status: ${launch.status})`,
+        `tokens are claimable only after liquidity is seeded (status: ${launch.status})`,
       );
     }
     if (!launch.presaleManager)
       fail("presale manager not indexed yet for this token");
-    const steps = buildClaimSteps({ presale: launch.presaleManager });
-    emitCalls(steps, chainId, opts.builderCode, { action: "claim", token });
+    // Enforce the post-seed cliff: claimTokens() reverts (CliffNotEnded) until
+    // cliffEnd, so read it and refuse to emit a guaranteed-revert tx.
+    const cliffEnd = await client.readContract({
+      abi: presaleManagerAbi,
+      address: launch.presaleManager,
+      functionName: "cliffEnd",
+    });
+    const now = Math.floor(Date.now() / 1000);
+    if (Number(cliffEnd) > now) {
+      fail(
+        `tokens are locked until the post-seed cliff ends at ${new Date(Number(cliffEnd) * 1000).toISOString()} (cliffEnd=${cliffEnd}); claim after that`,
+      );
+    }
+    emitCalls(buildClaimSteps({ presale: launch.presaleManager }), chainId, {
+      action: "claim",
+      token,
+      cliffEnd: cliffEnd.toString(),
+    });
   });
 
 program
   .command("stake-bmx")
-  .description("Build approve + stakeBmx (Base-only).")
-  .requiredOption("--amount <amount>", "BMX amount in human units")
+  .summary("Stake BMX (Base-only)")
+  .description(
+    "Build approve + stakeBmx. Base-only — errors clearly on other chains.",
+  )
+  .requiredOption("--amount <amount>", "BMX amount in human units (e.g. 100)")
   .requiredOption("--wallet <address>", "staker wallet address")
-  .option("--chain <chain>", "chain slug or id", "base")
-  .option("--builder-code <code>", "ERC-8021 builder code override")
-  .option("--rpc <url>", "RPC override")
+  .option("--chain <chain>", "chain slug or numeric id", "base")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
   .action(async (opts) => {
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
     const account = requireAddress(opts.wallet, "wallet");
@@ -258,7 +364,7 @@ program
       chainId,
       amount,
     });
-    emitCalls(steps, chainId, opts.builderCode, {
+    emitCalls(steps, chainId, {
       action: "stake-bmx",
       amount: amount.toString(),
     });
@@ -266,75 +372,53 @@ program
 
 program
   .command("vote")
+  .summary("Vote on fee direction (Base-only)")
   .description(
-    "Build a governance vote (Base-only). 1=Treasury 2=BuyBurnBMX 3=BuyBurnLP 4=Participation.",
+    "Build a governance vote (Base-only). Options: 1=Treasury 2=Buy&BurnBMX 3=Buy&BurnLP 4=Participation.",
   )
-  .requiredOption("--option <1-4>", "vote option")
+  .requiredOption("--option <1-4>", "vote option (1–4)")
   .requiredOption("--wallet <address>", "voter wallet address")
-  .option("--chain <chain>", "chain slug or id", "base")
-  .option("--builder-code <code>", "ERC-8021 builder code override")
-  .option("--rpc <url>", "RPC override")
+  .option("--chain <chain>", "chain slug or numeric id", "base")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
   .action(async (opts) => {
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
     const account = requireAddress(opts.wallet, "wallet");
     const option = Number(opts.option) as VoteOption;
     const steps = await buildVoteSteps({ client, account, chainId, option });
-    emitCalls(steps, chainId, opts.builderCode, { action: "vote", option });
+    emitCalls(steps, chainId, { action: "vote", option });
   });
 
 program
   .command("launch-cost")
-  .description(
-    "Read the effective BMX burn cost to launch (after any member discount).",
+  .summary("Read the BMX burn cost to launch (with member discount)")
+  .description("Read-only: the effective BMX burn cost to launch on a chain.")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption(
+    "--wallet <address>",
+    "issuer wallet address (checked for the NFT member discount)",
   )
-  .requiredOption("--chain <chain>", "chain slug or id")
-  .requiredOption("--wallet <address>", "issuer wallet address")
-  .option("--rpc <url>", "RPC override")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
   .action(async (opts) => {
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
     const account = requireAddress(opts.wallet, "wallet");
-    const { launchFactory } = getContracts(chainId);
-    const [baseBurn, discountBps, nftCollection] = await Promise.all([
-      client.readContract({
-        abi: launchFactoryAbi,
-        address: launchFactory,
-        functionName: "bmxBurnAmount",
-      }),
-      client.readContract({
-        abi: launchFactoryAbi,
-        address: launchFactory,
-        functionName: "memberLaunchDiscountBps",
-      }),
-      client.readContract({
-        abi: launchFactoryAbi,
-        address: launchFactory,
-        functionName: "nftCollection",
-      }),
-    ]);
-    let isMember = false;
-    if (nftCollection !== zeroAddress) {
-      const balance = await client.readContract({
-        abi: erc721Abi,
-        address: nftCollection,
-        functionName: "balanceOf",
-        args: [account],
-      });
-      isMember = balance > BigInt(0);
-    }
+    const cost = await readLaunchCost(client, account, chainId);
     print({
       chainId,
-      baseBurn: baseBurn.toString(),
-      discountBps: discountBps.toString(),
-      isMember,
-      bmxBurnCost: effectiveCost(baseBurn, discountBps, isMember).toString(),
+      baseBurn: cost.baseBurn.toString(),
+      discountBps: cost.discountBps.toString(),
+      isMember: cost.isMember,
+      bmxBurnCost: cost.bmxBurnCost.toString(),
     });
   });
 
 program
   .command("status")
-  .description("Read a launch's status + presale address.")
+  .summary("Read a launch's status + presale address")
+  .description(
+    "Read-only: a launch's status, path, presale manager, and raise token.",
+  )
   .requiredOption("--token <address>", "launch token address")
-  .requiredOption("--chain <chain>", "chain slug or id")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
   .action(async (opts) => {
     const chainId = chainIdOf(opts.chain);
     const token = requireAddress(opts.token, "token");
@@ -343,16 +427,24 @@ program
 
 program
   .command("launch-metadata")
+  .summary(
+    "Resolve the launched token + upload logo + build the EIP-712 payload to sign",
+  )
   .description(
-    "Upload the logo + build the EIP-712 metadata payload to sign, then run submit-metadata.",
+    "After the create-launch tx confirms, resolve the token from the receipt (--tx), upload the logo, " +
+      "and print the EIP-712 payload to sign. Finish with submit-metadata.",
   )
-  .requiredOption(
-    "--token <address>",
-    "launch token address (from the LaunchCreated log)",
+  .option(
+    "--tx <hash>",
+    "create-launch transaction hash — resolves the token from the receipt (recommended)",
   )
-  .requiredOption("--chain <chain>", "chain slug or id")
-  .option("--logo <file>", "path to a logo image (uploaded to the CDN)")
-  .option("--logo-data <dataurl>", "data: URL of a logo (uploaded to the CDN)")
+  .option("--token <address>", "launch token address (if you already have it)")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .option("--logo <file>", "path to a logo image on disk (uploaded to the CDN)")
+  .option(
+    "--logo-data <dataurl>",
+    "base64 / data: URL of a logo (uploaded to the CDN)",
+  )
   .option("--logo-url <url>", "already-hosted logo URL (used as-is)")
   .option("--twitter <handle>", "X/Twitter handle")
   .option("--discord <invite>", "Discord invite code")
@@ -367,11 +459,27 @@ program
     "--raise-goal <amount>",
     "raise goal in raise-token units (advanced; visual only)",
   )
-  .option("--tos-uri <uri>", "Terms of Service URI", DEFAULT_TOS_URI)
-  .option("--tos-version <v>", "Terms of Service version", DEFAULT_TOS_VERSION)
+  .option("--tos-uri <uri>", "Terms of Service URI", TOS_URI)
+  .option("--tos-version <v>", "Terms of Service version", TOS_VERSION)
+  .option(
+    "--rpc <url>",
+    "RPC URL override (used with --tx; default: chain's public RPC)",
+  )
   .action(async (opts) => {
     const chainId = chainIdOf(opts.chain);
-    const token = requireAddress(opts.token, "token");
+
+    let token: Address;
+    if (opts.tx) {
+      const txHash = requireTxHash(opts.tx);
+      const { client } = makeClient(opts.chain, opts.rpc);
+      token = (await resolveLaunchedToken(client, txHash, chainId)).token;
+    } else if (opts.token) {
+      token = requireAddress(opts.token, "token");
+    } else {
+      fail(
+        "provide --tx <create-launch tx hash> (recommended) or --token <address>",
+      );
+    }
 
     let logoUrl: string | undefined = opts.logoUrl;
     if (!logoUrl && opts.logo) {
@@ -389,9 +497,18 @@ program
       logoUrl = (await uploadLogo(opts.logoData)).url;
     }
 
-    const raiseGoalWei = opts.raiseGoal
-      ? parseUnits(opts.raiseGoal, 18).toString()
-      : "0";
+    let raiseGoalWei = "0";
+    if (opts.raiseGoal) {
+      const wei = parseUnits(opts.raiseGoal, 18);
+      const grad = getLaunchConfig(chainId);
+      // Advanced raise goal must exceed the graduation threshold (mirrors the FE).
+      if (wei <= grad.graduationThresholdWei) {
+        fail(
+          `raise goal (${opts.raiseGoal} ${grad.raiseTokenSymbol}) must be greater than the graduation threshold (${formatUnits(grad.graduationThresholdWei, 18)} ${grad.raiseTokenSymbol}) on this chain`,
+        );
+      }
+      raiseGoalWei = wei.toString();
+    }
     const typed = buildLaunchMetadataTypedData(chainId, {
       token,
       logoUrl: logoUrl ?? "",
@@ -410,45 +527,80 @@ program
 
     print({
       action: "launch-metadata",
+      token,
+      auctionUrl: getAuctionUrl(token, chainId),
       sign: {
         domain: typed.domain,
         types: typed.types,
         primaryType: typed.primaryType,
         message: typed.wireMessage,
       },
-      submit: {
-        method: "POST",
-        path: `/boardwalk-launches/${token}/metadata?chainId=${chainId}`,
-        body: { signature: "<eip712-signature>", message: typed.wireMessage },
+      next: {
+        note: "Sign `sign` (EIP-712 typed data) with the issuer wallet, then run the command below with --signature filled in (--message is `sign.message`).",
+        command: `boardwalk submit-metadata --token ${token} --chain ${opts.chain} --signature <signature> --message <sign.message>`,
       },
-      note: "Sign `sign` (EIP-712 typed data) with the issuer wallet, then run `boardwalk submit-metadata` with the signature.",
     });
   });
 
 program
   .command("submit-metadata")
-  .description("POST a signed metadata payload (retries through indexer lag).")
+  .summary("POST a signed metadata payload")
+  .description(
+    "POST a signed metadata payload (retries through backend indexer lag).",
+  )
   .requiredOption("--token <address>", "launch token address")
-  .requiredOption("--chain <chain>", "chain slug or id")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
   .requiredOption(
     "--signature <hex>",
     "EIP-712 signature from the issuer wallet",
   )
   .requiredOption(
     "--message <json>",
-    "the wireMessage JSON emitted by launch-metadata",
+    "the `sign.message` JSON emitted by launch-metadata",
   )
   .action(async (opts) => {
     const chainId = chainIdOf(opts.chain);
     const token = requireAddress(opts.token, "token");
-    const wireMessage = JSON.parse(opts.message) as MetadataWireMessage;
+    if (!/^0x[0-9a-fA-F]+$/.test(opts.signature)) {
+      fail("--signature must be a 0x-prefixed hex string");
+    }
+    let wireMessage: MetadataWireMessage;
+    try {
+      wireMessage = JSON.parse(opts.message) as MetadataWireMessage;
+    } catch {
+      fail(
+        "--message must be the JSON object from launch-metadata `sign.message`",
+      );
+    }
     const result = await postSignedMetadata(
       token,
       wireMessage,
       opts.signature,
       { chainId },
     );
-    print({ action: "submit-metadata", result });
+    print({
+      action: "submit-metadata",
+      token,
+      auctionUrl: getAuctionUrl(token, chainId),
+      result,
+    });
   });
+
+program.addHelpText(
+  "after",
+  `
+Launch flow (non-custodial — you sign + submit):
+  1. boardwalk launch …                         → submit the returned calls with your wallet
+  2. boardwalk launch-metadata --tx <hash> …    → resolves the token, returns the EIP-712 payload + auction URL
+  3. sign the payload, then boardwalk submit-metadata --signature … --message …
+
+Examples:
+  $ boardwalk launch --chain base --wallet 0xYou --name "My Token" --ticker MYT \\
+      --category meme-culture --path express --issuer-fee 0xYou
+  $ boardwalk contribute --token 0xLaunch --amount 0.1 --chain base --wallet 0xYou
+  $ boardwalk vote --option 1 --wallet 0xYou           # Base-only
+
+The CLI only prints unsigned calldata — it never signs or sends.`,
+);
 
 program.parseAsync().catch((e) => fail(errMsg(e)));

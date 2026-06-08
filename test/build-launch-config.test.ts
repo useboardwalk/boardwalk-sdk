@@ -32,6 +32,7 @@ describe("buildLaunchConfig", () => {
       category: "ai-agents",
       path: "advanced",
       presaleSupplyPercent: 40,
+      vesting: [{ address: A, percent: 100 }], // required when presale < 50
       issuerFee: [
         { address: A, percent: 75 },
         { address: B, percent: 25 },
@@ -43,6 +44,44 @@ describe("buildLaunchConfig", () => {
     expect(cfg.issuerFeeSplits.reduce((a, b) => a + b, BigInt(0))).toBe(
       BigInt(10000),
     );
+  });
+
+  it("rejects an out-of-range / non-divisible advanced presale percent", () => {
+    expect(() =>
+      buildLaunchConfig({
+        name: "Adv Token",
+        ticker: "ADV",
+        category: "other",
+        path: "advanced",
+        presaleSupplyPercent: 33,
+        vesting: [{ address: A, percent: 100 }],
+      }),
+    ).toThrow(/presaleSupplyPercent/i);
+  });
+
+  it("requires vesting recipients for an advanced launch with presale < 50", () => {
+    expect(() =>
+      buildLaunchConfig({
+        name: "Adv Token",
+        ticker: "ADV",
+        category: "other",
+        path: "advanced",
+        presaleSupplyPercent: 40,
+        issuerFee: [{ address: A, percent: 100 }],
+      }),
+    ).toThrow(/vesting/i);
+  });
+
+  it("requires at least one issuer-fee recipient for an advanced launch", () => {
+    expect(() =>
+      buildLaunchConfig({
+        name: "Adv Token",
+        ticker: "ADV",
+        category: "other",
+        path: "advanced",
+        presaleSupplyPercent: 50,
+      }),
+    ).toThrow(/issuer-fee/i);
   });
 
   it("uppercases/normalizes the ticker and throws on an invalid one", () => {
