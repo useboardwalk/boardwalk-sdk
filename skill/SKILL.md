@@ -1,7 +1,7 @@
 ---
 name: boardwalk
 description: >-
-  Build and submit onchain Boardwalk actions from natural language: launch a token, contribute to / join a presale auction, claim presale tokens after a successful launch, stake BMX, vote on fee direction, and check launch status or cost. Boardwalk is a fee-protection token-launch platform (permanently-locked liquidity + a built-in swap-fee equivalent). This skill drives the boardwalk CLI (npm package @boardwalk/sdk), which prints UNSIGNED transaction calldata (and EIP-712 payloads to sign) — the user's own wallet signs and submits. Works on Base (full feature parity) plus Ethereum, Fraxtal, Katana, and Ink (launch/contribute/claim); stake-bmx and vote are Base-only. Use whenever a user wants to create, fund, or manage a Boardwalk launch onchain. With a shell it drives the CLI; with no shell (plain chat) it generates a prefilled launch link the user opens in the Boardwalk UI.
+  Build and submit onchain Boardwalk actions from natural language: launch a token, contribute to / join a presale auction, claim presale tokens after a successful launch, stake BMX, vote on fee direction, and check launch status or cost. Boardwalk is a fee-protection token-launch platform (permanently-locked liquidity + a built-in swap-fee equivalent). This skill drives the boardwalk CLI (npm package @useboardwalk/sdk), which prints UNSIGNED transaction calldata (and EIP-712 payloads to sign) — the user's own wallet signs and submits. Works on Base (full feature parity) plus Ethereum, Fraxtal, Katana, and Ink (launch/contribute/claim); stake-bmx and vote are Base-only. Use whenever a user wants to create, fund, or manage a Boardwalk launch onchain. With a shell it drives the CLI; with no shell (plain chat) it generates a prefilled launch link the user opens in the Boardwalk UI.
 metadata:
   homepage: https://www.useboardwalk.com
 ---
@@ -10,7 +10,7 @@ metadata:
 
 **Boardwalk** is a fee-protection token-launch platform. Every token launched on Boardwalk gets **permanently-locked liquidity** (the LP can never be pulled) plus a **built-in swap-fee equivalent** that routes ongoing trading fees back to the issuer, BMX stakers, liquidity, and platform participation — so creators keep earning after launch and buyers are protected from rug pulls. Launches run as fixed-window **presale auctions**: contributors deposit a raise token (e.g. WETH) during the presale, and on a successful close the contract seeds permanent liquidity and lets contributors claim their tokens.
 
-This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` CLI (the `@boardwalk/sdk` npm package), which turns a natural-language intent into **UNSIGNED transaction calldata** — an ordered array of `{to, data, value}` calls (plus, for launch metadata, an **EIP-712** payload to sign). The CLI never touches a private key. **The user's wallet signs and submits.**
+This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` CLI (the `@useboardwalk/sdk` npm package), which turns a natural-language intent into **UNSIGNED transaction calldata** — an ordered array of `{to, data, value}` calls (plus, for launch metadata, an **EIP-712** payload to sign). The CLI never touches a private key. **The user's wallet signs and submits.**
 
 > **Conceptual docs** (auction mechanics, the fee model, governance/voting, vesting) live at
 > <https://www.useboardwalk.com/docs> and <https://www.useboardwalk.com/llms.txt>.
@@ -22,7 +22,7 @@ This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` 
 
 **Shell available → use the `boardwalk` CLI.** It prints unsigned calldata your wallet signs and submits (the rest of this doc): launch, contribute, claim, stake, vote, and metadata.
 
-**No shell (plain chat, no terminal) → emit a prefilled launch link.** `boardwalk launch-link …` (or `buildLaunchLink` from `@boardwalk/sdk`) returns a `…/launch?path=…&prefill=…` URL. The user opens it, the Boardwalk UI loads the launch summary fully prefilled, then they add a logo, connect a wallet, and sign — all in the UI. No tools required, so it works on any surface.
+**No shell (plain chat, no terminal) → emit a prefilled launch link.** `boardwalk launch-link …` (or `buildLaunchLink` from `@useboardwalk/sdk`) returns a `…/launch?path=…&prefill=…` URL. The user opens it, the Boardwalk UI loads the launch summary fully prefilled, then they add a logo, connect a wallet, and sign — all in the UI. No tools required, so it works on any surface.
 
 > **Decision: shell → CLI; no shell → emit the prefilled link.** The link covers **launch** only; contribute, claim, stake, and vote need the CLI and a signer.
 
@@ -31,11 +31,11 @@ This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` 
 ## Install & run
 
 ```bash
-boardwalk <command> [flags]                          # after: npm i -g @boardwalk/sdk
-npx -p @boardwalk/sdk boardwalk <command> [flags]    # …or zero-install
+boardwalk <command> [flags]                          # after: npm i -g @useboardwalk/sdk
+npx -p @useboardwalk/sdk boardwalk <command> [flags]    # …or zero-install
 ```
 
-- The CLI is **v0.1.0** (bin `boardwalk`, package `@boardwalk/sdk`). Reads use a public RPC by default; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint (only Base has a built-in default RPC).
+- The CLI is **v0.1.0** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a public RPC by default; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint (only Base has a built-in default RPC).
 - The user supplies their own wallet address with `--wallet <addr>` (BYO wallet — get it from your harness, e.g. Base MCP `get_wallets`). The CLI builds calldata **for** that address; it never asks for a key.
 - **Every transaction command prints JSON** of this shape:
 
