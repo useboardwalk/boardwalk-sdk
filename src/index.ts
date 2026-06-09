@@ -9,6 +9,10 @@ export type {
   EncodedCall,
   LaunchConfig,
   LaunchInput,
+  LaunchLinkInput,
+  LaunchLinkSocials,
+  LaunchLinkPrefill,
+  BuildLaunchLinkResult,
   FeeRecipientInput,
   LaunchParams,
   BuildLaunchResult,
@@ -35,6 +39,8 @@ export {
   BUILDER_CODE,
   API_BASE_URL,
   APP_BASE_URL,
+  LAUNCH_BASE_URL,
+  LAUNCH_CATEGORY_SLUGS,
   MULTICALL3_ADDRESS,
   BPS_DENOMINATOR,
   TOS_URI,
@@ -89,6 +95,7 @@ export { buildVoteSteps } from "./builders/vote";
 
 // Launch config
 export { buildLaunchConfig } from "./launch/build-launch-config";
+export { buildLaunchLink } from "./launch/build-launch-link";
 export { effectiveCost } from "./launch/member-discount";
 
 // Metadata kit

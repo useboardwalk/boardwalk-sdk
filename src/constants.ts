@@ -13,6 +13,32 @@ export const API_BASE_URL =
 export const APP_BASE_URL =
   process.env.BOARDWALK_APP_URL ?? "https://app.useboardwalk.com";
 
+/** Launch-form base URL for prefilled `/launch?path=…&prefill=…` links; override
+ *  with `BOARDWALK_LAUNCH_URL`. The token-launcher launch form parses `path` + the
+ *  base64url `prefill` blob and navigates to its summary step itself. */
+export const LAUNCH_BASE_URL =
+  process.env.BOARDWALK_LAUNCH_URL ?? `${APP_BASE_URL}/launch`;
+
+/**
+ * Launch-form category slugs (verbatim from token-launcher app/launch/constants.ts
+ * CATEGORIES). The launch form is a fixed picker, so `buildLaunchLink` validates
+ * against these to avoid emitting a link the form would silently drop. The on-chain
+ * `launch` path is intentionally more permissive (any non-empty category).
+ */
+export const LAUNCH_CATEGORY_SLUGS = [
+  "meme-culture",
+  "gaming",
+  "creator-media",
+  "protocol-defi",
+  "infra-tools",
+  "app-consumer",
+  "nft-collectibles",
+  "community",
+  "ai-agents",
+  "public-goods",
+  "other",
+] as const;
+
 /** Canonical Multicall3 — same address on every supported chain. Passed
  *  explicitly to `client.multicall` so batching works regardless of whether a
  *  given chain is in viem's built-in multicall3 config. */

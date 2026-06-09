@@ -1,7 +1,7 @@
 ---
 name: boardwalk
 description: >-
-  Build and submit onchain Boardwalk actions from natural language: launch a token, contribute to / join a presale auction, claim presale tokens after a successful launch, stake BMX, vote on fee direction, and check launch status or cost. Boardwalk is a fee-protection token-launch platform (permanently-locked liquidity + a built-in swap-fee equivalent). This skill drives the boardwalk CLI (npm package @boardwalk/sdk), which prints UNSIGNED transaction calldata (and EIP-712 payloads to sign) — the user's own wallet signs and submits. Works on Base (full feature parity) plus Ethereum, Fraxtal, Katana, and Ink (launch/contribute/claim); stake-bmx and vote are Base-only. Use whenever a user wants to create, fund, or manage a Boardwalk launch onchain.
+  Build and submit onchain Boardwalk actions from natural language: launch a token, contribute to / join a presale auction, claim presale tokens after a successful launch, stake BMX, vote on fee direction, and check launch status or cost. Boardwalk is a fee-protection token-launch platform (permanently-locked liquidity + a built-in swap-fee equivalent). This skill drives the boardwalk CLI (npm package @boardwalk/sdk), which prints UNSIGNED transaction calldata (and EIP-712 payloads to sign) — the user's own wallet signs and submits. Works on Base (full feature parity) plus Ethereum, Fraxtal, Katana, and Ink (launch/contribute/claim); stake-bmx and vote are Base-only. Use whenever a user wants to create, fund, or manage a Boardwalk launch onchain. With a shell it drives the CLI; with no shell (plain chat) it generates a prefilled launch link the user opens in the Boardwalk UI.
 metadata:
   homepage: https://www.useboardwalk.com
 ---
@@ -15,6 +15,16 @@ This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` 
 > **Conceptual docs** (auction mechanics, the fee model, governance/voting, vesting) live at
 > <https://www.useboardwalk.com/docs> and <https://www.useboardwalk.com/llms.txt>.
 > This skill covers **how to execute** those actions onchain.
+
+---
+
+## Two ways to drive Boardwalk
+
+**Shell available → use the `boardwalk` CLI.** It prints unsigned calldata your wallet signs and submits (the rest of this doc): launch, contribute, claim, stake, vote, and metadata.
+
+**No shell (plain chat, no terminal) → emit a prefilled launch link.** `boardwalk launch-link …` (or `buildLaunchLink` from `@boardwalk/sdk`) returns a `…/launch?path=…&prefill=…` URL. The user opens it, the Boardwalk UI loads the launch summary fully prefilled, then they add a logo, connect a wallet, and sign — all in the UI. No tools required, so it works on any surface.
+
+> **Decision: shell → CLI; no shell → emit the prefilled link.** The link covers **launch** only; contribute, claim, stake, and vote need the CLI and a signer.
 
 ---
 
@@ -77,7 +87,7 @@ There is **no login** required for onchain actions — no Privy, no session. The
 
 | Command           | What it does                                                                   | Key flags                                                                                                                                                                                                                             | Chain scope   |
 | ----------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `launch`          | Create a launch: emits conditional BMX approve + `create-launch`               | `--chain --wallet --name --ticker --category` · opt: `--path --description --issuer-fee --presale-percent --referrer --rpc` · advanced: `--fee <label:address:percent>` (repeatable) `--vesting <label:address:percent>` (repeatable) | multi-chain   |
+| `launch`          | Create a launch: emits conditional BMX approve + `create-launch`               | `--chain --wallet --name --ticker --category` · opt: `--path --description --issuer-fee --rpc` · advanced: `--presale-percent --referrer --fee <label:address:percent>` (repeatable) `--vesting <label:address:percent>` (repeatable) | multi-chain   |
 | `launch-metadata` | Upload logo to CDN, then print an EIP-712 payload to sign + the submit request | `--token --chain` · logo: `--logo \| --logo-data \| --logo-url` · opt: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`                                                         | multi-chain   |
 | `submit-metadata` | POST the signed metadata (auto-retries on 404 for indexer lag)                 | `--token --chain --signature --message`                                                                                                                                                                                               | multi-chain   |
 | `contribute`      | Join a presale: conditional raise-token approve + `contribute`                 | `--token --amount --chain --wallet` · opt: `--rpc`                                                                                                                                                                                    | multi-chain   |
@@ -87,13 +97,40 @@ There is **no login** required for onchain actions — no Privy, no session. The
 | `launch-cost`     | Read the BMX burn cost to launch (with member discount)                        | `--chain --wallet` · opt: `--rpc`                                                                                                                                                                                                     | read-only     |
 | `status`          | Read a launch's status / path / presale manager / raise token                  | `--token --chain`                                                                                                                                                                                                                     | read-only     |
 
-`--amount` is in **human units** (e.g. `0.01` WETH, `100` BMX); the CLI scales to wei. Categories are slugs (e.g. `meme-culture`). `--option` for `vote`: **1 = Treasury, 2 = Buy & Burn BMX, 3 = Buy & Burn LP, 4 = Participation**.
+`--amount` is in **human units** (e.g. `0.01` WETH, `100` BMX); the CLI scales to wei. Categories are slugs (e.g. `meme-culture`). `--option` for `vote`: **1 = Treasury, 2 = Buy & Burn BMX, 3 = Buy & Burn LP, 4 = Participation**. There is also a shell-free **`launch-link`** command (below) that emits a prefilled `/launch` URL instead of calldata.
+
+---
+
+## Validate before you call
+
+Check inputs **before** invoking the CLI — bad input wastes a round-trip or builds a tx that reverts. The CLI re-checks all of this and exits non-zero with a one-line `Error: …`, so on a failure read the message, fix the one input, and retry (don't loop blindly).
+
+| Input | Rule |
+| --- | --- |
+| Addresses (`--wallet --token --issuer-fee --referrer`, fee/vesting addresses) | valid 20-byte EIP-55 hex (`isAddress`) |
+| `--chain` | one of `base`, `ethereum`, `fraxtal`, `katana`, `ink` (or its numeric id) |
+| `--amount` (`contribute`, `stake-bmx`) | a number **> 0**, in human units |
+| `--option` (`vote`) | integer **1–4** |
+| `--category` | a launch slug: `meme-culture, gaming, creator-media, protocol-defi, infra-tools, app-consumer, nft-collectibles, community, ai-agents, public-goods, other` |
+| `--presale-percent` (advanced) | integer **25–50, divisible by 5** |
+| `--fee` / `--vesting` (advanced) | `<label>:<address>:<percent>`, percent **> 0**. Advanced needs **≥1 `--fee`**; **`--vesting` is required when presale < 50**. Labels — fee: `individual\|entity\|publicGood\|growthTeam`; vesting also allows `referrer` |
+| `--raise-goal` (advanced metadata / link) | **strictly greater** than the chain's graduation threshold (the `launch` output surfaces it as `graduationThreshold`, a top-level field) |
+| `--tx` (`launch-metadata`) | matches `^0x[0-9a-fA-F]{64}$` |
+| `--signature` (`submit-metadata`) | `0x`-prefixed hex |
+| `--message` (`submit-metadata`) | the exact `sign.message` JSON from `launch-metadata` (must parse) |
+
+### Pre-flight gates (read state first)
+
+- **`contribute`** → run `status`; require `status === "presale"` and a non-null `presaleManager`, and confirm the wallet holds **≥ amount** of `raiseToken`.
+- **`claim`** → run `status`; require `status === "seeded"`. The CLI then checks the 7-day post-seed cliff and **either** emits the `claim` call **or** refuses with a `cliffEnd` timestamp — surface the unlock time, don't retry before it.
+- **`launch` / `vote`** → check the wallet's BMX balance covers the burn (`launch-cost` gives `bmxBurnCost`; `vote` only burns when `governanceBurnAmount > 0`).
+- **All** → the wallet must be on the **right chain**; `stake-bmx` and `vote` are **Base-only**.
 
 ---
 
 ### `launch` — create a token launch
 
-Builds the launch transaction. Boardwalk requires **burning BMX** to launch (the burn cost is discounted for Boardwalk NFT members — the NFT is **not** required, it only lowers the cost). The CLI emits a conditional `approve-bmx` (so the launch contract can pull the burn) followed by `create-launch`. `meta` carries `bmxBurnCost` (wei) and the full `config` tuple passed to `createLaunch`.
+Builds the launch transaction. Boardwalk requires **burning BMX** to launch (the burn cost is discounted for Boardwalk NFT members — the NFT is **not** required, it only lowers the cost). The CLI emits a conditional `approve-bmx` (so the launch contract can pull the burn) followed by `create-launch`. Alongside `calls`, the output carries `bmxBurnCost` (wei) and the full `config` tuple passed to `createLaunch`.
 
 - **Paths:** `--path express` (24-hour auction, simpler fees, fully distributed supply) or `--path advanced` (7-day auction, customizable fee breakdown + token vesting).
 - **Prereqs:** the wallet holds **≥ bmxBurnCost** BMX, on the right chain.
@@ -101,7 +138,8 @@ Builds the launch transaction. Boardwalk requires **burning BMX** to launch (the
   - `--fee <label:address:percent>` (**repeatable**) — the issuer-fee split across recipients; valid labels: `individual` | `entity` | `publicGood` | `growthTeam`. **At least one is required** for `--path advanced`.
   - `--vesting <label:address:percent>` (**repeatable**) — token vesting recipients; valid labels: `individual` | `entity` | `referrer` | `publicGood` | `growthTeam`. **Required when `--presale-percent` < 50.**
   - `--presale-percent` is **25–50 in steps of 5**.
-- The `launch` output `meta` now includes `graduationThreshold { wei, display }`.
+- The `launch` output includes `graduationThreshold { wei, display }` (top-level, alongside `calls`).
+- **Metadata is required:** once the `create-launch` tx confirms, always complete the **Launch metadata sub-flow** below. A launch with no metadata appears on the Boardwalk UI with no name, logo, or socials — finish it on every launch.
 
 ```bash
 boardwalk launch \
@@ -139,19 +177,19 @@ boardwalk launch --chain base --wallet 0xYou \
       "chainId": 8453,
     },
   ],
-  // meta: { bmxBurnCost: "100000000000000000000", config: <createLaunch tuple>, graduationThreshold: { wei, display }, note }
+  // plus top-level (siblings of `calls`): bmxBurnCost: "100000000000000000000", config: <createLaunch tuple>, graduationThreshold: { wei, display }, next
 }
 ```
 
-#### Launch metadata sub-flow (name/logo/socials)
+#### Launch metadata sub-flow (name/logo/socials) — required after every launch
 
-After `create-launch` lands, attach the token's public metadata. This is a **three-step** flow because the metadata is gated by an issuer **EIP-712 signature**:
+Once the `create-launch` tx confirms, **always** attach the token's public metadata — never stop at the on-chain leg. A launch with no metadata appears on the Boardwalk UI with no name, logo, or socials and reads as broken to anyone who finds it, so treat this as a required part of the launch, not an optional extra. It's a **three-step** flow because the metadata is gated by an issuer **EIP-712 signature**:
 
 1. **`launch-metadata --tx <create-launch tx hash>`** — resolves the launched **token** from the tx receipt (no log-parsing), uploads the logo to the CDN, and prints `{ token, auctionUrl, sign, next }`.
    - `sign` is the EIP-712 typed data: `{ domain, types, primaryType, message }`.
    - **Logo** is provided one of three ways: `--logo <file>`, `--logo-data <base64-or-dataURL>`, or `--logo-url <url>`.
    - Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`. (Already have the token address? Use `--token <addr>` instead of `--tx`.)
-   - **`--raise-goal` (advanced) must EXCEED the chain's graduation threshold** — the CLI validates it and errors otherwise. Thresholds: **10 wETH** on Base / Mainnet / Ink, **20000 frxUSD** on Fraxtal, **2000000 KAT** on Katana. Set advanced `--raise-goal` above the graduation threshold (which the `launch` output surfaces via `meta.graduationThreshold`).
+   - **`--raise-goal` (advanced) must EXCEED the chain's graduation threshold** — the CLI validates it and errors otherwise. Thresholds: **10 wETH** on Base / Mainnet / Ink, **20000 frxUSD** on Fraxtal, **2000000 KAT** on Katana. Set advanced `--raise-goal` above the graduation threshold (which the `launch` output surfaces as the top-level `graduationThreshold`).
 2. **Sign** the `sign` payload (EIP-712 typed-data signing) with the **issuer wallet** — the same wallet that launched. (Base MCP can sign typed data.)
 3. **`submit-metadata`** — POSTs the signed metadata. Pass `--token <token>`, `--signature <hex>`, and `--message <sign.message-json>`. It **auto-retries on 404** to ride out backend indexer lag, so a transient 404 right after launch is expected, not a failure.
 
@@ -167,6 +205,25 @@ boardwalk launch-metadata --tx 0x<create-launch tx hash> --chain base \
 boardwalk submit-metadata --token 0x<token> --chain base \
   --signature 0x<hex> --message '<sign.message JSON>'
 ```
+
+---
+
+### `launch-link` — generate a prefilled launch link (no shell needed)
+
+Returns a `…/launch?path=…&prefill=…` URL that opens the Boardwalk launch form on its **summary** step, fully prefilled. **No wallet, no RPC, no signing** — pure URL generation, so it works on shell-less surfaces (plain chat) where the CLI can't run. The user opens the link, **adds a logo in the UI** (an image can't ride in a URL), connects a wallet, and signs. Nothing auto-submits.
+
+- **Required:** `--chain --name --ticker --category`.
+- **Optional:** `--path` (default express) `--description --issuer-fee`; advanced: `--presale-percent --fee --vesting --referrer --raise-goal`; socials: `--twitter`/`--x --discord --telegram --youtube --video`.
+- **Validate** the same inputs as `launch` (see [Validate before you call](#validate-before-you-call)) — `launch-link` runs the identical checks and throws on bad input. Advanced `--raise-goal` must exceed the graduation threshold.
+- **No `--logo`** (the UI collects it) and **no `--homepage`** (the launch form has no homepage field; set it later via `launch-metadata`).
+
+```bash
+boardwalk launch-link --chain base --name "My Token" --ticker MYT \
+  --category meme-culture --issuer-fee 0xYou
+# → { action: "launch-link", url: "https://app.useboardwalk.com/launch?path=express&prefill=…", path, prefill, next }
+```
+
+The user opens `url` → reviews the prefilled summary → adds a logo → signs in the UI. For an agent with no shell, this is the **only** way to start a launch — it needs no tools.
 
 ---
 
@@ -318,6 +375,7 @@ The `calls` array is **unsigned** `{ to, data, value }` (plus `id`, `label`, `ch
 - **Batched, single approval (recommended):** pass the **entire `calls` array** to a batched submit so the user approves once. With Base MCP this is `send_calls` — feed it the array of `{ to, data, value }`, then poll `get_request_status` until it resolves.
 - **Order matters:** when an approve step is present it is **element 0** and must execute **before** the action. A batched submit preserves order; if you submit calls one-by-one, send the **approve first**, wait for it, then the action.
 - **Metadata leg:** the `launch-metadata` `sign` payload is **EIP-712 typed data**, not a `calls` entry. Sign it with the issuer wallet (Base MCP supports typed-data signing), then run `submit-metadata`.
+- **No shell?** There are no `calls` to submit — generate a prefilled link with `launch-link` and hand the user the URL; the UI collects the logo, signs, and submits.
 
 ```text
 launch → send_calls([approve-bmx, create-launch]) → poll get_request_status
@@ -374,6 +432,11 @@ Attribution is **automatic and enforced**: every transaction the SDK builds carr
 - "Vote to route fees to Treasury." → `vote --option 1 --wallet <addr>` (Base only).
 - "Vote to Buy & Burn BMX with the protocol fees." → `vote --option 2 …`.
 - "Direct fees to Participation." → `vote --option 4 …`.
+
+**Prefilled link (no shell)**
+
+- "I'm in a plain chat with no terminal — how do I launch X on Base?" → `launch-link --chain base --name … --ticker … --category …` → hand the user the returned URL.
+- "Give me a link to launch a token with these settings that I can open in the app." → `launch-link …` (prefills the summary; the user adds a logo and signs in the UI).
 
 ---
 

@@ -34,6 +34,7 @@ import { buildContributeSteps } from "./builders/contribute";
 import { buildClaimSteps } from "./builders/claim";
 import { buildStakeBmxSteps } from "./builders/stake-bmx";
 import { buildVoteSteps } from "./builders/vote";
+import { buildLaunchLink } from "./launch/build-launch-link";
 import { presaleManagerAbi } from "./registry/abis";
 import { encodeSteps } from "./flow/encode";
 import { getAuctionUrl, getLaunch } from "./read/launches";
@@ -239,6 +240,96 @@ program
             ? " Advanced launches must set --raise-goal greater than the graduation threshold above."
             : ""),
         command: `boardwalk launch-metadata --tx <create-launch tx hash> --chain ${opts.chain} [--logo <file>] [--twitter <handle>]${advanced ? " --raise-goal <amount>" : ""}`,
+      },
+    });
+  });
+
+program
+  .command("launch-link")
+  .summary("Generate a prefilled /launch link (no wallet/RPC; logo added in the UI)")
+  .description(
+    "Build a prefilled `/launch?path=…&prefill=…` URL the user opens to review and sign in the UI. " +
+      "Pure URL generation — no wallet, no RPC, no signing. Use this on shell-less surfaces (plain chat) " +
+      "where the CLI can't run. The logo is added in the UI (a URL can't carry an image); homepage and any " +
+      "metadata beyond the launch form are set later via launch-metadata.",
+  )
+  .requiredOption(
+    "--chain <chain>",
+    "chain slug (base|ethereum|fraxtal|katana|ink) or numeric id",
+  )
+  .requiredOption("--name <name>", "token name (3–32 chars)")
+  .requiredOption("--ticker <ticker>", "token ticker (2–10 chars, A–Z 0–9)")
+  .requiredOption(
+    "--category <category>",
+    "launch category slug (e.g. meme-culture, ai-agents, gaming)",
+  )
+  .option(
+    "--path <path>",
+    "launch path: express (24h) | advanced (7d)",
+    "express",
+  )
+  .option("--description <text>", "token description")
+  .option(
+    "--issuer-fee <address>",
+    "issuer fee recipient (express path: receives 100%)",
+  )
+  .option(
+    "--fee <spec>",
+    "advanced issuer-fee recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|publicGood|growthTeam)",
+    collectRecipient,
+    [] as FeeRecipientInput[],
+  )
+  .option(
+    "--vesting <spec>",
+    "advanced vesting recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|referrer|publicGood|growthTeam)",
+    collectRecipient,
+    [] as FeeRecipientInput[],
+  )
+  .option(
+    "--presale-percent <n>",
+    "presale supply percent (advanced path; 25–50 in steps of 5; default 50)",
+  )
+  .option("--referrer <address>", "referrer address (advanced path)")
+  .option(
+    "--raise-goal <amount>",
+    "advanced raise goal in raise-token units (must exceed the graduation threshold)",
+  )
+  .option("--x, --twitter <handle>", "X/Twitter handle (either flag)")
+  .option("--discord <invite>", "Discord invite code")
+  .option("--telegram <handle>", "Telegram handle")
+  .option("--youtube <url>", "YouTube channel URL")
+  .option("--video <url>", "launch video URL (YouTube or TikTok)")
+  .action((opts) => {
+    const chainId = chainIdOf(opts.chain);
+    const result = buildLaunchLink({
+      name: opts.name,
+      ticker: opts.ticker,
+      category: opts.category,
+      description: opts.description,
+      path: opts.path,
+      chain: chainId,
+      issuerFeeRecipient: opts.issuerFee,
+      issuerFee: opts.fee.length ? opts.fee : undefined,
+      vesting: opts.vesting.length ? opts.vesting : undefined,
+      presaleSupplyPercent:
+        opts.presalePercent != null ? Number(opts.presalePercent) : undefined,
+      referrer: opts.referrer,
+      raiseGoalEth: opts.raiseGoal,
+      video: opts.video,
+      socials: {
+        x: opts.twitter,
+        youtube: opts.youtube,
+        telegram: opts.telegram,
+        discord: opts.discord,
+      },
+    });
+    print({
+      action: "launch-link",
+      url: result.url,
+      path: result.path,
+      prefill: result.prefill,
+      next: {
+        note: "Open `url` to land on the launch summary with everything prefilled. Add the logo in the UI, then connect a wallet and sign — nothing here signs or sends.",
       },
     });
   });
@@ -597,6 +688,8 @@ Launch flow (non-custodial — you sign + submit):
 Examples:
   $ boardwalk launch --chain base --wallet 0xYou --name "My Token" --ticker MYT \\
       --category meme-culture --path express --issuer-fee 0xYou
+  $ boardwalk launch-link --chain base --name "My Token" --ticker MYT \\
+      --category meme-culture --issuer-fee 0xYou   # prefilled /launch link (no wallet, no shell)
   $ boardwalk contribute --token 0xLaunch --amount 0.1 --chain base --wallet 0xYou
   $ boardwalk vote --option 1 --wallet 0xYou           # Base-only
 

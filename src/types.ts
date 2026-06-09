@@ -96,6 +96,77 @@ export interface LaunchInput {
   referrer?: Address;
 }
 
+/** Socials for a prefilled launch link (x/telegram/discord = handles, youtube = URL). */
+export interface LaunchLinkSocials {
+  x?: string;
+  /** Channel URL — shown on the launch summary but not persisted to token metadata
+   *  (use `video` for a clip you want in the metadata). */
+  youtube?: string;
+  telegram?: string;
+  discord?: string;
+}
+
+/**
+ * Superset of a launch config used to generate a prefilled `/launch?…` link.
+ * Unlike `LaunchInput` (consumed by the on-chain builder), this also carries the
+ * UI-only fields the launch FORM collects: chain (slug or id), raise goal, socials,
+ * and video. Logo is intentionally excluded — the UI uploads it via a popup. There
+ * is no homepage field because the launch form has none.
+ */
+export interface LaunchLinkInput {
+  name: string;
+  ticker: string;
+  category: string;
+  description?: string;
+  path: "express" | "advanced";
+  /** Chain slug ("base"…) or numeric id; normalized to a slug in the link. */
+  chain: string | number;
+
+  // Express
+  issuerFeeRecipient?: Address;
+
+  // Advanced
+  presaleSupplyPercent?: number;
+  issuerFee?: FeeRecipientInput[];
+  vesting?: FeeRecipientInput[];
+  referrer?: Address;
+  /** Advanced raise goal in raise-token units (decimal string), e.g. "12.5". */
+  raiseGoalEth?: string;
+
+  // UI-only metadata (no logo — the UI popup handles that)
+  socials?: LaunchLinkSocials;
+  video?: string;
+}
+
+/** The base64url-encoded `prefill` payload the launch form decodes (v1). */
+export interface LaunchLinkPrefill {
+  v: 1;
+  name: string;
+  ticker: string;
+  category: string;
+  chain: string;
+  description?: string;
+  video?: string;
+  socials?: LaunchLinkSocials;
+  /** Express single fee recipient. */
+  feeRecipient?: Address;
+  /** Advanced presale supply percent (raw percent, not bps). */
+  presalePercent?: number;
+  /** Advanced raise goal (decimal string). */
+  raiseGoalEth?: string;
+  fees?: Array<{ label: string; address: Address; percent: number }>;
+  vesting?: Array<{ label: string; address: Address; percent: number }>;
+  referrer?: Address;
+}
+
+export interface BuildLaunchLinkResult {
+  /** The full prefilled `/launch?…` URL to open. */
+  url: string;
+  path: "express" | "advanced";
+  /** The decoded prefill payload (useful for inspection/tests). */
+  prefill: LaunchLinkPrefill;
+}
+
 // ---------------------------------------------------------------------------
 // Builder params
 // ---------------------------------------------------------------------------
