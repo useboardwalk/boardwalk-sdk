@@ -1,4 +1,4 @@
-// @boardwalk/sdk — framework-agnostic builders for unsigned Boardwalk txs.
+// @useboardwalk/sdk — framework-agnostic builders for unsigned Boardwalk txs.
 
 // Public types (single source of truth: src/types.ts)
 export type {

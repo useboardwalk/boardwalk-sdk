@@ -1,4 +1,4 @@
-# @boardwalk/sdk
+# @useboardwalk/sdk
 
 Framework-agnostic builders for **unsigned** [Boardwalk](https://www.useboardwalk.com) transactions, plus a `boardwalk` CLI. Lets an agent (or any app) launch a token, contribute to an auction, claim, stake BMX, and vote — by producing `{to, data, value, chainId}` calldata that the caller's own wallet signs and submits.
 
@@ -9,12 +9,12 @@ Framework-agnostic builders for **unsigned** [Boardwalk](https://www.useboardwal
 ## Install
 
 ```bash
-npm install @boardwalk/sdk                  # library
-npm install -g @boardwalk/sdk               # CLI, then:  boardwalk --help
-npx -p @boardwalk/sdk boardwalk --help      # …or zero-install
+npm install @useboardwalk/sdk                  # library
+npm install -g @useboardwalk/sdk               # CLI, then:  boardwalk --help
+npx -p @useboardwalk/sdk boardwalk --help      # …or zero-install
 ```
 
-Requires Node ≥ 18 (uses global `fetch`/`Blob`/`FormData`). The bin is `boardwalk` (the package is `@boardwalk/sdk`).
+Requires Node ≥ 18 (uses global `fetch`/`Blob`/`FormData`). The bin is `boardwalk` (the package is `@useboardwalk/sdk`).
 
 ## CLI
 
@@ -156,7 +156,7 @@ Each builder takes a viem `PublicClient` (for live reads like allowance / burn c
 ```ts
 import { createPublicClient, http } from "viem";
 import { base } from "viem/chains";
-import { buildContributeSteps, encodeSteps, getLaunch } from "@boardwalk/sdk";
+import { buildContributeSteps, encodeSteps, getLaunch } from "@useboardwalk/sdk";
 
 const client = createPublicClient({ chain: base, transport: http() });
 const launch = await getLaunch("0xLaunch…", base.id); // { presaleManager, status, raiseToken, … }
@@ -172,7 +172,7 @@ const steps = await buildContributeSteps({
 const calls = encodeSteps(steps, base.id); // [{ to, data, value, chainId }, …] — sign + submit these
 ```
 
-The launch metadata leg (`buildLaunchMetadataTypedData` → your wallet signs → `postSignedMetadata`), `uploadLogo`, and `readLaunchCost` are exported too. All public types come from one place — `import type { … } from "@boardwalk/sdk"`.
+The launch metadata leg (`buildLaunchMetadataTypedData` → your wallet signs → `postSignedMetadata`), `uploadLogo`, and `readLaunchCost` are exported too. All public types come from one place — `import type { … } from "@useboardwalk/sdk"`.
 
 ## Logos
 
