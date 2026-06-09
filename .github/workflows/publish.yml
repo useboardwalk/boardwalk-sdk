@@ -1,0 +1,39 @@
+name: Publish to npm
+
+# Publishes @useboardwalk/sdk when you publish a GitHub Release.
+# Auth is OIDC "Trusted Publishing" — no npm token is stored anywhere; npm verifies
+# the run came from this repo + workflow (configure it once at npmjs.com, see below).
+#
+# To publish straight from a pushed tag instead of a Release, swap the trigger for:
+#   on:
+#     push:
+#       tags: ['v*']
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write # lets npm verify this run via OIDC (required for Trusted Publishing)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Trusted Publishing needs npm >= 11.5.1; Node 22 ships an older npm.
+      - run: npm install -g npm@latest
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+      # prepublishOnly builds; OIDC auth + provenance attestation are automatic.
+      - run: npm publish
