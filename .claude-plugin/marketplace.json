@@ -1,0 +1,14 @@
+{
+  "name": "boardwalk-sdk",
+  "owner": {
+    "name": "Boardwalk",
+    "url": "https://www.useboardwalk.com"
+  },
+  "plugins": [
+    {
+      "name": "boardwalk",
+      "source": "./",
+      "description": "Build unsigned Boardwalk transactions for an agent's wallet to sign, or generate a prefilled launch link. Non-custodial."
+    }
+  ]
+}

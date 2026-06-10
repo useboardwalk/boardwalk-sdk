@@ -1,0 +1,12 @@
+{
+  "name": "boardwalk",
+  "description": "Build unsigned Boardwalk transactions (launch, contribute, claim, stake BMX, vote) for an agent's wallet to sign and submit, or generate a prefilled launch link. Drives the boardwalk CLI; non-custodial.",
+  "author": {
+    "name": "Boardwalk",
+    "url": "https://www.useboardwalk.com"
+  },
+  "homepage": "https://www.useboardwalk.com",
+  "repository": "https://github.com/useboardwalk/boardwalk-sdk",
+  "license": "MIT",
+  "keywords": ["boardwalk", "base", "token-launch", "defi", "non-custodial", "agent"]
+}

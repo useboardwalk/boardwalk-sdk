@@ -41,7 +41,7 @@
   },
   "files": [
     "dist",
-    "skill",
+    "skills",
     "LICENSE"
   ],
   "publishConfig": {

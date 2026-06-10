@@ -174,6 +174,27 @@ const calls = encodeSteps(steps, base.id); // [{ to, data, value, chainId }, …
 
 The launch metadata leg (`buildLaunchMetadataTypedData` → your wallet signs → `postSignedMetadata`), `uploadLogo`, and `readLaunchCost` are exported too. All public types come from one place — `import type { … } from "@useboardwalk/sdk"`.
 
+## Agent skill
+
+This package ships an [Agent Skill](https://agentskills.io) at `skills/boardwalk/SKILL.md` that teaches an agent how and when to drive the CLI (and emit prefilled launch links). It references the CLI via `npx`; it does not bundle the SDK.
+
+**Claude Code** — install as a plugin:
+
+```
+/plugin marketplace add useboardwalk/boardwalk-sdk
+/plugin install boardwalk@boardwalk-sdk
+```
+
+Or drop it in by hand (swap `~/.claude` for a project's `.claude` to scope it locally):
+
+```bash
+mkdir -p ~/.claude/skills/boardwalk
+curl -sL https://unpkg.com/@useboardwalk/sdk/skills/boardwalk/SKILL.md \
+  -o ~/.claude/skills/boardwalk/SKILL.md
+```
+
+**Other agents** (Cursor, Codex, Gemini CLI, …) — the standard `skills/boardwalk/` layout loads anywhere the Agent Skills format is supported.
+
 ## Logos
 
 The logo is **off-chain, metadata-only** (`logo_url` in the signed metadata; a launch is valid without one). Provide it as a **file path** (`--logo ./logo.png` / `uploadLogo(bytes, { mime })`), **base64 / data URL** (`--logo-data` / `uploadLogo(dataUrl)` — e.g. an agent-generated image), or an **already-hosted URL** (`--logo-url`). Constraints: ≤ 1 MB (backend cap; compress larger images first) and a standard image MIME.
