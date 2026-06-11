@@ -64,3 +64,7 @@ src/
 ## Verification
 
 `npm run typecheck && npm test && npm run build`, then a live smoke test against Base (`node dist/cli.js launch-cost --chain base --wallet 0x… --rpc <url>`; build a contribute/vote/launch and confirm the calldata). Reads against a public RPC may rate-limit — pass `--rpc`.
+
+## Version update
+
+When pushing a new release, make sure to also update the sdk version constant in cli.ts to be in line.
