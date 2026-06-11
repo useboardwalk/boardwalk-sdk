@@ -94,6 +94,15 @@ export async function buildLaunchSteps(
 ): Promise<BuildLaunchResult> {
   const { client, account, chainId, input } = params;
   const config = buildLaunchConfig({ ...input, chainId });
+  // Contract requires exactly one fee recipient on the express path
+  // (ExpressRequiresOneFeeRecipient) — without this the tx is a guaranteed
+  // revert. Not enforced in buildLaunchConfig: a prefilled /launch link may
+  // omit it and let the form fill it in.
+  if (config.path === 0 && config.issuerFeeRecipients.length === 0) {
+    throw new Error(
+      "Express launches require an issuer-fee recipient (--issuer-fee <address>, e.g. the issuer wallet; it receives 100% of the issuer fee)",
+    );
+  }
   const { launchFactory, bmxToken } = getContracts(chainId);
 
   const cost = await readLaunchCost(client, account, chainId);

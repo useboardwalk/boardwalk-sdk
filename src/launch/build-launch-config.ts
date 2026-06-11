@@ -117,6 +117,18 @@ export function buildLaunchConfig(input: LaunchInput): LaunchConfig {
     );
   }
 
+  // Contract rejects vesting when the presale distributes the full supply
+  // (advanced + presalePercent == 50) — VestingNotAllowedAtFullPresale.
+  if (
+    !isExpress &&
+    presalePercent === BigInt(5000) &&
+    vesting.addresses.length > 0
+  ) {
+    throw new Error(
+      "Advanced launches with presaleSupplyPercent = 50 cannot have vesting recipients (the presale sells the full supply); use 25–45 with vesting, or drop --vesting",
+    );
+  }
+
   const referrerRaw = input.referrer?.trim() ?? "";
   const referrer: Address =
     !isExpress && referrerRaw && isAddress(referrerRaw)

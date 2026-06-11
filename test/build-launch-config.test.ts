@@ -72,6 +72,20 @@ describe("buildLaunchConfig", () => {
     ).toThrow(/vesting/i);
   });
 
+  it("rejects vesting recipients for an advanced launch at full (50%) presale", () => {
+    expect(() =>
+      buildLaunchConfig({
+        name: "Adv Token",
+        ticker: "ADV",
+        category: "other",
+        path: "advanced",
+        presaleSupplyPercent: 50,
+        issuerFee: [{ address: A, percent: 100 }],
+        vesting: [{ address: B, percent: 100 }],
+      }),
+    ).toThrow(/cannot have vesting/i);
+  });
+
   it("requires at least one issuer-fee recipient for an advanced launch", () => {
     expect(() =>
       buildLaunchConfig({

@@ -23,6 +23,7 @@ import {
   DEFAULT_RPC_BY_CHAIN,
   MULTICALL3_ADDRESS,
 } from "./constants";
+import { formatCliError } from "./cli-error";
 import { SUPPORTED_CHAINS, toNumericChainId } from "./registry/chains";
 import { getLaunchConfig } from "./registry/launch-config";
 import {
@@ -52,10 +53,6 @@ import type {
 function fail(message: string): never {
   console.error(`Error: ${message}`);
   process.exit(1);
-}
-
-function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
 }
 
 function requireAddress(value: string | undefined, name: string): Address {
@@ -148,7 +145,7 @@ program
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
       "Boardwalk's ERC-8021 builder code is enforced on every built transaction.",
   )
-  .version("0.1.0")
+  .version("0.2.0")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
 
 program
@@ -182,7 +179,7 @@ program
   )
   .option(
     "--issuer-fee <address>",
-    "issuer fee recipient (express path: receives 100%)",
+    "issuer fee recipient (REQUIRED on the express path; receives 100%)",
   )
   .option(
     "--fee <spec>",
@@ -192,7 +189,7 @@ program
   )
   .option(
     "--vesting <spec>",
-    "advanced vesting recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|referrer|publicGood|growthTeam)",
+    "advanced vesting recipient as <label>:<address>:<percent>, repeatable; required when --presale-percent < 50, not allowed at 50 (labels: individual|entity|referrer|publicGood|growthTeam)",
     collectRecipient,
     [] as FeeRecipientInput[],
   )
@@ -696,4 +693,4 @@ Examples:
 The CLI only prints unsigned calldata — it never signs or sends.`,
 );
 
-program.parseAsync().catch((e) => fail(errMsg(e)));
+program.parseAsync().catch((e) => fail(formatCliError(e)));

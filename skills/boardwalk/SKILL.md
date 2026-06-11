@@ -87,7 +87,7 @@ There is **no login** required for onchain actions — no Privy, no session. The
 
 | Command           | What it does                                                                   | Key flags                                                                                                                                                                                                                             | Chain scope   |
 | ----------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `launch`          | Create a launch: emits conditional BMX approve + `create-launch`               | `--chain --wallet --name --ticker --category` · opt: `--path --description --issuer-fee --rpc` · advanced: `--presale-percent --referrer --fee <label:address:percent>` (repeatable) `--vesting <label:address:percent>` (repeatable) | multi-chain   |
+| `launch`          | Create a launch: emits conditional BMX approve + `create-launch`               | `--chain --wallet --name --ticker --category` (+ `--issuer-fee` on express) · opt: `--path --description --rpc` · advanced: `--presale-percent --referrer --fee <label:address:percent>` (repeatable) `--vesting <label:address:percent>` (repeatable) | multi-chain   |
 | `launch-metadata` | Upload logo to CDN, then print an EIP-712 payload to sign + the submit request | `--token --chain` · logo: `--logo \| --logo-data \| --logo-url` · opt: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`                                                         | multi-chain   |
 | `submit-metadata` | POST the signed metadata (auto-retries on 404 for indexer lag)                 | `--token --chain --signature --message`                                                                                                                                                                                               | multi-chain   |
 | `contribute`      | Join a presale: conditional raise-token approve + `contribute`                 | `--token --amount --chain --wallet` · opt: `--rpc`                                                                                                                                                                                    | multi-chain   |
@@ -124,6 +124,7 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 - **`contribute`** → run `status`; require `status === "presale"` and a non-null `presaleManager`, and confirm the wallet holds **≥ amount** of `raiseToken`.
 - **`claim`** → run `status`; require `status === "seeded"`. The CLI then checks the 7-day post-seed cliff and **either** emits the `claim` call **or** refuses with a `cliffEnd` timestamp — surface the unlock time, don't retry before it.
 - **`launch` / `vote`** → check the wallet's BMX balance covers the burn (`launch-cost` gives `bmxBurnCost`; `vote` only burns when `governanceBurnAmount > 0`).
+- **`vote`** → the CLI checks eligibility onchain and refuses to emit the call if the wallet **already voted this epoch**, has **no staked BMX (no voting power)**, or its **multiplier points are below the 1.5% participation gate** — surface the error (stake BMX / compound points), don't retry as-is.
 - **All** → the wallet must be on the **right chain**; `stake-bmx` and `vote` are **Base-only**.
 
 ---
@@ -133,10 +134,11 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 Builds the launch transaction. Boardwalk requires **burning BMX** to launch (the burn cost is discounted for Boardwalk NFT members — the NFT is **not** required, it only lowers the cost). The CLI emits a conditional `approve-bmx` (so the launch contract can pull the burn) followed by `create-launch`. Alongside `calls`, the output carries `bmxBurnCost` (wei) and the full `config` tuple passed to `createLaunch`.
 
 - **Paths:** `--path express` (24-hour auction, simpler fees, fully distributed supply) or `--path advanced` (7-day auction, customizable fee breakdown + token vesting).
+- **Express-path params:** `--issuer-fee <address>` is **required** (the contract demands exactly one fee recipient; it receives 100% of the issuer fee — typically the issuer wallet). `--fee`, `--vesting`, and `--referrer` are advanced-only.
 - **Prereqs:** the wallet holds **≥ bmxBurnCost** BMX, on the right chain.
 - **Advanced-path params:**
   - `--fee <label:address:percent>` (**repeatable**) — the issuer-fee split across recipients; valid labels: `individual` | `entity` | `publicGood` | `growthTeam`. **At least one is required** for `--path advanced`.
-  - `--vesting <label:address:percent>` (**repeatable**) — token vesting recipients; valid labels: `individual` | `entity` | `referrer` | `publicGood` | `growthTeam`. **Required when `--presale-percent` < 50.**
+  - `--vesting <label:address:percent>` (**repeatable**) — token vesting recipients; valid labels: `individual` | `entity` | `referrer` | `publicGood` | `growthTeam`. **Required when `--presale-percent` < 50; not allowed at 50** (full presale leaves nothing to vest).
   - `--presale-percent` is **25–50 in steps of 5**.
 - The `launch` output includes `graduationThreshold { wei, display }` (top-level, alongside `calls`).
 - **Metadata is required:** once the `create-launch` tx confirms, always complete the **Launch metadata sub-flow** below. A launch with no metadata appears on the Boardwalk UI with no name, logo, or socials — finish it on every launch.
@@ -303,6 +305,8 @@ Casts a Boardwalk governance vote that directs where protocol swap fees flow. Pi
 | `4`    | Participation  |
 
 If the configured `governanceBurnAmount` is **> 0**, the CLI prepends a conditional `approve-bmx`; when it is `0`, you get **just** the `vote` call (as below). **Base only.**
+
+The CLI pre-checks eligibility against the GovernanceVoter and **refuses to emit a guaranteed-revert tx** when the wallet has already voted this epoch, has no voting power (no staked BMX — stake first via `stake-bmx`), or holds fewer staked multiplier points than the 1.5%-of-staked-BMX participation gate (compound points first).
 
 ```bash
 boardwalk vote --option 1 --wallet 0x3666…1CA3 --chain base

@@ -3,6 +3,12 @@
 /** Basis-point denominator (100% = 10_000 bps). */
 export const BPS_DENOMINATOR = BigInt(10_000);
 
+/** GovernanceVoter participation gate: a voter with staked BMX must hold staked
+ *  multiplier points of at least this share of their staked BMX (150 bps = 1.5%),
+ *  else `vote()` reverts InsufficientParticipationPoints. Mirrors the private
+ *  constant in boardwalk-contracts GovernanceVoter.sol — keep in sync. */
+export const PARTICIPATION_POINTS_GATE_BPS = BigInt(150);
+
 /** Boardwalk backend base URL; override with `BOARDWALK_API_URL` for staging. */
 export const API_BASE_URL =
   process.env.BOARDWALK_API_URL ?? "https://api.useboardwalk.com";
@@ -68,7 +74,9 @@ export const TOS_VERSION = "1";
 export const METADATA_DOMAIN_NAME = "BoardwalkLaunchMetadata";
 export const METADATA_DOMAIN_VERSION = "1";
 
-/** Logo upload constraints (backend hard cap is 1 MB). */
+/** Logo upload constraints (backend hard cap is 1 MB). Types mirror the
+ *  backend's ALLOWED_EXTENSIONS (morphex-backend boardwalk_upload.js) —
+ *  anything else is rejected server-side with a 400. */
 export const LOGO_MAX_SIZE = 1 * 1024 * 1024;
 export const LOGO_ALLOWED_TYPES = [
   "image/png",
@@ -76,9 +84,6 @@ export const LOGO_ALLOWED_TYPES = [
   "image/gif",
   "image/webp",
   "image/svg+xml",
-  "image/heic",
-  "image/heif",
-  "image/tiff",
 ] as const;
 
 /** Logo file-extension → MIME, for the CLI's `--logo <file>`. */
@@ -89,8 +94,4 @@ export const MIME_BY_EXT: Record<string, string> = {
   gif: "image/gif",
   webp: "image/webp",
   svg: "image/svg+xml",
-  heic: "image/heic",
-  heif: "image/heif",
-  tif: "image/tiff",
-  tiff: "image/tiff",
 };
