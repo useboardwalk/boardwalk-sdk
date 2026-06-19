@@ -194,6 +194,28 @@ function deadlineFromNow(seconds: number): bigint {
   return BigInt(Math.floor(Date.now() / 1000) + seconds);
 }
 
+/** Parse a `--deadline <unixSeconds>` option, or fall back to now + `defaultSeconds`. */
+function parseDeadline(value: string | undefined, defaultSeconds: number): bigint {
+  if (value == null) return deadlineFromNow(defaultSeconds);
+  if (!/^\d+$/.test(value)) fail("--deadline must be a unix-seconds integer");
+  return BigInt(value);
+}
+
+/** Parse a required non-negative integer option (e.g. --recipient-idx, --allocation-id). */
+function parseUintOption(value: string, flag: string): bigint {
+  if (!/^\d+$/.test(value)) fail(`--${flag} must be a non-negative integer`);
+  return BigInt(value);
+}
+
+/** Validate the launch `--path` option (anything but "advanced" was otherwise
+ *  silently treated as advanced). */
+function requireLaunchPath(value: string): "express" | "advanced" {
+  if (value !== "express" && value !== "advanced") {
+    fail('--path must be "express" or "advanced"');
+  }
+  return value;
+}
+
 const program = new Command();
 program
   .name("boardwalk")
@@ -260,6 +282,7 @@ program
   .action(async (opts) => {
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
     const account = requireAddress(opts.wallet, "wallet");
+    const path = requireLaunchPath(opts.path);
     const result = await buildLaunchSteps({
       client,
       account,
@@ -269,7 +292,7 @@ program
         ticker: opts.ticker,
         category: opts.category,
         description: opts.description,
-        path: opts.path,
+        path,
         issuerFeeRecipient: opts.issuerFee,
         issuerFee: opts.fee.length ? opts.fee : undefined,
         vesting: opts.vesting.length ? opts.vesting : undefined,
@@ -279,14 +302,14 @@ program
       },
     });
     const grad = getLaunchConfig(chainId);
-    const advanced = opts.path === "advanced";
+    const advanced = path === "advanced";
     emitCalls(result.steps, chainId, {
       action: "launch",
       bmxBurnCost: result.bmxBurnCost.toString(),
       config: serializeConfig(result.config),
       graduationThreshold: {
         wei: grad.graduationThresholdWei.toString(),
-        display: `${formatUnits(grad.graduationThresholdWei, 18)} ${grad.raiseTokenSymbol}`,
+        display: grad.graduationDisplay,
       },
       next: {
         note:
@@ -356,12 +379,13 @@ program
   .option("--video <url>", "launch video URL (YouTube or TikTok)")
   .action((opts) => {
     const chainId = chainIdOf(opts.chain);
+    const path = requireLaunchPath(opts.path);
     const result = buildLaunchLink({
       name: opts.name,
       ticker: opts.ticker,
       category: opts.category,
       description: opts.description,
-      path: opts.path,
+      path,
       chain: chainId,
       issuerFeeRecipient: opts.issuerFee,
       issuerFee: opts.fee.length ? opts.fee : undefined,
@@ -860,19 +884,17 @@ program
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
     const token = requireAddress(opts.token, "token");
     requireAddress(opts.wallet, "wallet");
-    if (!/^\d+$/.test(opts.recipientIdx))
-      fail("--recipient-idx must be a non-negative integer");
+    const recipientIdx = parseUintOption(opts.recipientIdx, "recipient-idx");
+    const minRaiseTokenOut =
+      opts.minOut != null ? parseUnits(opts.minOut, 18) : BigInt(0);
+    const deadline = parseDeadline(opts.deadline, 1200);
     const { feeDistributor } = await getLaunchAddresses(client, token, chainId);
     if (feeDistributor === zeroAddress)
       fail("fee distributor not deployed for this launch");
-    const minRaiseTokenOut =
-      opts.minOut != null ? parseUnits(opts.minOut, 18) : BigInt(0);
-    const deadline =
-      opts.deadline != null ? BigInt(opts.deadline) : deadlineFromNow(1200);
     emitCalls(
       buildClaimIssuerFeesSteps({
         feeDistributor,
-        recipientIdx: BigInt(opts.recipientIdx),
+        recipientIdx,
         minRaiseTokenOut,
         deadline,
       }),
@@ -924,8 +946,7 @@ program
     const account = requireAddress(opts.wallet, "wallet");
     const collector = assertDeployed(chainId, "integratorFeeCollector");
     const slippageBps = parseSlippageBps(opts.slippageBps);
-    const deadline =
-      opts.deadline != null ? BigInt(opts.deadline) : deadlineFromNow(1200);
+    const deadline = parseDeadline(opts.deadline, 1200);
 
     // With --min-out we can skip the quote read entirely. Otherwise derive minOut
     // from the collector's quote; it reverts when there's nothing claimable.
@@ -973,16 +994,12 @@ program
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
     const token = requireAddress(opts.token, "token");
     requireAddress(opts.wallet, "wallet");
-    if (!/^\d+$/.test(opts.allocationId))
-      fail("--allocation-id must be a non-negative integer");
+    const allocationId = parseUintOption(opts.allocationId, "allocation-id");
     const { vestingStream } = await getLaunchAddresses(client, token, chainId);
     if (vestingStream === zeroAddress)
       fail("vesting stream not deployed for this launch");
     emitCalls(
-      buildClaimVestedTokensSteps({
-        vestingStream,
-        allocationId: BigInt(opts.allocationId),
-      }),
+      buildClaimVestedTokensSteps({ vestingStream, allocationId }),
       chainId,
       { action: "claim-vested", token, vestingStream },
     );
