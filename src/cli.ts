@@ -11,6 +11,7 @@ import {
   formatUnits,
   isAddress,
   erc20Abi,
+  zeroAddress,
   type Address,
   type Hash,
   type PublicClient,
@@ -35,10 +36,33 @@ import { buildContributeSteps } from "./builders/contribute";
 import { buildClaimSteps } from "./builders/claim";
 import { buildStakeBmxSteps } from "./builders/stake-bmx";
 import { buildVoteSteps } from "./builders/vote";
+import { buildRefundSteps } from "./builders/refund";
+import { buildSeedLiquiditySteps } from "./builders/seed-liquidity";
+import { buildUnstakeBmxSteps } from "./builders/unstake-bmx";
+import { buildHandleRewardsSteps } from "./builders/handle-rewards";
+import { buildClaimIssuerFeesSteps } from "./builders/claim-issuer-fees";
+import { buildClaimReferrerFeesSteps } from "./builders/claim-referrer-fees";
+import { buildClaimIntegratorFeesSteps } from "./builders/claim-integrator-fees";
+import { buildClaimVestedTokensSteps } from "./builders/claim-vested-tokens";
+import { buildClaimParticipationRewardsSteps } from "./builders/claim-participation-rewards";
+import { buildCastVisibilitySteps } from "./builders/cast-visibility";
+import { buildAddLiquiditySteps } from "./builders/add-liquidity";
+import { buildRemoveLiquiditySteps } from "./builders/remove-liquidity";
+import { buildStakeLpSteps } from "./builders/stake-lp";
+import { buildWithdrawLpSteps } from "./builders/withdraw-lp";
+import { buildClaimLpRewardsSteps } from "./builders/claim-lp-rewards";
+import { buildSwapSteps } from "./builders/swap";
 import { buildLaunchLink } from "./launch/build-launch-link";
-import { presaleManagerAbi } from "./registry/abis";
+import {
+  integratorFeeCollectorAbi,
+  lpStakingAbi,
+  pairAbi,
+  presaleManagerAbi,
+  uniswapV2FactoryAbi,
+} from "./registry/abis";
+import { assertDeployed, getContracts } from "./registry/contracts";
 import { encodeSteps } from "./flow/encode";
-import { getAuctionUrl, getLaunch } from "./read/launches";
+import { getAuctionUrl, getLaunch, getLaunchAddresses } from "./read/launches";
 import { buildLaunchMetadataTypedData } from "./metadata/message";
 import { uploadLogo } from "./metadata/upload";
 import { postSignedMetadata } from "./metadata/post";
@@ -136,6 +160,40 @@ function collectRecipient(
   return [...prev, { label, address: address as Address, percent }];
 }
 
+/** Apply a bps slippage floor: amount * (10000 - bps) / 10000. */
+function applySlippage(amount: bigint, slippageBps: number): bigint {
+  return (amount * BigInt(10_000 - slippageBps)) / BigInt(10_000);
+}
+
+/** Validate a 0–9999 bps option (default when omitted). */
+function parseSlippageBps(value: string | undefined, fallback = 50): number {
+  if (value == null) return fallback;
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 0 || n >= 10_000) {
+    fail("--slippage-bps must be an integer between 0 and 9999");
+  }
+  return n;
+}
+
+/** Parse a comma-separated list of epoch numbers to bigints. */
+function parseEpochs(csv: string): bigint[] {
+  const epochs = (csv ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => {
+      if (!/^\d+$/.test(s)) fail(`invalid epoch "${s}" — expected a non-negative integer`);
+      return BigInt(s);
+    });
+  if (epochs.length === 0) fail("--epochs must list at least one epoch (e.g. 0,1,2)");
+  return epochs;
+}
+
+/** Default swap/claim deadline: now + `seconds`, as a unix-seconds bigint. */
+function deadlineFromNow(seconds: number): bigint {
+  return BigInt(Math.floor(Date.now() / 1000) + seconds);
+}
+
 const program = new Command();
 program
   .name("boardwalk")
@@ -145,7 +203,7 @@ program
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
       "Boardwalk's ERC-8021 builder code is enforced on every built transaction.",
   )
-  .version("0.2.0")
+  .version("0.3.0")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
 
 program
@@ -671,6 +729,569 @@ program
       token,
       auctionUrl: getAuctionUrl(token, chainId),
       result,
+    });
+  });
+
+// ---------------------------------------------------------------------------
+// Presale lifecycle
+// ---------------------------------------------------------------------------
+
+program
+  .command("refund")
+  .summary("Refund a contribution on a FAILED launch")
+  .description(
+    "Build refund() for a launch that failed to graduate (status: failed).",
+  )
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "contributor wallet address")
+  .action(async (opts) => {
+    const chainId = chainIdOf(opts.chain);
+    const token = requireAddress(opts.token, "token");
+    requireAddress(opts.wallet, "wallet");
+    const launch = await getLaunch(token, chainId);
+    if (launch.status !== "failed") {
+      fail(
+        `refunds are only available on a failed launch (status: ${launch.status})`,
+      );
+    }
+    if (!launch.presaleManager)
+      fail("presale manager not indexed yet for this token");
+    emitCalls(buildRefundSteps({ presale: launch.presaleManager }), chainId, {
+      action: "refund",
+      token,
+    });
+  });
+
+program
+  .command("seed-liquidity")
+  .summary("Activate trading by seeding liquidity after a successful presale")
+  .description(
+    "Build seedLiquidity() for a launch that reached its graduation threshold.",
+  )
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "wallet address")
+  .action(async (opts) => {
+    const chainId = chainIdOf(opts.chain);
+    const token = requireAddress(opts.token, "token");
+    requireAddress(opts.wallet, "wallet");
+    const launch = await getLaunch(token, chainId);
+    if (launch.seeded) fail("liquidity is already seeded for this launch");
+    if (!launch.presaleManager)
+      fail("presale manager not indexed yet for this token");
+    emitCalls(
+      buildSeedLiquiditySteps({ presale: launch.presaleManager }),
+      chainId,
+      { action: "seed-liquidity", token },
+    );
+  });
+
+// ---------------------------------------------------------------------------
+// BMX staking
+// ---------------------------------------------------------------------------
+
+program
+  .command("unstake-bmx")
+  .summary("Unstake BMX (Base-only)")
+  .description("Build unstakeBmx. Base-only — errors clearly on other chains.")
+  .requiredOption("--amount <amount>", "BMX amount in human units (e.g. 100)")
+  .requiredOption("--wallet <address>", "staker wallet address")
+  .option("--chain <chain>", "chain slug or numeric id", "base")
+  .action((opts) => {
+    const chainId = chainIdOf(opts.chain);
+    requireAddress(opts.wallet, "wallet");
+    const amount = parseUnits(opts.amount, 18); // BMX is 18 decimals
+    emitCalls(buildUnstakeBmxSteps({ chainId, amount }), chainId, {
+      action: "unstake-bmx",
+      amount: amount.toString(),
+    });
+  });
+
+program
+  .command("handle-rewards")
+  .summary("Claim/compound staking rewards (Base-only)")
+  .description(
+    "Build handleRewards(...). With no flags it claims everything; pass flags to select actions.",
+  )
+  .requiredOption("--wallet <address>", "staker wallet address")
+  .option("--chain <chain>", "chain slug or numeric id", "base")
+  .option("--claim-op-bmx", "claim OP BMX rewards")
+  .option("--stake-mp", "stake multiplier points")
+  .option("--claim-weth", "claim WETH rewards")
+  .option("--convert-weth-to-eth", "convert claimed WETH to ETH")
+  .action((opts) => {
+    const chainId = chainIdOf(opts.chain);
+    requireAddress(opts.wallet, "wallet");
+    const anyFlag =
+      opts.claimOpBmx || opts.stakeMp || opts.claimWeth || opts.convertWethToEth;
+    const all = !anyFlag; // no flags → claim everything
+    emitCalls(
+      buildHandleRewardsSteps({
+        chainId,
+        shouldClaimOpBmx: all || !!opts.claimOpBmx,
+        shouldStakeMultiplierPoints: all || !!opts.stakeMp,
+        shouldClaimWeth: all || !!opts.claimWeth,
+        shouldConvertWethToEth: all || !!opts.convertWethToEth,
+      }),
+      chainId,
+      { action: "handle-rewards" },
+    );
+  });
+
+// ---------------------------------------------------------------------------
+// Fee / vesting / participation claims
+// ---------------------------------------------------------------------------
+
+program
+  .command("claim-issuer-fees")
+  .summary("Issuer claims fees as the raise token")
+  .description(
+    "Build claimAsRaiseToken on the launch's FeeDistributor (resolved on-chain).",
+  )
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--recipient-idx <n>", "issuer-fee recipient index")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "issuer wallet address")
+  .option("--min-out <amount>", "min raise-token out (human units; default 0)")
+  .option("--deadline <unixSeconds>", "swap deadline (default now + 1200s)")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const token = requireAddress(opts.token, "token");
+    requireAddress(opts.wallet, "wallet");
+    if (!/^\d+$/.test(opts.recipientIdx))
+      fail("--recipient-idx must be a non-negative integer");
+    const { feeDistributor } = await getLaunchAddresses(client, token, chainId);
+    if (feeDistributor === zeroAddress)
+      fail("fee distributor not deployed for this launch");
+    const minRaiseTokenOut =
+      opts.minOut != null ? parseUnits(opts.minOut, 18) : BigInt(0);
+    const deadline =
+      opts.deadline != null ? BigInt(opts.deadline) : deadlineFromNow(1200);
+    emitCalls(
+      buildClaimIssuerFeesSteps({
+        feeDistributor,
+        recipientIdx: BigInt(opts.recipientIdx),
+        minRaiseTokenOut,
+        deadline,
+      }),
+      chainId,
+      { action: "claim-issuer-fees", token, feeDistributor },
+    );
+  });
+
+program
+  .command("claim-referrer-fees")
+  .summary("Referrer claims their fee share")
+  .description(
+    "Build claimReferrerFees on the launch's FeeDistributor (resolved on-chain).",
+  )
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "referrer wallet address")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const token = requireAddress(opts.token, "token");
+    requireAddress(opts.wallet, "wallet");
+    const { feeDistributor } = await getLaunchAddresses(client, token, chainId);
+    if (feeDistributor === zeroAddress)
+      fail("fee distributor not deployed for this launch");
+    emitCalls(buildClaimReferrerFeesSteps({ feeDistributor }), chainId, {
+      action: "claim-referrer-fees",
+      token,
+      feeDistributor,
+    });
+  });
+
+program
+  .command("claim-integrator-fees")
+  .summary("Integrator claims a launch token's accrued tax")
+  .description(
+    "Build claim() on the per-chain IntegratorFeeCollector. Derives minOut from the collector's quote.",
+  )
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "integrator wallet address")
+  .option("--slippage-bps <bps>", "slippage tolerance in bps (default 50)")
+  .option("--min-out <amount>", "override min raise-token out (human units)")
+  .option("--deadline <unixSeconds>", "swap deadline (default now + 1200s)")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const token = requireAddress(opts.token, "token");
+    const account = requireAddress(opts.wallet, "wallet");
+    const collector = assertDeployed(chainId, "integratorFeeCollector");
+    const slippageBps = parseSlippageBps(opts.slippageBps);
+    const deadline =
+      opts.deadline != null ? BigInt(opts.deadline) : deadlineFromNow(1200);
+
+    // With --min-out we can skip the quote read entirely. Otherwise derive minOut
+    // from the collector's quote; it reverts when there's nothing claimable.
+    let minOut: bigint;
+    let amountIn = "0";
+    if (opts.minOut != null) {
+      minOut = parseUnits(opts.minOut, 18);
+    } else {
+      let quote: readonly [bigint, bigint];
+      try {
+        quote = (await client.readContract({
+          abi: integratorFeeCollectorAbi,
+          address: collector,
+          functionName: "quote",
+          args: [account, token, BigInt(slippageBps)],
+        })) as readonly [bigint, bigint];
+      } catch {
+        fail(
+          "no claimable integrator fees for this token (or this wallet is not the integrator). Pass --min-out to override.",
+        );
+      }
+      minOut = quote[1];
+      amountIn = quote[0].toString();
+    }
+
+    emitCalls(
+      buildClaimIntegratorFeesSteps({ chainId, token, minOut, deadline }),
+      chainId,
+      { action: "claim-integrator-fees", token, amountIn, minOut: minOut.toString() },
+    );
+  });
+
+program
+  .command("claim-vested")
+  .summary("Claim vested launch tokens")
+  .description(
+    "Build claim(allocationId) on the launch's VestingStream (resolved on-chain).",
+  )
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--allocation-id <n>", "vesting allocation id")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "recipient wallet address")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const token = requireAddress(opts.token, "token");
+    requireAddress(opts.wallet, "wallet");
+    if (!/^\d+$/.test(opts.allocationId))
+      fail("--allocation-id must be a non-negative integer");
+    const { vestingStream } = await getLaunchAddresses(client, token, chainId);
+    if (vestingStream === zeroAddress)
+      fail("vesting stream not deployed for this launch");
+    emitCalls(
+      buildClaimVestedTokensSteps({
+        vestingStream,
+        allocationId: BigInt(opts.allocationId),
+      }),
+      chainId,
+      { action: "claim-vested", token, vestingStream },
+    );
+  });
+
+program
+  .command("claim-participation")
+  .summary("Claim participation BMX rewards (Base-only)")
+  .description("Build claimAll(epochs) on the ParticipationDistributor.")
+  .requiredOption("--epochs <csv>", "comma-separated epoch numbers (e.g. 0,1,2)")
+  .requiredOption("--wallet <address>", "wallet address")
+  .option("--chain <chain>", "chain slug or numeric id", "base")
+  .action((opts) => {
+    const chainId = chainIdOf(opts.chain);
+    requireAddress(opts.wallet, "wallet");
+    const epochs = parseEpochs(opts.epochs);
+    emitCalls(
+      buildClaimParticipationRewardsSteps({ chainId, epochs }),
+      chainId,
+      { action: "claim-participation", epochs: epochs.map(String) },
+    );
+  });
+
+// ---------------------------------------------------------------------------
+// Visibility
+// ---------------------------------------------------------------------------
+
+program
+  .command("cast-visibility")
+  .summary("Upvote (boost) or downvote (deboost) a token — burns BMX")
+  .description(
+    "Build approve BMX + boost/deboost. Reads the live BMX cost (with member discount).",
+  )
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--mode <mode>", "boost | deboost")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "wallet address")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const token = requireAddress(opts.token, "token");
+    const account = requireAddress(opts.wallet, "wallet");
+    if (opts.mode !== "boost" && opts.mode !== "deboost")
+      fail("--mode must be boost or deboost");
+    const steps = await buildCastVisibilitySteps({
+      client,
+      account,
+      chainId,
+      token,
+      mode: opts.mode,
+    });
+    emitCalls(steps, chainId, {
+      action: "cast-visibility",
+      mode: opts.mode,
+      token,
+    });
+  });
+
+// ---------------------------------------------------------------------------
+// Boardwalk LP + swap
+// ---------------------------------------------------------------------------
+
+program
+  .command("add-liquidity")
+  .summary("Add liquidity to a Boardwalk pair")
+  .description(
+    "Build approve(s) + addLiquidity on the Boardwalk LP manager. Min amounts use --slippage-bps off the desired amounts.",
+  )
+  .requiredOption("--token-a <address>", "first token")
+  .requiredOption("--token-b <address>", "second token (e.g. the raise token)")
+  .requiredOption("--amount-a <amount>", "token A amount in human units")
+  .requiredOption("--amount-b <amount>", "token B amount in human units")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "wallet address")
+  .option("--slippage-bps <bps>", "slippage tolerance in bps (default 50)")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const account = requireAddress(opts.wallet, "wallet");
+    const tokenA = requireAddress(opts.tokenA, "token-a");
+    const tokenB = requireAddress(opts.tokenB, "token-b");
+    const slippageBps = parseSlippageBps(opts.slippageBps);
+    const [decA, decB] = await client.multicall({
+      allowFailure: false,
+      multicallAddress: MULTICALL3_ADDRESS,
+      contracts: [
+        { abi: erc20Abi, address: tokenA, functionName: "decimals" },
+        { abi: erc20Abi, address: tokenB, functionName: "decimals" },
+      ],
+    });
+    const amountADesired = parseUnits(opts.amountA, decA);
+    const amountBDesired = parseUnits(opts.amountB, decB);
+    const steps = await buildAddLiquiditySteps({
+      client,
+      account,
+      chainId,
+      tokenA,
+      tokenB,
+      amountADesired,
+      amountBDesired,
+      amountAMin: applySlippage(amountADesired, slippageBps),
+      amountBMin: applySlippage(amountBDesired, slippageBps),
+    });
+    emitCalls(steps, chainId, {
+      action: "add-liquidity",
+      tokenA,
+      tokenB,
+      amountADesired: amountADesired.toString(),
+      amountBDesired: amountBDesired.toString(),
+    });
+  });
+
+program
+  .command("remove-liquidity")
+  .summary("Remove liquidity from a Boardwalk token/raise-token pair")
+  .description(
+    "Build approve LP + removeLiquidity. Min amounts are derived from pool reserves and --slippage-bps.",
+  )
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--liquidity <amount>", "LP tokens to burn (human units)")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "wallet address")
+  .option("--slippage-bps <bps>", "slippage tolerance in bps (default 50)")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const account = requireAddress(opts.wallet, "wallet");
+    const token = requireAddress(opts.token, "token");
+    const { raiseToken } = getContracts(chainId);
+    const factory = assertDeployed(chainId, "uniswapV2Factory");
+    const pair = (await client.readContract({
+      abi: uniswapV2FactoryAbi,
+      address: factory,
+      functionName: "getPair",
+      args: [token, raiseToken],
+    })) as Address;
+    if (pair === zeroAddress) fail("no Boardwalk LP pool for this token");
+    const liquidity = parseUnits(opts.liquidity, 18); // V2 LP tokens are 18 decimals
+    const [reserves, totalSupply, token0] = await client.multicall({
+      allowFailure: false,
+      multicallAddress: MULTICALL3_ADDRESS,
+      contracts: [
+        { abi: pairAbi, address: pair, functionName: "getReserves" },
+        { abi: pairAbi, address: pair, functionName: "totalSupply" },
+        { abi: pairAbi, address: pair, functionName: "token0" },
+      ],
+    });
+    if (totalSupply === BigInt(0)) fail("pool has no liquidity");
+    const tokenIsToken0 =
+      (token0 as Address).toLowerCase() === token.toLowerCase();
+    const outToken =
+      (liquidity * (tokenIsToken0 ? reserves[0] : reserves[1])) / totalSupply;
+    const outRaise =
+      (liquidity * (tokenIsToken0 ? reserves[1] : reserves[0])) / totalSupply;
+    const slippageBps = parseSlippageBps(opts.slippageBps);
+    const steps = await buildRemoveLiquiditySteps({
+      client,
+      account,
+      chainId,
+      tokenA: token,
+      tokenB: raiseToken,
+      lpToken: pair,
+      liquidity,
+      amountAMin: applySlippage(outToken, slippageBps),
+      amountBMin: applySlippage(outRaise, slippageBps),
+    });
+    emitCalls(steps, chainId, {
+      action: "remove-liquidity",
+      token,
+      lpToken: pair,
+      liquidity: liquidity.toString(),
+    });
+  });
+
+program
+  .command("stake-lp")
+  .summary("Stake a launch's LP tokens")
+  .description(
+    "Build approve LP + stake on the launch's LPStaking (resolved on-chain).",
+  )
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--amount <amount>", "LP tokens to stake (human units)")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "wallet address")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const account = requireAddress(opts.wallet, "wallet");
+    const token = requireAddress(opts.token, "token");
+    const { lpStaking } = await getLaunchAddresses(client, token, chainId);
+    if (lpStaking === zeroAddress)
+      fail("LP staking is not deployed until liquidity is seeded");
+    const lpToken = (await client.readContract({
+      abi: lpStakingAbi,
+      address: lpStaking,
+      functionName: "lpToken",
+    })) as Address;
+    if (lpToken === zeroAddress)
+      fail("this launch has no LP token yet — liquidity is not seeded");
+    const amount = parseUnits(opts.amount, 18); // V2 LP tokens are 18 decimals
+    const steps = await buildStakeLpSteps({
+      client,
+      account,
+      lpStaking,
+      lpToken,
+      amount,
+    });
+    emitCalls(steps, chainId, {
+      action: "stake-lp",
+      token,
+      lpStaking,
+      lpToken,
+      amount: amount.toString(),
+    });
+  });
+
+program
+  .command("unstake-lp")
+  .summary("Unstake a launch's LP tokens")
+  .description("Build withdraw on the launch's LPStaking (resolved on-chain).")
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--amount <amount>", "LP tokens to unstake (human units)")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "wallet address")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const token = requireAddress(opts.token, "token");
+    requireAddress(opts.wallet, "wallet");
+    const { lpStaking } = await getLaunchAddresses(client, token, chainId);
+    if (lpStaking === zeroAddress)
+      fail("LP staking is not deployed for this launch");
+    const amount = parseUnits(opts.amount, 18);
+    emitCalls(buildWithdrawLpSteps({ lpStaking, amount }), chainId, {
+      action: "unstake-lp",
+      token,
+      lpStaking,
+      amount: amount.toString(),
+    });
+  });
+
+program
+  .command("claim-lp-rewards")
+  .summary("Claim a launch's LP staking rewards")
+  .description("Build claim() on the launch's LPStaking (resolved on-chain).")
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "wallet address")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const token = requireAddress(opts.token, "token");
+    requireAddress(opts.wallet, "wallet");
+    const { lpStaking } = await getLaunchAddresses(client, token, chainId);
+    if (lpStaking === zeroAddress)
+      fail("LP staking is not deployed for this launch");
+    emitCalls(buildClaimLpRewardsSteps({ lpStaking }), chainId, {
+      action: "claim-lp-rewards",
+      token,
+      lpStaking,
+    });
+  });
+
+program
+  .command("swap")
+  .summary("Swap via the Boardwalk DEX (raise token ↔ launch token)")
+  .description(
+    "Build approve + swapExactTokensForTokens through Boardwalk's V2 router. " +
+      "--direction buy spends the raise token for the launch token; sell does the reverse.",
+  )
+  .requiredOption("--token <address>", "launch token address")
+  .requiredOption("--amount <amount>", "input amount in human units of the sell token")
+  .requiredOption("--direction <dir>", "buy | sell")
+  .requiredOption("--chain <chain>", "chain slug or numeric id")
+  .requiredOption("--wallet <address>", "wallet address")
+  .option("--slippage-bps <bps>", "slippage tolerance in bps (default 50)")
+  .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
+  .action(async (opts) => {
+    const { client, chainId } = makeClient(opts.chain, opts.rpc);
+    const account = requireAddress(opts.wallet, "wallet");
+    const token = requireAddress(opts.token, "token");
+    if (opts.direction !== "buy" && opts.direction !== "sell")
+      fail("--direction must be buy or sell");
+    const { raiseToken } = getContracts(chainId);
+    const sellToken = opts.direction === "buy" ? raiseToken : token;
+    const buyToken = opts.direction === "buy" ? token : raiseToken;
+    const slippageBps = parseSlippageBps(opts.slippageBps);
+    const decimals = await client.readContract({
+      abi: erc20Abi,
+      address: sellToken,
+      functionName: "decimals",
+    });
+    const sellAmount = parseUnits(opts.amount, decimals);
+    const steps = await buildSwapSteps({
+      client,
+      account,
+      chainId,
+      sellToken,
+      buyToken,
+      sellAmount,
+      slippageBps,
+    });
+    emitCalls(steps, chainId, {
+      action: "swap",
+      direction: opts.direction,
+      token,
+      sellToken,
+      buyToken,
+      sellAmount: sellAmount.toString(),
     });
   });
 

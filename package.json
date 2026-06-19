@@ -1,7 +1,7 @@
 {
   "name": "@useboardwalk/sdk",
-  "version": "0.2.0",
-  "description": "Framework-agnostic SDK + CLI for building unsigned Boardwalk transactions (launch, contribute, claim, stake BMX, vote).",
+  "version": "0.3.0",
+  "description": "Framework-agnostic SDK + CLI for building unsigned Boardwalk transactions (launch, contribute, claim, refund, presale seed, BMX stake/unstake, fee/vesting/participation claims, LP, swap, visibility, vote).",
   "license": "MIT",
   "author": "Boardwalk",
   "homepage": "https://www.useboardwalk.com",
@@ -53,6 +53,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "cli": "tsx src/cli.ts",
+    "smoke": "node scripts/smoke.mjs",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

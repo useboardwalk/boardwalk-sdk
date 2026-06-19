@@ -11,6 +11,10 @@ import type {
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+/** Fixed 404 backoff schedule (2s, 4s, 8s, 16s) — matches token-launcher's
+ *  `retryOn404` so both ride out the same ~30s indexer-lag window. */
+const RETRY_DELAYS_MS = [2_000, 4_000, 8_000, 16_000];
+
 /**
  * POST a signed metadata payload. The backend verifies `signer == issuer`
  * (EOA via `verifyTypedData` or EIP-1271). Retries on 404 with backoff because
@@ -43,8 +47,9 @@ export async function postSignedMetadata(
     if (res.ok) return res.json() as Promise<SubmitMetadataResponse>;
 
     if (res.status === 404 && Date.now() < giveUpAt) {
+      const delay = RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]!;
       attempt += 1;
-      await sleep(Math.min(2_000, 250 * 2 ** attempt));
+      await sleep(delay);
       continue;
     }
 

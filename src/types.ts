@@ -236,6 +236,153 @@ export interface VoteParams {
 }
 
 // ---------------------------------------------------------------------------
+// Presale lifecycle + staking + claims + visibility builders
+// ---------------------------------------------------------------------------
+
+/** Refund a contribution on a FAILED launch (`PresaleManager.refund()`). */
+export interface RefundParams {
+  /** PresaleManager address for the launch (see `getLaunch().presaleManager`). */
+  presale: Address;
+}
+
+/** Activate trading after a successful presale (`PresaleManager.seedLiquidity()`). */
+export interface SeedLiquidityParams {
+  presale: Address;
+}
+
+export interface UnstakeBmxParams {
+  chainId: number;
+  /** BMX amount in wei. */
+  amount: bigint;
+}
+
+/** Claim staking rewards via `RewardRouter.handleRewards(...)`. Each flag maps
+ *  1:1 to the contract args. Base-only. */
+export interface HandleRewardsParams {
+  chainId: number;
+  shouldClaimOpBmx: boolean;
+  shouldStakeMultiplierPoints: boolean;
+  shouldClaimWeth: boolean;
+  shouldConvertWethToEth: boolean;
+}
+
+/** Issuer claims their fee share as the raise token (`FeeDistributor.claimAsRaiseToken`). */
+export interface ClaimIssuerFeesParams {
+  /** Per-launch FeeDistributor (resolve via `getLaunchAddresses().feeDistributor`). */
+  feeDistributor: Address;
+  /** Index of the issuer-fee recipient slot to claim. */
+  recipientIdx: bigint;
+  /** Slippage floor for the fee→raise-token swap, in raise-token wei. */
+  minRaiseTokenOut: bigint;
+  /** Unix-seconds deadline for the swap. */
+  deadline: bigint;
+}
+
+/** Referrer claims their fee share (`FeeDistributor.claimReferrerFees`). */
+export interface ClaimReferrerFeesParams {
+  feeDistributor: Address;
+}
+
+/** Integrator claims a launch token's accrued tax from the per-chain collector. */
+export interface ClaimIntegratorFeesParams {
+  chainId: number;
+  /** Launch token whose integrator slot is being claimed. */
+  token: Address;
+  /** Slippage floor in raise-token wei (derive from the collector's `quote`). */
+  minOut: bigint;
+  deadline: bigint;
+}
+
+/** Claim vested launch tokens for one allocation (`VestingStream.claim`). */
+export interface ClaimVestedTokensParams {
+  /** Per-launch VestingStream (resolve via `getLaunchAddresses().vestingStream`). */
+  vestingStream: Address;
+  allocationId: bigint;
+}
+
+/** Claim participation BMX rewards across epochs (`ParticipationDistributor.claimAll`). Base-only. */
+export interface ClaimParticipationRewardsParams {
+  chainId: number;
+  epochs: bigint[];
+}
+
+/** Upvote ("boost") or downvote ("deboost") a token's visibility — burns BMX. */
+export interface CastVisibilityParams {
+  client: PublicClient;
+  account: Address;
+  chainId: number;
+  token: Address;
+  mode: "boost" | "deboost";
+}
+
+// ---------------------------------------------------------------------------
+// Boardwalk LP + swap builders
+// ---------------------------------------------------------------------------
+
+export interface AddLiquidityParams {
+  client: PublicClient;
+  account: Address;
+  chainId: number;
+  tokenA: Address;
+  tokenB: Address;
+  amountADesired: bigint;
+  amountBDesired: bigint;
+  amountAMin: bigint;
+  amountBMin: bigint;
+  /** Unix-seconds deadline (default now + 1800s). */
+  deadline?: bigint;
+}
+
+export interface RemoveLiquidityParams {
+  client: PublicClient;
+  account: Address;
+  chainId: number;
+  tokenA: Address;
+  tokenB: Address;
+  /** The Uniswap V2 pair (LP) token address — approved to the LP manager. */
+  lpToken: Address;
+  liquidity: bigint;
+  amountAMin: bigint;
+  amountBMin: bigint;
+  deadline?: bigint;
+}
+
+export interface StakeLpParams {
+  client: PublicClient;
+  account: Address;
+  /** Per-launch LPStaking contract (resolve via `getLaunchAddresses().lpStaking`). */
+  lpStaking: Address;
+  /** The LP (pair) token to approve + stake. */
+  lpToken: Address;
+  amount: bigint;
+}
+
+export interface WithdrawLpParams {
+  lpStaking: Address;
+  amount: bigint;
+}
+
+export interface ClaimLpRewardsParams {
+  lpStaking: Address;
+}
+
+export interface SwapParams {
+  client: PublicClient;
+  account: Address;
+  chainId: number;
+  /** Token paid in. */
+  sellToken: Address;
+  /** Token received. */
+  buyToken: Address;
+  /** Input amount in `sellToken` wei. */
+  sellAmount: bigint;
+  /** Slippage tolerance in bps (default 50 = 0.5%). */
+  slippageBps?: number;
+  /** Unix-seconds deadline (default now + 1200s). */
+  deadline?: bigint;
+}
+
+// ---------------------------------------------------------------------------
 // Metadata
 // ---------------------------------------------------------------------------
 
@@ -349,4 +496,16 @@ export interface LaunchSummary {
   /** Per-chain canonical raise token (approve target for contribute). */
   raiseToken: Address;
   seeded: boolean;
+}
+
+/** Per-launch contract addresses from `LaunchFactory.launches(token)`. Zero
+ *  address for contracts not yet deployed for the launch (e.g. `lpStaking`
+ *  before liquidity is seeded). */
+export interface LaunchAddresses {
+  token: Address;
+  feeDistributor: Address;
+  presaleManager: Address;
+  vestingStream: Address;
+  lpStaking: Address;
+  issuer: Address;
 }
