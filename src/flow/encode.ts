@@ -1,10 +1,13 @@
 import { Attribution } from "ox/erc8021";
 import { concatHex, encodeFunctionData, type Address, type Hex } from "viem";
+import { base } from "viem/chains";
 import { BUILDER_CODE } from "../constants";
 import type { EncodedCall, TxRequest, TxStep, TxWriteRequest } from "../types";
 
 /**
- * ERC-8021 builder-code suffix — ENFORCED on every SDK-built transaction.
+ * ERC-8021 builder-code suffix — appended on Base, where Boardwalk's builder
+ * code is registered (base.dev Builder Codes). Non-Base chains carry no suffix:
+ * the registry doesn't index them, so it would only bloat their calldata.
  *
  * The frontend appends this at the wagmi send chokepoint; agents submit through
  * their own wallet (e.g. `send_calls`), so the SDK appends it directly to `data`
@@ -26,8 +29,9 @@ interface RawCall {
   value: bigint;
 }
 
-/** Encode a single request to `{to,data,value}`, appending the enforced builder-code suffix. */
-export function encodeRequest(req: TxRequest): RawCall {
+/** Encode a single request to `{to,data,value}`, appending the builder-code
+ *  suffix on Base (see `BUILDER_CODE_SUFFIX`). */
+export function encodeRequest(req: TxRequest, chainId: number): RawCall {
   let to: Address;
   let data: Hex;
   let value: bigint;
@@ -46,7 +50,11 @@ export function encodeRequest(req: TxRequest): RawCall {
     value = req.value ?? BigInt(0);
   }
 
-  if (BUILDER_CODE_SUFFIX && BUILDER_CODE_SUFFIX !== "0x") {
+  if (
+    chainId === base.id &&
+    BUILDER_CODE_SUFFIX &&
+    BUILDER_CODE_SUFFIX !== "0x"
+  ) {
     data = concatHex([data, BUILDER_CODE_SUFFIX]);
   }
 
@@ -55,7 +63,7 @@ export function encodeRequest(req: TxRequest): RawCall {
 
 /** Encode a step to a ready-to-submit `EncodedCall` (value as a decimal wei string). */
 export function encodeStep(step: TxStep, chainId: number): EncodedCall {
-  const { to, data, value } = encodeRequest(step.request);
+  const { to, data, value } = encodeRequest(step.request, chainId);
   return {
     id: step.id,
     label: step.label,

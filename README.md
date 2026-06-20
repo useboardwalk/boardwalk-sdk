@@ -4,7 +4,7 @@ Framework-agnostic builders for **unsigned** [Boardwalk](https://www.useboardwal
 
 > **Non-custodial by design.** This package never requests, stores, or accepts a private key. It only emits unsigned calldata and EIP-712 payloads. Your wallet signs and submits.
 
-> **Attribution is enforced.** Every transaction the SDK builds carries Boardwalk's [ERC-8021](https://github.com/base/builder-codes) builder-code suffix on its calldata. There is no per-call, CLI, or env override — see [Attribution](#attribution).
+> **Attribution.** Transactions the SDK builds on **Base** carry Boardwalk's [ERC-8021](https://github.com/base/builder-codes) builder-code suffix on their calldata (that's where the code is registered). There is no per-call, CLI, or env override — see [Attribution](#attribution).
 
 ## Install
 
@@ -151,7 +151,7 @@ get_request_status          → confirm
 
 ## SDK
 
-Each builder takes a viem `PublicClient` (for live reads like allowance / burn cost) and returns `TxStep[]`; `encodeSteps` turns them into ready-to-submit calldata (with the enforced builder-code suffix already applied).
+Each builder takes a viem `PublicClient` (for live reads like allowance / burn cost) and returns `TxStep[]`; `encodeSteps` turns them into ready-to-submit calldata (with the builder-code suffix applied on Base).
 
 ```ts
 import { createPublicClient, http } from "viem";
@@ -203,7 +203,7 @@ The logo is **off-chain, metadata-only** (`logo_url` in the signed metadata; a l
 
 ## Attribution
 
-Every SDK-built transaction carries Boardwalk's ERC-8021 builder code, appended to the calldata so it survives any submit path (including `send_calls`). The code is fixed in [`src/constants.ts`](src/constants.ts) (`BUILDER_CODE`) and is **enforced** — there is intentionally no per-call, CLI, or env override.
+SDK-built transactions **on Base** carry Boardwalk's ERC-8021 builder code, appended to the calldata so it survives any submit path (including `send_calls`). Base is where the code is registered (base.dev → Builder Codes), so non-Base chains carry no suffix. The code is fixed in [`src/constants.ts`](src/constants.ts) (`BUILDER_CODE`) and is **enforced** for Base — there is intentionally no per-call, CLI, or env override.
 
 > Maintainers: `BUILDER_CODE` is Boardwalk's registered code (from base.dev → Builder Codes); update it there if it ever rotates.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // boardwalk CLI — prints UNSIGNED calldata as JSON. Never accepts private keys;
 // the agent's wallet signs + submits (e.g. Base MCP `send_calls`). Boardwalk's
-// ERC-8021 builder code is enforced on every built transaction.
+// ERC-8021 builder code is appended on Base (where the code is registered).
 import { readFile } from "node:fs/promises";
 import { Command } from "commander";
 import {
@@ -223,7 +223,7 @@ program
     "Build UNSIGNED Boardwalk transactions for an agent to sign + submit.\n" +
       "Every tx command prints { calls: [{to,data,value,chainId}], ...meta }; submit\n" +
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
-      "Boardwalk's ERC-8021 builder code is enforced on every built transaction.",
+      "Boardwalk's ERC-8021 builder code is appended on Base (where it is registered).",
   )
   .version("0.3.0")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");

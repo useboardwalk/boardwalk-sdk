@@ -64,7 +64,7 @@ npx -p @useboardwalk/sdk boardwalk <command> [flags]    # …or zero-install
 ```
 
 - `calls` is an **ORDERED array**. When an ERC-20 allowance is insufficient, a **conditional approve is element 0** and the action follows. Feed the **whole array** to a batched submit so the user approves once. If the allowance is already sufficient, the approve step is **omitted** and you get just the action call.
-- Every call's `data` ends with Boardwalk's **enforced ERC-8021 builder-code suffix** — submit `data` exactly as printed.
+- On Base, every call's `data` ends with Boardwalk's **ERC-8021 builder-code suffix**; on any chain, submit `data` exactly as printed.
 - `value` is a **decimal wei string** and is `"0"` for **every** v1 action (no native value is ever attached).
 - Read commands (`status`, `launch-cost`) print a plain JSON object (no `calls`).
 
@@ -491,7 +491,7 @@ launch → send_calls([approve-bmx, create-launch]) → poll get_request_status
 
 ## Attribution
 
-Attribution is **automatic and enforced**: every transaction the SDK builds carries Boardwalk's **ERC-8021** builder-code suffix on its calldata, so volume is attributed even when submitted through the agent's own wallet. There is no flag to set or change, and it does not alter the action, recipient, or amount.
+Attribution is **automatic** on **Base**: every transaction the SDK builds there carries Boardwalk's **ERC-8021** builder-code suffix on its calldata (Base is where the code is registered), so Base volume is attributed even when submitted through the agent's own wallet. Non-Base chains carry no suffix. There is no flag to set or change, and it does not alter the action, recipient, or amount.
 
 ---
 

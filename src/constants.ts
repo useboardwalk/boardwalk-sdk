@@ -63,9 +63,10 @@ export const DEFAULT_RPC_BY_CHAIN: Record<number, string> = {
 };
 
 /**
- * Boardwalk's ERC-8021 builder code. ENFORCED on every transaction the SDK
- * builds — there is intentionally no per-call, CLI, or env override, so all
- * SDK-driven volume is attributed to Boardwalk.
+ * Boardwalk's ERC-8021 builder code. Appended to calldata on Base (where the
+ * code is registered — base.dev Builder Codes); non-Base chains carry no
+ * suffix. There is intentionally no per-call, CLI, or env override, so all
+ * Base volume is attributed to Boardwalk. See `flow/encode.ts`.
  */
 export const BUILDER_CODE = "bc_snzinn6r";
 
