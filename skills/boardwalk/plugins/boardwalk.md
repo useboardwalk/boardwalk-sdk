@@ -3,7 +3,7 @@ title: Boardwalk Plugin
 description: Launch tokens, contribute to auctions, claim, stake BMX, and vote — via the boardwalk CLI driven through Base MCP's non-custodial wallet; or generate a prefilled launch link when no shell is available.
 ---
 
-The Boardwalk plugin lets an agent drive the Boardwalk token-launch platform from inside Base MCP. It shells out to the **`boardwalk` CLI (v0.3.0)**, which only ever prints **unsigned** calldata (and, for launch metadata, an EIP-712 payload to sign). The user's Base Account signs and submits — the CLI and the Base MCP server never touch a private key.
+The Boardwalk plugin lets an agent drive the Boardwalk token-launch platform from inside Base MCP. It shells out to the **`boardwalk` CLI (v0.4.0)**, which only ever prints **unsigned** calldata (and, for launch metadata, an EIP-712 payload to sign). The user's Base Account signs and submits — the CLI and the Base MCP server never touch a private key.
 
 > [!IMPORTANT]
 > **Shell available → drive the `boardwalk` CLI** (below): unsigned calldata → `send_calls`. **No shell (plain chat, no terminal) → emit a prefilled launch link instead:** generate a `…/launch?path=…&prefill=…` URL — with `boardwalk launch-link` where a shell exists, or `buildLaunchLink` from `@useboardwalk/sdk` (a pure function, no tools) — and hand it to the user; the launch UI collects the logo and signs/submits. The link path needs no tools, so it works anywhere, but it covers **launch** only (contribute/claim/stake/vote require the CLI + a signer). For the CLI path, complete the Base MCP onboarding in `SKILL.md` first (wallet connection, `send_calls`, `get_request_status`).
