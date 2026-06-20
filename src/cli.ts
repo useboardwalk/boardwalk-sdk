@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // boardwalk CLI — prints UNSIGNED calldata as JSON. Never accepts private keys;
 // the agent's wallet signs + submits (e.g. Base MCP `send_calls`). Boardwalk's
-// ERC-8021 builder code is enforced on every built transaction.
+// ERC-8021 builder code is appended on Base (where the code is registered).
 import { readFile } from "node:fs/promises";
 import { Command } from "commander";
 import {
@@ -73,6 +73,10 @@ import type {
   TxStep,
   VoteOption,
 } from "./types";
+
+/** `--chain` help text, derived from the registry so it can't drift from the
+ *  supported set when a chain is added. */
+const CHAIN_HELP = `chain slug (${SUPPORTED_CHAINS.map((c) => c.slug).join("|")}) or numeric id`;
 
 function fail(message: string): never {
   console.error(`Error: ${message}`);
@@ -223,7 +227,7 @@ program
     "Build UNSIGNED Boardwalk transactions for an agent to sign + submit.\n" +
       "Every tx command prints { calls: [{to,data,value,chainId}], ...meta }; submit\n" +
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
-      "Boardwalk's ERC-8021 builder code is enforced on every built transaction.",
+      "Boardwalk's ERC-8021 builder code is appended on Base (where it is registered).",
   )
   .version("0.3.0")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
@@ -236,7 +240,7 @@ program
   )
   .requiredOption(
     "--chain <chain>",
-    "chain slug (base|ethereum|fraxtal|katana|ink) or numeric id",
+    CHAIN_HELP,
   )
   .requiredOption(
     "--wallet <address>",
@@ -333,7 +337,7 @@ program
   )
   .requiredOption(
     "--chain <chain>",
-    "chain slug (base|ethereum|fraxtal|katana|ink) or numeric id",
+    CHAIN_HELP,
   )
   .requiredOption("--name <name>", "token name (3–32 chars)")
   .requiredOption("--ticker <ticker>", "token ticker (2–10 chars, A–Z 0–9)")

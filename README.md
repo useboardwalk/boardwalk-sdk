@@ -4,7 +4,7 @@ Framework-agnostic builders for **unsigned** [Boardwalk](https://www.useboardwal
 
 > **Non-custodial by design.** This package never requests, stores, or accepts a private key. It only emits unsigned calldata and EIP-712 payloads. Your wallet signs and submits.
 
-> **Attribution is enforced.** Every transaction the SDK builds carries Boardwalk's [ERC-8021](https://github.com/base/builder-codes) builder-code suffix on its calldata. There is no per-call, CLI, or env override — see [Attribution](#attribution).
+> **Attribution.** Transactions the SDK builds on **Base** carry Boardwalk's [ERC-8021](https://github.com/base/builder-codes) builder-code suffix on their calldata (that's where the code is registered). There is no per-call, CLI, or env override — see [Attribution](#attribution).
 
 ## Install
 
@@ -39,7 +39,7 @@ boardwalk <command> --help
 | [`launch-cost`](#read-commands)                        | Read the BMX burn cost to launch                         | read-only |
 | [`status`](#read-commands)                             | Read a launch's status + presale address                 | read-only |
 
-**Common flags:** `--chain <slug|id>` (base · ethereum · fraxtal · katana · ink), `--wallet <address>` (BYO; never a key), `--rpc <url>` (override; defaults to the chain's public RPC — `https://mainnet.base.org` for Base). **Public RPCs rate-limit** — on a 429 / timeout, retry with `--rpc <url>` pointing at a dedicated endpoint (only Base has a built-in default; the other chains fall through to viem's public RPC). Amounts (`--amount`, `--raise-goal`) are in **human units**; the CLI scales to wei.
+**Common flags:** `--chain <slug|id>` (base · ethereum · fraxtal · katana · ink · arbitrum), `--wallet <address>` (BYO; never a key), `--rpc <url>` (override; defaults to the chain's public RPC — `https://mainnet.base.org` for Base). **Public RPCs rate-limit** — on a 429 / timeout, retry with `--rpc <url>` pointing at a dedicated endpoint (only Base has a built-in default; the other chains fall through to viem's public RPC). Amounts (`--amount`, `--raise-goal`) are in **human units**; the CLI scales to wei.
 
 ### `launch`
 
@@ -72,7 +72,7 @@ boardwalk submit-metadata --token 0x<token> --chain base \
   --signature 0x<sig> --message '<sign.message json>'
 ```
 
-Already have the token address? Use `--token 0x…` instead of `--tx`. **Logo** (one of): `--logo <file>` (path on disk) · `--logo-data <base64|dataURL>` (e.g. an agent-generated image) · `--logo-url <url>` (already hosted) — see [Logos](#logos). Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`. **`--raise-goal`** (advanced) is validated to exceed the chain's graduation threshold (10 wETH on Base/Mainnet/Ink, 20 000 frxUSD on Fraxtal, 2 000 000 KAT on Katana). A launch is valid onchain even if you skip metadata.
+Already have the token address? Use `--token 0x…` instead of `--tx`. **Logo** (one of): `--logo <file>` (path on disk) · `--logo-data <base64|dataURL>` (e.g. an agent-generated image) · `--logo-url <url>` (already hosted) — see [Logos](#logos). Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`. **`--raise-goal`** (advanced) is validated to exceed the chain's graduation threshold (10 wETH on Base/Mainnet/Ink/Arbitrum, 20 000 frxUSD on Fraxtal, 2 000 000 KAT on Katana). A launch is valid onchain even if you skip metadata.
 
 ### `contribute`
 
@@ -151,7 +151,7 @@ get_request_status          → confirm
 
 ## SDK
 
-Each builder takes a viem `PublicClient` (for live reads like allowance / burn cost) and returns `TxStep[]`; `encodeSteps` turns them into ready-to-submit calldata (with the enforced builder-code suffix already applied).
+Each builder takes a viem `PublicClient` (for live reads like allowance / burn cost) and returns `TxStep[]`; `encodeSteps` turns them into ready-to-submit calldata (with the builder-code suffix applied on Base).
 
 ```ts
 import { createPublicClient, http } from "viem";
@@ -203,13 +203,13 @@ The logo is **off-chain, metadata-only** (`logo_url` in the signed metadata; a l
 
 ## Attribution
 
-Every SDK-built transaction carries Boardwalk's ERC-8021 builder code, appended to the calldata so it survives any submit path (including `send_calls`). The code is fixed in [`src/constants.ts`](src/constants.ts) (`BUILDER_CODE`) and is **enforced** — there is intentionally no per-call, CLI, or env override.
+SDK-built transactions **on Base** carry Boardwalk's ERC-8021 builder code, appended to the calldata so it survives any submit path (including `send_calls`). Base is where the code is registered (base.dev → Builder Codes), so non-Base chains carry no suffix. The code is fixed in [`src/constants.ts`](src/constants.ts) (`BUILDER_CODE`) and is **enforced** for Base — there is intentionally no per-call, CLI, or env override.
 
 > Maintainers: `BUILDER_CODE` is Boardwalk's registered code (from base.dev → Builder Codes); update it there if it ever rotates.
 
 ## Chains
 
-Base (`8453`, full feature parity) · Ethereum (`1`) · Fraxtal (`252`) · Katana · Ink. Launch / contribute / claim are multi-chain; **stake-bmx and vote are Base-only** (the SDK errors clearly elsewhere via `assertDeployed`).
+Base (`8453`, full feature parity) · Ethereum (`1`) · Fraxtal (`252`) · Katana · Ink · Arbitrum (`42161`). Launch / contribute / claim are multi-chain; **stake-bmx and vote are Base-only** (the SDK errors clearly elsewhere via `assertDeployed`).
 
 ## Provenance
 

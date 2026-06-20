@@ -1,7 +1,7 @@
 // Per-chain launch defaults — ported from token-launcher/config/launch.ts.
 // These mirror the on-chain graduation thresholds (LaunchFactory.graduation*)
 // and durations; kept as constants so callers don't hit RPC for static values.
-import { mainnet, base, fraxtal, katana, ink } from "viem/chains";
+import { mainnet, base, fraxtal, katana, ink, arbitrum } from "viem/chains";
 import { parseUnits, formatUnits } from "viem";
 
 export interface ChainLaunchConfig {
@@ -46,6 +46,7 @@ export const chainLaunchConfig: Record<number, ChainLaunchConfig> = {
   [fraxtal.id]: makeLaunchConfig(parseUnits("20000", 18), "frxUSD"),
   [katana.id]: makeLaunchConfig(parseUnits("2000000", 18), "KAT"),
   [ink.id]: makeLaunchConfig(ETH_10, "wETH"),
+  [arbitrum.id]: makeLaunchConfig(ETH_10, "wETH"),
 };
 
 const FALLBACK: ChainLaunchConfig = makeLaunchConfig(ETH_10, "ETH");

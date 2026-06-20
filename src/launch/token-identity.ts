@@ -11,7 +11,7 @@
  * KAT on Katana or FRAX on Fraxtal.
  */
 
-import { mainnet, base, fraxtal, katana, ink } from "viem/chains";
+import { mainnet, base, fraxtal, katana, ink, arbitrum } from "viem/chains";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -84,6 +84,7 @@ const CHAIN_RESERVED_TICKERS: Record<number, ReadonlyArray<string>> = {
     "vbKAT",
   ],
   [fraxtal.id]: ["frxUSD", "FRAX", "FXS"],
+  [arbitrum.id]: ["ARB"],
   [mainnet.id]: [],
   [base.id]: [],
   [ink.id]: [],

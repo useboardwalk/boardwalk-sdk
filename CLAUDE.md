@@ -2,10 +2,6 @@
 
 Guidance for Claude Code when working in **boardwalk-sdk** — a framework-agnostic TypeScript SDK + `boardwalk` CLI that builds **unsigned** Boardwalk transactions for agents to sign and submit.
 
-## Coding Approach
-
-For any task that writes, reviews, or refactors code here, invoke the `andrej-karpathy-skills:karpathy-guidelines` skill at the start (surgical changes, surface assumptions, verifiable success criteria, avoid overcomplication).
-
 ## Commands
 
 ```bash
@@ -34,7 +30,7 @@ src/
     chains.ts           SUPPORTED_CHAINS (viem chain objects — never hardcode chain ids)
     abis/               *.ts ABI consts (core 4 verbatim; the rest are minimal fragments)
   flow/               ← TxRequest execution primitives
-    encode.ts           encodeStep/encodeSteps + BUILDER_CODE_SUFFIX (the enforced ERC-8021 suffix)
+    encode.ts           encodeStep/encodeSteps + BUILDER_CODE_SUFFIX (the ERC-8021 suffix, Base-only)
     erc20.ts            buildConditionalApproveStep (viem PublicClient)
   builders/           ← the 5 v1 actions: launch, contribute, claim, stake-bmx, vote
   launch/             ← launch support: build-launch-config, member-discount, token-identity, description
@@ -47,7 +43,7 @@ src/
 ## Conventions (important)
 
 - **Constants → `src/constants.ts`. Public types → `src/types.ts`.** Don't scatter either. Internal helper types (e.g. `ApproveParams`) may stay co-located.
-- **Attribution is enforced.** Every built tx carries Boardwalk's ERC-8021 builder code (`BUILDER_CODE` in `constants.ts`), appended to calldata in `flow/encode.ts`. Do **not** add a per-call / CLI / env override — that is intentional.
+- **Attribution.** Boardwalk's ERC-8021 builder code (`BUILDER_CODE` in `constants.ts`) is appended to calldata in `flow/encode.ts` **on Base only** — that's where the code is registered (base.dev Builder Codes); other chains carry no suffix. Do **not** add a per-call / CLI / env override — that is intentional.
 - **Provenance.** Logic is lifted from the sibling `token-launcher` repo (`hooks/contracts/`, `lib/`, `components/transaction-flow/`, `config/`). Each module names its source in a header comment. The address registry and the four core ABIs (LaunchFactory, PresaleManager, RewardRouter, GovernanceVoter) are **verbatim copies** — keep them in sync; never hand-edit those. ABIs added for additional builders are **minimal hand-authored fragments** holding only the entries the SDK calls/reads (the full source ABIs are large); keep their signatures in sync with `token-launcher/config/abis`.
 - **Reads.** Builders take a viem `PublicClient`. Public RPCs rate-limit, so minimize adjacent round-trips: batch independent reads with `client.multicall({ multicallAddress: MULTICALL3_ADDRESS, allowFailure: false, contracts: [...] })` (not `Promise.all` of single `readContract` calls) — see `readLaunchCost`. Pass a pre-fetched `currentAllowance` to `buildConditionalApproveStep` to skip its allowance read when you've already batched it.
 - **Chain scope.** Launch/contribute/claim are multi-chain; stake-bmx and vote are Base-only. Guard chain-specific contracts with `assertDeployed(chainId, key)` so undeployed chains fail loudly.

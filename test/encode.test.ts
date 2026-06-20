@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { concatHex, encodeFunctionData, erc20Abi, type Address } from "viem";
+import { base, mainnet } from "viem/chains";
 import { encodeRequest, encodeStep } from "../src/flow/encode";
 import { BUILDER_CODE_SUFFIX } from "../src/flow/encode";
 
@@ -7,47 +8,46 @@ const TOKEN = "0x4200000000000000000000000000000000000006" as Address;
 const SPENDER = "0x2222222222222222222222222222222222222222" as Address;
 
 describe("encodeRequest", () => {
-  it("encodes a write request to calldata + the enforced builder-code suffix", () => {
-    const base = encodeFunctionData({
-      abi: erc20Abi,
-      functionName: "approve",
-      args: [SPENDER, BigInt(5)],
-    });
-    const { to, data, value } = encodeRequest({
-      abi: erc20Abi,
-      address: TOKEN,
-      functionName: "approve",
-      args: [SPENDER, BigInt(5)],
-    });
+  const approve = {
+    abi: erc20Abi,
+    address: TOKEN,
+    functionName: "approve",
+    args: [SPENDER, BigInt(5)],
+  } as const;
+  const approveCalldata = encodeFunctionData({
+    abi: erc20Abi,
+    functionName: "approve",
+    args: [SPENDER, BigInt(5)],
+  });
+
+  it("encodes a write request to calldata + the builder-code suffix on Base", () => {
+    const { to, data, value } = encodeRequest(approve, base.id);
     expect(to).toBe(TOKEN);
     expect(value).toBe(BigInt(0));
-    expect(data).toBe(concatHex([base, BUILDER_CODE_SUFFIX]));
+    expect(data).toBe(concatHex([approveCalldata, BUILDER_CODE_SUFFIX]));
   });
 
-  it("always appends the builder-code suffix (it is enforced, not overridable)", () => {
-    const base = encodeFunctionData({
-      abi: erc20Abi,
-      functionName: "approve",
-      args: [SPENDER, BigInt(5)],
-    });
-    const { data } = encodeRequest({
-      abi: erc20Abi,
-      address: TOKEN,
-      functionName: "approve",
-      args: [SPENDER, BigInt(5)],
-    });
-    expect(data.endsWith(BUILDER_CODE_SUFFIX.slice(2))).toBe(true);
-    expect(data.length).toBeGreaterThan(base.length);
+  it("does not append the builder-code suffix off Base", () => {
+    const { data } = encodeRequest(approve, mainnet.id);
+    expect(data).toBe(approveCalldata);
   });
 
-  it("appends the suffix to a raw send too", () => {
-    const { to, data, value } = encodeRequest({
-      to: SPENDER,
-      value: BigInt(7),
-    });
+  it("appends the suffix to a raw send on Base", () => {
+    const { to, data, value } = encodeRequest(
+      { to: SPENDER, value: BigInt(7) },
+      base.id,
+    );
     expect(to).toBe(SPENDER);
     expect(data).toBe(concatHex(["0x", BUILDER_CODE_SUFFIX]));
     expect(value).toBe(BigInt(7));
+  });
+
+  it("leaves a raw send untouched off Base", () => {
+    const { data } = encodeRequest(
+      { to: SPENDER, value: BigInt(7) },
+      mainnet.id,
+    );
+    expect(data).toBe("0x");
   });
 });
 

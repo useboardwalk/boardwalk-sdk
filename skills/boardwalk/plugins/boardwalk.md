@@ -51,7 +51,7 @@ npx -p @useboardwalk/sdk boardwalk <command> [flags]    # …or zero-install
 ```
 
 - **`calls` is an ORDERED array.** When an ERC-20 allowance is insufficient, a conditional **approve** is element `[0]` and the action follows. Feed the **whole array** to one batched submit so the user approves once.
-- Every call's `data` ends with Boardwalk's **enforced ERC-8021 builder-code suffix** — submit `data` exactly as printed.
+- On Base, every call's `data` ends with Boardwalk's **ERC-8021 builder-code suffix**; on any chain, submit `data` exactly as printed.
 - **`value`** is a decimal **wei** string. For every v1 action it is `"0"` (no native value is ever sent).
 - **Reads** (`status`, `launch-cost`) default to a **public RPC**. Public RPCs **rate-limit** — on a 429 / timeout, retry with `--rpc <url>` pointing at a dedicated endpoint (only Base has a built-in default).
 
@@ -293,9 +293,10 @@ A launch is a multi-leg flow. Legs (a)–(c) create the token on-chain; legs (d)
 | fraxtal  | 252  | ✅                          | ❌               |
 | katana   | —    | ✅                          | ❌               |
 | ink      | —    | ✅                          | ❌               |
+| arbitrum | 42161 | ✅                         | ❌               |
 
 - **Base is the only chain with full feature parity.** Base-only commands: `stake-bmx`, `unstake-bmx`, `handle-rewards`, `claim-participation`, and `vote` — the contracts are placeholders elsewhere and the CLI errors clearly if you target another chain. The other v0.3 actions (refund, seed-liquidity, fee/vesting claims, cast-visibility, LP, swap) are multi-chain.
-- **Attribution is automatic & enforced:** every built transaction carries Boardwalk's **ERC-8021 data-suffix** on its calldata, so volume submitted through the agent's own wallet is attributed. There is no flag to set.
+- **Attribution is automatic on Base:** transactions built for Base carry Boardwalk's **ERC-8021 data-suffix** on their calldata, so Base volume submitted through the agent's own wallet is attributed; other chains carry no suffix. There is no flag to set.
 
 ## Slippage / safety warnings
 

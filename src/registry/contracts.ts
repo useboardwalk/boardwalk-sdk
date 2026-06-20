@@ -1,5 +1,5 @@
 import type { Address } from "viem";
-import { mainnet, base, fraxtal, katana, ink } from "viem/chains";
+import { mainnet, base, fraxtal, katana, ink, arbitrum } from "viem/chains";
 
 /** Singleton contract addresses — one deployment per chain */
 export interface ChainContracts {
@@ -129,6 +129,24 @@ export const chainContracts: Record<number, ChainContracts> = {
     rewardReader: PLACEHOLDER,
     uniswapV2Router: "0x7f04C08f1c870B58c5fAEBF87A6C53675210453A", // Ink DEX Router
     uniswapV2Factory: "0x8e28edBFb74F5ef7De12E5091CACDcE45EE0BEaC", // Ink DEX Factory
+  },
+  [arbitrum.id]: {
+    launchFactory: "0x53a4fbc6E36a1CF7bfaf27D5f4682f7DD8C3ab9F",
+    integratorFeeCollector: "0x512F8D4E28EB53A6d036aEDA9C5a4D1De6DBD543",
+    boardwalkLPManager: "0x8BC6D6d2cdD68E51a8046F2C570824027842eD8D",
+    boostBurn: "0xe0f606e6730bE531EeAf42348dE43C2feeD43505",
+    governanceVoter: PLACEHOLDER,
+    participationDistributor: PLACEHOLDER,
+    treasury: "0x366624d894920e3abE1F231f67a02a1861Ff1CA3",
+    lpLocker: PLACEHOLDER,
+    bmxToken: "0xc2694a5c9f3a886d0467fce5e07f6211dfc86c48",
+    raiseToken: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", // WETH
+    rewardRouter: PLACEHOLDER,
+    stakedBmxTracker: PLACEHOLDER,
+    bonusBmxTracker: PLACEHOLDER,
+    rewardReader: PLACEHOLDER,
+    uniswapV2Router: "0x3c293f03700f873C8cfee7Faae36E3437B673A50",
+    uniswapV2Factory: "0xdD9EB26239a8A7B71631Dc70E872be831a65D198",
   },
 };
 
