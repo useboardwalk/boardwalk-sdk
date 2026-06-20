@@ -1,7 +1,7 @@
 ---
 name: boardwalk
 description: >-
-  Build and submit onchain Boardwalk actions from natural language: launch a token, contribute to / join a presale auction, claim presale tokens (or refund a failed launch), seed liquidity, stake/unstake BMX and claim staking/participation rewards, claim issuer/referrer/integrator fees and vested tokens, add/remove and stake/unstake Boardwalk LP, swap a launch token against its raise token on the Boardwalk DEX, boost/downvote a token's visibility, vote on fee direction, and check launch status or cost. Boardwalk is a fee-protection token-launch platform (permanently-locked liquidity + a built-in swap-fee equivalent). This skill drives the boardwalk CLI (npm package @useboardwalk/sdk), which prints UNSIGNED transaction calldata (and EIP-712 payloads to sign) — the user's own wallet signs and submits. Works on Base (full feature parity) plus Ethereum, Fraxtal, Katana, and Ink; BMX staking/unstaking, handle-rewards, participation-reward claims, and governance voting are Base-only. Use whenever a user wants to create, fund, or manage a Boardwalk launch onchain. With a shell it drives the CLI; with no shell (plain chat) it generates a prefilled launch link the user opens in the Boardwalk UI.
+  Build and submit onchain Boardwalk actions from natural language: launch a token, contribute to / join a presale auction, claim presale tokens (or refund a failed launch), seed liquidity, stake/unstake BMX and claim staking/participation rewards, claim issuer/referrer/integrator fees and vested tokens, add/remove and stake/unstake Boardwalk LP, swap a launch token against its raise token on the Boardwalk DEX, boost/downvote a token's visibility, vote on fee direction, and check launch status or cost. Boardwalk is a fee-protection token-launch platform (permanently-locked liquidity + a built-in swap-fee equivalent). This skill drives the boardwalk CLI (npm package @useboardwalk/sdk), which prints UNSIGNED transaction calldata (and EIP-712 payloads to sign) — the user's own wallet signs and submits. Works on Base (full feature parity) plus Ethereum, Fraxtal, Katana, Ink, and Arbitrum; BMX staking/unstaking, handle-rewards, participation-reward claims, and governance voting are Base-only. Use whenever a user wants to create, fund, or manage a Boardwalk launch onchain. With a shell it drives the CLI; with no shell (plain chat) it generates a prefilled launch link the user opens in the Boardwalk UI.
 metadata:
   homepage: https://www.useboardwalk.com
 ---
@@ -124,7 +124,7 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 | Input | Rule |
 | --- | --- |
 | Addresses (`--wallet --token --issuer-fee --referrer --token-a --token-b`, fee/vesting addresses) | valid 20-byte EIP-55 hex (`isAddress`) |
-| `--chain` | one of `base`, `ethereum`, `fraxtal`, `katana`, `ink` (or its numeric id) |
+| `--chain` | one of `base`, `ethereum`, `fraxtal`, `katana`, `ink`, `arbitrum` (or its numeric id) |
 | `--amount` / `--amount-a` / `--amount-b` / `--liquidity` / `--min-out` | a number **> 0**, in human units |
 | `--option` (`vote`) | integer **1–4** |
 | `--path` (`launch`, `launch-link`) | `express` or `advanced` (rejected otherwise) |

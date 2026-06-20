@@ -236,7 +236,7 @@ program
   )
   .requiredOption(
     "--chain <chain>",
-    "chain slug (base|ethereum|fraxtal|katana|ink) or numeric id",
+    "chain slug (base|ethereum|fraxtal|katana|ink|arbitrum) or numeric id",
   )
   .requiredOption(
     "--wallet <address>",
@@ -333,7 +333,7 @@ program
   )
   .requiredOption(
     "--chain <chain>",
-    "chain slug (base|ethereum|fraxtal|katana|ink) or numeric id",
+    "chain slug (base|ethereum|fraxtal|katana|ink|arbitrum) or numeric id",
   )
   .requiredOption("--name <name>", "token name (3–32 chars)")
   .requiredOption("--ticker <ticker>", "token ticker (2–10 chars, A–Z 0–9)")
