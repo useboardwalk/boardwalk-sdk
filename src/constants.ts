@@ -1,4 +1,7 @@
 // Single source of truth for SDK constants. Keep all magic values here.
+// Provenance: values lifted from the sibling token-launcher repo (e.g.
+// config/builder-code.ts, app/launch/constants.ts, lib/api/mutations.ts,
+// lib/launch-prefill.ts, lib/retry-helpers.ts) name their source inline below.
 
 /** Basis-point denominator (100% = 10_000 bps). */
 export const BPS_DENOMINATOR = BigInt(10_000);
