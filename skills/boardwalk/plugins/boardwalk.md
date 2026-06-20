@@ -3,14 +3,14 @@ title: "Boardwalk Plugin"
 description: "Launch, fund, and manage Boardwalk token launches — the CLI builds unsigned calldata → send_calls, or a prefilled launch link when no shell is available."
 tags: [token-launches, staking, governance, liquidity]
 name: boardwalk
-version: 0.4.0
+version: 0.5.0
 integration: hybrid
 chains: [base, ethereum, arbitrum]
 requires:
   shell: optional
   allowlist: []
   externalMcp: null
-  cliPackage: "npx -p @useboardwalk/sdk@0.4.0 boardwalk"
+  cliPackage: "npx -p @useboardwalk/sdk@0.5.0 boardwalk"
 auth: none
 risk: [low-liquidity, slippage, irreversible]
 ---
@@ -31,7 +31,7 @@ This plugin drives the `boardwalk` CLI (the `@useboardwalk/sdk` npm package), wh
 No install step is required — the CLI runs per call via `npx`:
 
 ```bash
-npx -p @useboardwalk/sdk@0.4.0 boardwalk <command> [flags]
+npx -p @useboardwalk/sdk@0.5.0 boardwalk <command> [flags]
 ```
 
 Optionally install it globally (`npm i -g @useboardwalk/sdk`) and call `boardwalk <command>` directly. The no-shell path needs nothing installed — it only produces a URL.

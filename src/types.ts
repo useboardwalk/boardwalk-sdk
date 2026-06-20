@@ -233,6 +233,15 @@ export interface VoteParams {
   account: Address;
   chainId: number;
   option: VoteOption;
+  /**
+   * Run the on-chain eligibility pre-checks (already-voted / voting-weight /
+   * participation-gate) and refuse a guaranteed revert. Default `true` — keep
+   * it on for agents/CLI, which have no other gate. A caller that already gates
+   * eligibility in its own UI (e.g. token-launcher's governance screen) can set
+   * `false` to skip the extra reads + build-time throws and instead let an
+   * ineligible vote revert on-chain, matching that UI's existing behavior.
+   */
+  checkEligibility?: boolean;
 }
 
 // ---------------------------------------------------------------------------

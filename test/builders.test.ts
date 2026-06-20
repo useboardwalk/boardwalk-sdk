@@ -281,6 +281,42 @@ describe("buildVoteSteps", () => {
     });
     expect(steps.map((s) => s.id)).toEqual(["vote"]);
   });
+
+  it("checkEligibility:false skips the eligibility reads + guards", async () => {
+    // Only the lean reads are provided; the eligibility reads (getUserVote,
+    // balanceOf, depositBalances) are intentionally absent so the mock throws
+    // ("unexpected read") if the builder touches them.
+    const client = mockClient({
+      governanceBurnAmount: BigInt(0),
+      allowance: BigInt(0),
+    });
+    const steps = await buildVoteSteps({
+      client,
+      account: ACCOUNT,
+      chainId: base.id,
+      option: 2,
+      checkEligibility: false,
+    });
+    expect(steps.map((s) => s.id)).toEqual(["vote"]);
+    expect(encodeStep(steps[0]!, base.id).data).toBe(
+      expectedData(governanceVoterAbi, "vote", [2]),
+    );
+  });
+
+  it("checkEligibility:false still approves when burn > 0", async () => {
+    const client = mockClient({
+      governanceBurnAmount: BigInt(100),
+      allowance: BigInt(0),
+    });
+    const steps = await buildVoteSteps({
+      client,
+      account: ACCOUNT,
+      chainId: base.id,
+      option: 1,
+      checkEligibility: false,
+    });
+    expect(steps.map((s) => s.id)).toEqual(["approve-bmx", "vote"]);
+  });
 });
 
 // ---------------------------------------------------------------------------

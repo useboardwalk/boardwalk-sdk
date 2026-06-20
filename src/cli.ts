@@ -229,7 +229,7 @@ program
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
       "Boardwalk's ERC-8021 builder code is appended on Base (where it is registered).",
   )
-  .version("0.4.0")
+  .version("0.5.0")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
 
 program
