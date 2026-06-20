@@ -74,6 +74,10 @@ import type {
   VoteOption,
 } from "./types";
 
+/** `--chain` help text, derived from the registry so it can't drift from the
+ *  supported set when a chain is added. */
+const CHAIN_HELP = `chain slug (${SUPPORTED_CHAINS.map((c) => c.slug).join("|")}) or numeric id`;
+
 function fail(message: string): never {
   console.error(`Error: ${message}`);
   process.exit(1);
@@ -236,7 +240,7 @@ program
   )
   .requiredOption(
     "--chain <chain>",
-    "chain slug (base|ethereum|fraxtal|katana|ink|arbitrum) or numeric id",
+    CHAIN_HELP,
   )
   .requiredOption(
     "--wallet <address>",
@@ -333,7 +337,7 @@ program
   )
   .requiredOption(
     "--chain <chain>",
-    "chain slug (base|ethereum|fraxtal|katana|ink|arbitrum) or numeric id",
+    CHAIN_HELP,
   )
   .requiredOption("--name <name>", "token name (3–32 chars)")
   .requiredOption("--ticker <ticker>", "token ticker (2–10 chars, A–Z 0–9)")
