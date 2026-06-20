@@ -1,6 +1,6 @@
 {
   "name": "boardwalk",
-  "description": "Build unsigned Boardwalk transactions (launch, contribute, claim, stake BMX, vote) for an agent's wallet to sign and submit, or generate a prefilled launch link. Drives the boardwalk CLI; non-custodial.",
+  "description": "Build unsigned Boardwalk transactions (launch, contribute, claim, refund, seed liquidity, stake/unstake BMX, claim staking/participation/fee/vesting rewards, LP add/remove/stake, swap, cast visibility, vote) for an agent's wallet to sign and submit, or generate a prefilled launch link. Drives the boardwalk CLI; non-custodial.",
   "author": {
     "name": "Boardwalk",
     "url": "https://www.useboardwalk.com"

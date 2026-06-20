@@ -1,7 +1,7 @@
 // Ported from token-launcher/lib/api/mutations.ts `postSignedMetadata`, keeping
 // the retry-on-404 to ride out indexer lag on a freshly-created launch.
 import { isAddress, type Address, type Hex } from "viem";
-import { API_BASE_URL } from "../constants";
+import { API_BASE_URL, RETRY_DELAYS_MS } from "../constants";
 import type {
   MetadataWireMessage,
   PostMetadataOptions,
@@ -43,8 +43,9 @@ export async function postSignedMetadata(
     if (res.ok) return res.json() as Promise<SubmitMetadataResponse>;
 
     if (res.status === 404 && Date.now() < giveUpAt) {
+      const delay = RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]!;
       attempt += 1;
-      await sleep(Math.min(2_000, 250 * 2 ** attempt));
+      await sleep(delay);
       continue;
     }
 

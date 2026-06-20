@@ -1,7 +1,7 @@
 ---
 name: boardwalk
 description: >-
-  Build and submit onchain Boardwalk actions from natural language: launch a token, contribute to / join a presale auction, claim presale tokens after a successful launch, stake BMX, vote on fee direction, and check launch status or cost. Boardwalk is a fee-protection token-launch platform (permanently-locked liquidity + a built-in swap-fee equivalent). This skill drives the boardwalk CLI (npm package @useboardwalk/sdk), which prints UNSIGNED transaction calldata (and EIP-712 payloads to sign) — the user's own wallet signs and submits. Works on Base (full feature parity) plus Ethereum, Fraxtal, Katana, and Ink (launch/contribute/claim); stake-bmx and vote are Base-only. Use whenever a user wants to create, fund, or manage a Boardwalk launch onchain. With a shell it drives the CLI; with no shell (plain chat) it generates a prefilled launch link the user opens in the Boardwalk UI.
+  Build and submit onchain Boardwalk actions from natural language: launch a token, contribute to / join a presale auction, claim presale tokens (or refund a failed launch), seed liquidity, stake/unstake BMX and claim staking/participation rewards, claim issuer/referrer/integrator fees and vested tokens, add/remove and stake/unstake Boardwalk LP, swap a launch token against its raise token on the Boardwalk DEX, boost/downvote a token's visibility, vote on fee direction, and check launch status or cost. Boardwalk is a fee-protection token-launch platform (permanently-locked liquidity + a built-in swap-fee equivalent). This skill drives the boardwalk CLI (npm package @useboardwalk/sdk), which prints UNSIGNED transaction calldata (and EIP-712 payloads to sign) — the user's own wallet signs and submits. Works on Base (full feature parity) plus Ethereum, Fraxtal, Katana, and Ink; BMX staking/unstaking, handle-rewards, participation-reward claims, and governance voting are Base-only. Use whenever a user wants to create, fund, or manage a Boardwalk launch onchain. With a shell it drives the CLI; with no shell (plain chat) it generates a prefilled launch link the user opens in the Boardwalk UI.
 metadata:
   homepage: https://www.useboardwalk.com
 ---
@@ -20,7 +20,7 @@ This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` 
 
 ## Two ways to drive Boardwalk
 
-**Shell available → use the `boardwalk` CLI.** It prints unsigned calldata your wallet signs and submits (the rest of this doc): launch, contribute, claim, stake, vote, and metadata.
+**Shell available → use the `boardwalk` CLI.** It prints unsigned calldata your wallet signs and submits (the rest of this doc): launch + metadata, contribute, claim, refund, seed-liquidity, BMX stake/unstake + handle-rewards, fee/vesting/participation claims, Boardwalk LP add/remove/stake/unstake/claim, swap, cast-visibility, and vote.
 
 **No shell (plain chat, no terminal) → emit a prefilled launch link.** `boardwalk launch-link …` (or `buildLaunchLink` from `@useboardwalk/sdk`) returns a `…/launch?path=…&prefill=…` URL. The user opens it, the Boardwalk UI loads the launch summary fully prefilled, then they add a logo, connect a wallet, and sign — all in the UI. No tools required, so it works on any surface.
 
@@ -35,7 +35,7 @@ boardwalk <command> [flags]                          # after: npm i -g @useboard
 npx -p @useboardwalk/sdk boardwalk <command> [flags]    # …or zero-install
 ```
 
-- The CLI is **v0.1.0** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a public RPC by default; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint (only Base has a built-in default RPC).
+- The CLI is **v0.3.0** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a public RPC by default; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint (only Base has a built-in default RPC).
 - The user supplies their own wallet address with `--wallet <addr>` (BYO wallet — get it from your harness, e.g. Base MCP `get_wallets`). The CLI builds calldata **for** that address; it never asks for a key.
 - **Every transaction command prints JSON** of this shape:
 
@@ -94,10 +94,26 @@ There is **no login** required for onchain actions — no Privy, no session. The
 | `claim`           | Claim presale tokens (only after seeded + 7-day post-seed cliff)               | `--token --chain --wallet` · opt: `--rpc`                                                                                                                                                                                             | multi-chain   |
 | `stake-bmx`       | Stake BMX: conditional BMX approve + `stake-bmx`                               | `--amount --wallet` · opt: `--chain base --rpc`                                                                                                                                                                                       | **Base only** |
 | `vote`            | Vote on fee direction (optional BMX approve if burn>0) + `vote`                | `--option <1-4> --wallet` · opt: `--chain base --rpc`                                                                                                                                                                                 | **Base only** |
+| `refund`          | Reclaim a contribution on a **failed** launch + `refund`                       | `--token --chain --wallet`                                                                                                                                                                                                            | multi-chain   |
+| `seed-liquidity`  | Activate trading after a successful presale + `seedLiquidity`                  | `--token --chain --wallet`                                                                                                                                                                                                            | multi-chain   |
+| `unstake-bmx`     | Unstake BMX (no approve) + `unstakeBmx`                                         | `--amount --wallet` · opt: `--chain base`                                                                                                                                                                                             | **Base only** |
+| `handle-rewards`  | Claim/compound staking rewards + `handleRewards`                               | `--wallet` · opt: `--chain base --claim-op-bmx --stake-mp --claim-weth --convert-weth-to-eth` (no flags = claim all)                                                                                                                  | **Base only** |
+| `claim-issuer-fees` | Issuer claims fees as the raise token + `claimAsRaiseToken`                  | `--token --recipient-idx --chain --wallet` · opt: `--min-out --deadline --rpc`                                                                                                                                                        | multi-chain   |
+| `claim-referrer-fees` | Referrer claims their fee share + `claimReferrerFees`                      | `--token --chain --wallet` · opt: `--rpc`                                                                                                                                                                                             | multi-chain   |
+| `claim-integrator-fees` | Integrator claims a token's accrued tax + `claim`                       | `--token --chain --wallet` · opt: `--slippage-bps --min-out --deadline --rpc`                                                                                                                                                         | multi-chain   |
+| `claim-vested`    | Claim vested launch tokens + `claim(allocationId)`                             | `--token --allocation-id --chain --wallet` · opt: `--rpc`                                                                                                                                                                             | multi-chain   |
+| `claim-participation` | Claim participation BMX rewards + `claimAll(epochs)`                       | `--epochs <csv> --wallet` · opt: `--chain base`                                                                                                                                                                                       | **Base only** |
+| `cast-visibility` | Boost/downvote a token (burns BMX) + `boost`/`deboost`                         | `--token --mode boost\|deboost --chain --wallet` · opt: `--rpc`                                                                                                                                                                       | multi-chain   |
+| `add-liquidity`   | Add liquidity to a Boardwalk pair (2 approves + `addLiquidity`)                | `--token-a --token-b --amount-a --amount-b --chain --wallet` · opt: `--slippage-bps --rpc`                                                                                                                                            | multi-chain   |
+| `remove-liquidity` | Remove liquidity (approve LP + `removeLiquidity`)                             | `--token --liquidity --chain --wallet` · opt: `--slippage-bps --rpc`                                                                                                                                                                  | multi-chain   |
+| `stake-lp`        | Stake a launch's LP tokens (approve + `stake`)                                 | `--token --amount --chain --wallet` · opt: `--rpc`                                                                                                                                                                                    | multi-chain   |
+| `unstake-lp`      | Unstake LP tokens + `withdraw`                                                 | `--token --amount --chain --wallet` · opt: `--rpc`                                                                                                                                                                                    | multi-chain   |
+| `claim-lp-rewards` | Claim LP staking rewards + `claim`                                            | `--token --chain --wallet` · opt: `--rpc`                                                                                                                                                                                             | multi-chain   |
+| `swap`            | Swap launch↔raise token via the Boardwalk DEX (approve + `swapExactTokensForTokens`) | `--token --amount --direction buy\|sell --chain --wallet` · opt: `--slippage-bps --rpc`                                                                                                                                         | multi-chain   |
 | `launch-cost`     | Read the BMX burn cost to launch (with member discount)                        | `--chain --wallet` · opt: `--rpc`                                                                                                                                                                                                     | read-only     |
 | `status`          | Read a launch's status / path / presale manager / raise token                  | `--token --chain`                                                                                                                                                                                                                     | read-only     |
 
-`--amount` is in **human units** (e.g. `0.01` WETH, `100` BMX); the CLI scales to wei. Categories are slugs (e.g. `meme-culture`). `--option` for `vote`: **1 = Treasury, 2 = Buy & Burn BMX, 3 = Buy & Burn LP, 4 = Participation**. There is also a shell-free **`launch-link`** command (below) that emits a prefilled `/launch` URL instead of calldata.
+`--amount` (and `--amount-a/--amount-b/--liquidity/--min-out`) are in **human units** (e.g. `0.01` WETH, `100` BMX); the CLI scales to wei. Categories are slugs (e.g. `meme-culture`). `--option` for `vote`: **1 = Treasury, 2 = Buy & Burn BMX, 3 = Buy & Burn LP, 4 = Participation**. `--mode` for `cast-visibility` is `boost|deboost`; `--direction` for `swap` is `buy` (raise→token) or `sell` (token→raise). The fee/vesting/LP-staking commands take only `--token` and **resolve the per-launch contract on-chain** (no need to pass FeeDistributor/VestingStream/LPStaking addresses). There is also a shell-free **`launch-link`** command (below) that emits a prefilled `/launch` URL instead of calldata.
 
 ---
 
@@ -107,10 +123,17 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 
 | Input | Rule |
 | --- | --- |
-| Addresses (`--wallet --token --issuer-fee --referrer`, fee/vesting addresses) | valid 20-byte EIP-55 hex (`isAddress`) |
+| Addresses (`--wallet --token --issuer-fee --referrer --token-a --token-b`, fee/vesting addresses) | valid 20-byte EIP-55 hex (`isAddress`) |
 | `--chain` | one of `base`, `ethereum`, `fraxtal`, `katana`, `ink` (or its numeric id) |
-| `--amount` (`contribute`, `stake-bmx`) | a number **> 0**, in human units |
+| `--amount` / `--amount-a` / `--amount-b` / `--liquidity` / `--min-out` | a number **> 0**, in human units |
 | `--option` (`vote`) | integer **1–4** |
+| `--path` (`launch`, `launch-link`) | `express` or `advanced` (rejected otherwise) |
+| `--mode` (`cast-visibility`) | `boost` or `deboost` |
+| `--direction` (`swap`) | `buy` or `sell` |
+| `--epochs` (`claim-participation`) | comma-separated non-negative integers, **≥ 1** (e.g. `0,1,2`) |
+| `--recipient-idx` (`claim-issuer-fees`), `--allocation-id` (`claim-vested`) | a **non-negative integer** |
+| `--slippage-bps` (`swap`, LP, `claim-integrator-fees`) | integer **0–9999** (default 50 = 0.5%) |
+| `--deadline` (fee claims) | unix-seconds integer (default now + 1200s) |
 | `--category` | a launch slug: `meme-culture, gaming, creator-media, protocol-defi, infra-tools, app-consumer, nft-collectibles, community, ai-agents, public-goods, other` |
 | `--presale-percent` (advanced) | integer **25–50, divisible by 5** |
 | `--fee` / `--vesting` (advanced) | `<label>:<address>:<percent>`, percent **> 0**. Advanced needs **≥1 `--fee`**; **`--vesting` is required when presale < 50**. Labels — fee: `individual\|entity\|publicGood\|growthTeam`; vesting also allows `referrer` |
@@ -123,9 +146,14 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 
 - **`contribute`** → run `status`; require `status === "presale"` and a non-null `presaleManager`, and confirm the wallet holds **≥ amount** of `raiseToken`.
 - **`claim`** → run `status`; require `status === "seeded"`. The CLI then checks the 7-day post-seed cliff and **either** emits the `claim` call **or** refuses with a `cliffEnd` timestamp — surface the unlock time, don't retry before it.
+- **`refund`** → run `status`; only valid on `status === "failed"` (the CLI gates on this).
+- **`seed-liquidity`** → only before liquidity is seeded; the CLI refuses if the launch is already `seeded`.
+- **`swap` / `remove-liquidity` / `stake-lp` / `unstake-lp` / `claim-lp-rewards`** → require a **seeded** launch (the Boardwalk pool / LP token must exist); the CLI errors clearly (`no Boardwalk pool`, `liquidity is not seeded`) otherwise.
+- **`claim-issuer-fees` / `claim-referrer-fees` / `claim-vested`** → the launch must be indexed on-chain; the CLI resolves the per-launch FeeDistributor/VestingStream via `LaunchFactory.launches(--token)` and errors if it's undeployed.
+- **`cast-visibility`** → burns BMX; the wallet needs ≥ the live boost cost in BMX (the CLI reads it, applying the NFT member discount).
 - **`launch` / `vote`** → check the wallet's BMX balance covers the burn (`launch-cost` gives `bmxBurnCost`; `vote` only burns when `governanceBurnAmount > 0`).
 - **`vote`** → the CLI checks eligibility onchain and refuses to emit the call if the wallet **already voted this epoch**, has **no staked BMX (no voting power)**, or its **multiplier points are below the 1.5% participation gate** — surface the error (stake BMX / compound points), don't retry as-is.
-- **All** → the wallet must be on the **right chain**; `stake-bmx` and `vote` are **Base-only**.
+- **All** → the wallet must be on the **right chain**; `stake-bmx`, `unstake-bmx`, `handle-rewards`, `claim-participation`, and `vote` are **Base-only** (the staking/governance contracts are placeholders elsewhere and the CLI errors clearly).
 
 ---
 
@@ -332,6 +360,63 @@ boardwalk vote --option 1 --wallet 0x3666…1CA3 --chain base
 
 ---
 
+### More actions (v0.3)
+
+All of these print the same `{ calls, …meta }` shape and follow the same submit flow (batched `calls`, approve at `[0]` when present). The fee/vesting/LP commands take only `--token` and resolve the per-launch contract on-chain.
+
+**Presale lifecycle**
+
+```bash
+boardwalk refund         --token 0x… --chain base --wallet 0xYou   # only when status == failed
+boardwalk seed-liquidity --token 0x… --chain base --wallet 0xYou   # activate trading post-presale
+```
+
+**BMX staking (Base-only)**
+
+```bash
+boardwalk unstake-bmx    --amount 100 --wallet 0xYou               # no approve
+boardwalk handle-rewards --wallet 0xYou                            # no flags = claim everything
+boardwalk handle-rewards --wallet 0xYou --claim-weth --convert-weth-to-eth
+```
+
+**Fee / vesting / participation claims**
+
+```bash
+boardwalk claim-issuer-fees     --token 0x… --recipient-idx 0 --chain base --wallet 0xYou [--min-out 0.1 --deadline <unix>]
+boardwalk claim-referrer-fees   --token 0x… --chain base --wallet 0xYou
+boardwalk claim-integrator-fees --token 0x… --chain base --wallet 0xYou [--slippage-bps 50]   # derives minOut from the collector quote
+boardwalk claim-vested          --token 0x… --allocation-id 0 --chain base --wallet 0xYou
+boardwalk claim-participation   --epochs 0,1,2 --wallet 0xYou        # Base-only
+```
+
+**Visibility (burns BMX)**
+
+```bash
+boardwalk cast-visibility --token 0x… --mode boost   --chain base --wallet 0xYou
+boardwalk cast-visibility --token 0x… --mode deboost --chain base --wallet 0xYou
+```
+
+**Boardwalk LP**
+
+```bash
+boardwalk add-liquidity    --token-a 0xWETH --token-b 0xBMX --amount-a 0.01 --amount-b 100 --chain base --wallet 0xYou [--slippage-bps 50]
+boardwalk remove-liquidity --token 0x… --liquidity 1 --chain base --wallet 0xYou [--slippage-bps 50]
+boardwalk stake-lp         --token 0x… --amount 1 --chain base --wallet 0xYou
+boardwalk unstake-lp       --token 0x… --amount 1 --chain base --wallet 0xYou
+boardwalk claim-lp-rewards --token 0x… --chain base --wallet 0xYou
+```
+
+**Swap (Boardwalk DEX, single-hop launch↔raise token)**
+
+```bash
+boardwalk swap --token 0x… --amount 0.01 --direction buy  --chain base --wallet 0xYou   # raise → token
+boardwalk swap --token 0x… --amount 1000 --direction sell --chain base --wallet 0xYou   # token → raise
+```
+
+The swap quotes via the router's `getAmountsOut` and applies `--slippage-bps` (default 50); it errors `no Boardwalk pool` if the token's pool isn't seeded.
+
+---
+
 ### Read commands
 
 **`status`** — what state is a launch in?
@@ -400,7 +485,7 @@ launch → send_calls([approve-bmx, create-launch]) → poll get_request_status
 | Katana   | `katana`   | —        | ✅                          | —         | —    |
 | Ink      | `ink`      | —        | ✅                          | —         | —    |
 
-**Base** is the only chain with **full feature parity**. `stake-bmx` and `vote` are **Base-only** — on other chains those contracts are placeholders and the CLI errors clearly.
+**Base** is the only chain with **full feature parity**. **Base-only** commands: `stake-bmx`, `unstake-bmx`, `handle-rewards`, `claim-participation`, and `vote` — on other chains those contracts are placeholders and the CLI errors clearly. The other v0.3 actions (refund, seed-liquidity, fee/vesting claims, cast-visibility, LP, swap) are **multi-chain**, available wherever launch/contribute/claim are.
 
 ---
 

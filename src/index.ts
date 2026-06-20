@@ -22,6 +22,24 @@ export type {
   StakeBmxParams,
   VoteParams,
   VoteOption,
+  RefundParams,
+  SeedLiquidityParams,
+  UnstakeBmxParams,
+  HandleRewardsParams,
+  ClaimIssuerFeesParams,
+  ClaimReferrerFeesParams,
+  ClaimIntegratorFeesParams,
+  ClaimVestedTokensParams,
+  ClaimParticipationRewardsParams,
+  CastVisibilityParams,
+  AddLiquidityParams,
+  RemoveLiquidityParams,
+  StakeLpParams,
+  WithdrawLpParams,
+  ClaimLpRewardsParams,
+  ClaimAllLpRewardsParams,
+  SwapParams,
+  LaunchAddresses,
   MetadataInput,
   LaunchMetadataMessage,
   MetadataWireMessage,
@@ -93,6 +111,29 @@ export { buildClaimSteps } from "./builders/claim";
 export { buildStakeBmxSteps } from "./builders/stake-bmx";
 export { buildVoteSteps } from "./builders/vote";
 
+// Builders — presale lifecycle / staking / claims / visibility
+export { buildRefundSteps } from "./builders/refund";
+export { buildSeedLiquiditySteps } from "./builders/seed-liquidity";
+export { buildUnstakeBmxSteps } from "./builders/unstake-bmx";
+export { buildHandleRewardsSteps } from "./builders/handle-rewards";
+export { buildClaimIssuerFeesSteps } from "./builders/claim-issuer-fees";
+export { buildClaimReferrerFeesSteps } from "./builders/claim-referrer-fees";
+export { buildClaimIntegratorFeesSteps } from "./builders/claim-integrator-fees";
+export { buildClaimVestedTokensSteps } from "./builders/claim-vested-tokens";
+export { buildClaimParticipationRewardsSteps } from "./builders/claim-participation-rewards";
+export { buildCastVisibilitySteps } from "./builders/cast-visibility";
+
+// Builders — Boardwalk LP + swap
+export { buildAddLiquiditySteps } from "./builders/add-liquidity";
+export { buildRemoveLiquiditySteps } from "./builders/remove-liquidity";
+export { buildStakeLpSteps } from "./builders/stake-lp";
+export { buildWithdrawLpSteps } from "./builders/withdraw-lp";
+export {
+  buildClaimLpRewardsSteps,
+  buildClaimAllLpRewardsSteps,
+} from "./builders/claim-lp-rewards";
+export { buildSwapSteps } from "./builders/swap";
+
 // Launch config
 export { buildLaunchConfig } from "./launch/build-launch-config";
 export { buildLaunchLink } from "./launch/build-launch-link";
@@ -108,5 +149,5 @@ export { uploadLogo } from "./metadata/upload";
 export { postSignedMetadata } from "./metadata/post";
 
 // Read
-export { getLaunch, getAuctionUrl } from "./read/launches";
+export { getLaunch, getLaunchAddresses, getAuctionUrl } from "./read/launches";
 export { apiGet, ApiError } from "./read/client";

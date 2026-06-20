@@ -3,7 +3,7 @@ title: Boardwalk Plugin
 description: Launch tokens, contribute to auctions, claim, stake BMX, and vote — via the boardwalk CLI driven through Base MCP's non-custodial wallet; or generate a prefilled launch link when no shell is available.
 ---
 
-The Boardwalk plugin lets an agent drive the Boardwalk token-launch platform from inside Base MCP. It shells out to the **`boardwalk` CLI (v0.1.0)**, which only ever prints **unsigned** calldata (and, for launch metadata, an EIP-712 payload to sign). The user's Base Account signs and submits — the CLI and the Base MCP server never touch a private key.
+The Boardwalk plugin lets an agent drive the Boardwalk token-launch platform from inside Base MCP. It shells out to the **`boardwalk` CLI (v0.3.0)**, which only ever prints **unsigned** calldata (and, for launch metadata, an EIP-712 payload to sign). The user's Base Account signs and submits — the CLI and the Base MCP server never touch a private key.
 
 > [!IMPORTANT]
 > **Shell available → drive the `boardwalk` CLI** (below): unsigned calldata → `send_calls`. **No shell (plain chat, no terminal) → emit a prefilled launch link instead:** generate a `…/launch?path=…&prefill=…` URL — with `boardwalk launch-link` where a shell exists, or `buildLaunchLink` from `@useboardwalk/sdk` (a pure function, no tools) — and hand it to the user; the launch UI collects the logo and signs/submits. The link path needs no tools, so it works anywhere, but it covers **launch** only (contribute/claim/stake/vote require the CLI + a signer). For the CLI path, complete the Base MCP onboarding in `SKILL.md` first (wallet connection, `send_calls`, `get_request_status`).
@@ -180,6 +180,37 @@ boardwalk launch-cost --chain base --wallet 0x3666…1CA3
 
 `launch-cost` tells you the **BMX burn** required for a launch up front (`bmxBurnCost`, wei). The Boardwalk NFT is **not** required to launch — `isMember: true` only applies a discount (`discountBps`).
 
+### More actions (v0.3)
+
+The CLI also covers the rest of the Boardwalk surface — all with the same flow (**`get_wallets` → run CLI → `send_calls` the batch → `get_request_status`**) and the same `{ calls, …meta }` output. The fee/vesting/LP commands take only `--token` and resolve the per-launch contract on-chain.
+
+```bash
+# presale lifecycle
+boardwalk refund         --token 0x… --chain base --wallet 0xYou    # status == failed
+boardwalk seed-liquidity --token 0x… --chain base --wallet 0xYou
+# BMX staking (Base-only)
+boardwalk unstake-bmx    --amount 100 --wallet 0xYou
+boardwalk handle-rewards --wallet 0xYou                             # no flags = claim all
+# fee / vesting / participation claims
+boardwalk claim-issuer-fees     --token 0x… --recipient-idx 0 --chain base --wallet 0xYou [--min-out --deadline]
+boardwalk claim-referrer-fees   --token 0x… --chain base --wallet 0xYou
+boardwalk claim-integrator-fees --token 0x… --chain base --wallet 0xYou [--slippage-bps 50]
+boardwalk claim-vested          --token 0x… --allocation-id 0 --chain base --wallet 0xYou
+boardwalk claim-participation   --epochs 0,1,2 --wallet 0xYou       # Base-only
+# visibility (burns BMX)
+boardwalk cast-visibility --token 0x… --mode boost|deboost --chain base --wallet 0xYou
+# Boardwalk LP
+boardwalk add-liquidity    --token-a 0xWETH --token-b 0xBMX --amount-a 0.01 --amount-b 100 --chain base --wallet 0xYou [--slippage-bps 50]
+boardwalk remove-liquidity --token 0x… --liquidity 1 --chain base --wallet 0xYou [--slippage-bps 50]
+boardwalk stake-lp         --token 0x… --amount 1 --chain base --wallet 0xYou
+boardwalk unstake-lp       --token 0x… --amount 1 --chain base --wallet 0xYou
+boardwalk claim-lp-rewards --token 0x… --chain base --wallet 0xYou
+# swap (Boardwalk DEX, single-hop launch↔raise token)
+boardwalk swap --token 0x… --amount 0.01 --direction buy|sell --chain base --wallet 0xYou [--slippage-bps 50]
+```
+
+Base-only: `unstake-bmx`, `handle-rewards`, `claim-participation` (alongside `stake-bmx`/`vote`). State gates: `refund` needs `status == failed`; `swap`/LP/`stake-lp` need a **seeded** launch (the CLI errors `no Boardwalk pool` / `not seeded` otherwise). See `SKILL.md` for the full per-command flag and validation reference.
+
 ### Launch link (shell-less — no `send_calls`)
 
 When you **can't** run a shell, you can still start a launch: emit a prefilled link. There's no `get_wallets` and no `send_calls` here — just produce the URL and hand it over.
@@ -263,7 +294,7 @@ A launch is a multi-leg flow. Legs (a)–(c) create the token on-chain; legs (d)
 | katana   | —    | ✅                          | ❌               |
 | ink      | —    | ✅                          | ❌               |
 
-- **Base is the only chain with full feature parity.** `stake-bmx` and `vote` are **Base-only** — the contracts are placeholders elsewhere and the CLI errors clearly if you target another chain.
+- **Base is the only chain with full feature parity.** Base-only commands: `stake-bmx`, `unstake-bmx`, `handle-rewards`, `claim-participation`, and `vote` — the contracts are placeholders elsewhere and the CLI errors clearly if you target another chain. The other v0.3 actions (refund, seed-liquidity, fee/vesting claims, cast-visibility, LP, swap) are multi-chain.
 - **Attribution is automatic & enforced:** every built transaction carries Boardwalk's **ERC-8021 data-suffix** on its calldata, so volume submitted through the agent's own wallet is attributed. There is no flag to set.
 
 ## Slippage / safety warnings

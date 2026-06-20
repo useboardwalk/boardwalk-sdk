@@ -13,7 +13,14 @@ import type {
   LaunchLinkPrefill,
   LaunchLinkSocials,
 } from "../types";
-import { LAUNCH_BASE_URL, LAUNCH_CATEGORY_SLUGS } from "../constants";
+import {
+  DISCORD_RE,
+  FEE_LABELS,
+  HANDLE_RE,
+  LAUNCH_BASE_URL,
+  LAUNCH_CATEGORY_SLUGS,
+  VESTING_LABELS,
+} from "../constants";
 import {
   SUPPORTED_CHAINS,
   toChainSlug,
@@ -49,6 +56,19 @@ function normalizeDiscord(raw: string): string {
   return match?.[1] ?? trimmed;
 }
 
+function isYouTubeUrl(value: string): boolean {
+  try {
+    const host = new URL(value).hostname.replace(/^www\./, "");
+    return (
+      host === "youtube.com" ||
+      host === "youtu.be" ||
+      host.endsWith(".youtube.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
 function resolveChain(chain: string | number): {
   chainId: number;
   slug: string;
@@ -75,24 +95,49 @@ function compactSocials(
   if (!socials) return undefined;
   const out: LaunchLinkSocials = {};
   const x = socials.x?.trim().replace(/^@/, "");
-  if (x) out.x = x;
+  if (x) {
+    if (!HANDLE_RE.test(x))
+      throw new Error("socials.x must be 1–64 chars of letters, numbers, _ or .");
+    out.x = x;
+  }
   const telegram = socials.telegram?.trim().replace(/^@/, "");
-  if (telegram) out.telegram = telegram;
+  if (telegram) {
+    if (!HANDLE_RE.test(telegram))
+      throw new Error(
+        "socials.telegram must be 1–64 chars of letters, numbers, _ or .",
+      );
+    out.telegram = telegram;
+  }
   const discord = socials.discord ? normalizeDiscord(socials.discord) : "";
-  if (discord) out.discord = discord;
+  if (discord) {
+    if (!DISCORD_RE.test(discord))
+      throw new Error(
+        "socials.discord must be a 1–64 char invite code (letters, numbers, _, -, .)",
+      );
+    out.discord = discord;
+  }
   const youtube = socials.youtube?.trim();
-  if (youtube) out.youtube = youtube;
+  if (youtube) {
+    if (!isYouTubeUrl(youtube))
+      throw new Error("socials.youtube must be a youtube.com or youtu.be URL");
+    out.youtube = youtube;
+  }
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
 function toDtoRecipients(
   entries: FeeRecipientInput[],
+  allowedLabels: string[],
 ): Array<{ label: string; address: Address; percent: number }> {
-  return entries.map((e) => ({
-    label: e.label ?? "individual",
-    address: e.address,
-    percent: e.percent,
-  }));
+  return entries.map((e) => {
+    const label = e.label ?? "individual";
+    if (!allowedLabels.includes(label)) {
+      throw new Error(
+        `recipient label "${label}" must be one of: ${allowedLabels.join(", ")}`,
+      );
+    }
+    return { label, address: e.address, percent: e.percent };
+  });
 }
 
 /**
@@ -182,8 +227,10 @@ export function buildLaunchLink(input: LaunchLinkInput): BuildLaunchLinkResult {
       prefill.raiseGoalEth = input.raiseGoalEth;
     }
 
-    if (input.issuerFee?.length) prefill.fees = toDtoRecipients(input.issuerFee);
-    if (input.vesting?.length) prefill.vesting = toDtoRecipients(input.vesting);
+    if (input.issuerFee?.length)
+      prefill.fees = toDtoRecipients(input.issuerFee, FEE_LABELS);
+    if (input.vesting?.length)
+      prefill.vesting = toDtoRecipients(input.vesting, VESTING_LABELS);
     if (input.referrer && isAddress(input.referrer))
       prefill.referrer = input.referrer;
   }
