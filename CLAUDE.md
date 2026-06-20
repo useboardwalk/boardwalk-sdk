@@ -63,4 +63,10 @@ src/
 
 ## Version update
 
-When pushing a new release, make sure to also update the sdk version constant in cli.ts to be in line.
+A user-facing change ships a version bump in the same PR — don't defer it to "release time". Bump all four in lockstep so the tag, npm package, CLI `--version`, and docs never drift:
+
+- `package.json` `version` (the npm package version)
+- `src/cli.ts` `.version("…")` (the CLI `--version` output)
+- the `v…` reference in `skills/boardwalk/SKILL.md` and `skills/boardwalk/plugins/boardwalk.md`
+
+Use the tag you intend to release (e.g. a new chain / action is a minor bump). After merge, `npm publish` publishes whatever `package.json` says — so if it wasn't bumped, the release is hollow (tag says X, code says X-1).
