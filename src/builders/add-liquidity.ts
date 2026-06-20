@@ -1,8 +1,8 @@
 // Ported from token-launcher/hooks/contracts/useAddLiquidity.ts.
 import { erc20Abi } from "viem";
 import { boardwalkLPManagerAbi } from "../registry/abis";
-import { getContracts } from "../registry/contracts";
-import { MULTICALL3_ADDRESS } from "../constants";
+import { assertDeployed } from "../registry/contracts";
+import { DEFAULT_LP_DEADLINE_SECONDS, MULTICALL3_ADDRESS } from "../constants";
 import { buildConditionalApproveStep } from "../flow/erc20";
 import type { AddLiquidityParams, TxStep } from "../types";
 
@@ -28,9 +28,10 @@ export async function buildAddLiquiditySteps(
   } = params;
   if (amountADesired <= BigInt(0) || amountBDesired <= BigInt(0))
     throw new Error("Both desired amounts must be greater than 0");
-  const { boardwalkLPManager } = getContracts(chainId);
+  const boardwalkLPManager = assertDeployed(chainId, "boardwalkLPManager");
   const deadline =
-    params.deadline ?? BigInt(Math.floor(Date.now() / 1000) + 1800);
+    params.deadline ??
+    BigInt(Math.floor(Date.now() / 1000) + DEFAULT_LP_DEADLINE_SECONDS);
 
   const [allowanceA, allowanceB] = await client.multicall({
     allowFailure: false,

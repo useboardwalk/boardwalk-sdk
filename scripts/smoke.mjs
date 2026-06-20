@@ -33,9 +33,11 @@ const run = (args) =>
     execFile(
       process.execPath,
       [CLI, ...args],
-      { cwd: ROOT },
+      { cwd: ROOT, timeout: 30_000, killSignal: "SIGKILL" },
       (err, stdout, stderr) => {
-        resolve({ code: err?.code ?? 0, stdout, stderr: stderr + (err ? "" : "") });
+        // A timeout/SIGKILL leaves err.code null — report nonzero so it fails.
+        const code = err ? (typeof err.code === "number" ? err.code : 1) : 0;
+        resolve({ code, stdout, stderr: stderr + (err ? "" : "") });
       },
     );
   });
@@ -46,6 +48,12 @@ async function pickTokens() {
   const res = await fetch(`${API}/boardwalk-launches?chainId=8453&limit=25`, {
     headers: { accept: "application/json" },
   });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(
+      `token API failed: ${res.status} ${res.statusText} ${body.slice(0, 200)}`,
+    );
+  }
   const { launches = [] } = await res.json();
   const express = launches.find((l) => l.path === "EXPRESS") ?? launches[0];
   const advanced = launches.find((l) => l.path === "ADVANCED") ?? launches[0];
@@ -68,10 +76,15 @@ function commands({ token, advancedToken }) {
   };
   const readOk = (r) => (JSON.parse(r.stdout), null);
   const has = (key) => (r) => (JSON.parse(r.stdout)[key] ? null : `no ${key}`);
-  const gracefully = (re) => (r) =>
-    r.code !== 0 && re.test(r.stdout + r.stderr)
-      ? null
-      : `expected error /${re.source}/`;
+  // State-gated commands: accept EITHER valid calldata (the live token's state
+  // allows the action) OR the known gating error (it doesn't). The smoke picks a
+  // live token whose state varies between runs, so a fixed expectation is flaky.
+  const okOrGated = (re) => (r) =>
+    r.code === 0
+      ? ok(r)
+      : re.test(r.stdout + r.stderr)
+        ? null
+        : `expected calls or error /${re.source}/`;
 
   return [
     { name: "launch-cost", args: ["launch-cost", "--chain", "base", "--wallet", W, "--rpc", RPC], check: readOk },
@@ -79,14 +92,14 @@ function commands({ token, advancedToken }) {
     { name: "launch-link", args: ["launch-link", "--chain", "base", "--name", "Smoke", "--ticker", "SMOKE", "--category", "meme-culture", "--issuer-fee", W], check: has("url") },
     { name: "launch", args: ["launch", "--chain", "base", "--wallet", W, "--name", "Smoke", "--ticker", "SMOKE", "--category", "meme-culture", "--path", "express", "--issuer-fee", W, "--rpc", RPC], check: ok },
     { name: "launch-metadata", args: ["launch-metadata", "--token", token, "--chain", "base"], check: has("sign") },
-    { name: "contribute", args: ["contribute", "--token", token, "--amount", "0.01", "--chain", "base", "--wallet", W, "--rpc", RPC], check: gracefully(/not in presale/i) },
-    { name: "claim", args: ["claim", "--token", token, "--chain", "base", "--wallet", W, "--rpc", RPC], check: gracefully(/seeded/i) },
-    { name: "refund", args: ["refund", "--token", token, "--chain", "base", "--wallet", W], check: ok },
+    { name: "contribute", args: ["contribute", "--token", token, "--amount", "0.01", "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/not in presale/i) },
+    { name: "claim", args: ["claim", "--token", token, "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/seeded|cliff/i) },
+    { name: "refund", args: ["refund", "--token", token, "--chain", "base", "--wallet", W], check: okOrGated(/failed launch/i) },
     { name: "seed-liquidity", args: ["seed-liquidity", "--token", token, "--chain", "base", "--wallet", W], check: ok },
     { name: "stake-bmx", args: ["stake-bmx", "--amount", "100", "--wallet", W, "--chain", "base", "--rpc", RPC], check: ok },
     { name: "unstake-bmx", args: ["unstake-bmx", "--amount", "100", "--wallet", W, "--chain", "base"], check: ok },
     { name: "handle-rewards", args: ["handle-rewards", "--wallet", W, "--chain", "base"], check: ok },
-    { name: "vote", args: ["vote", "--option", "1", "--wallet", W, "--chain", "base", "--rpc", RPC], check: gracefully(/voting power|already voted|participation/i) },
+    { name: "vote", args: ["vote", "--option", "1", "--wallet", W, "--chain", "base", "--rpc", RPC], check: okOrGated(/voting power|already voted|participation/i) },
     { name: "claim-participation", args: ["claim-participation", "--epochs", "0,1", "--wallet", W, "--chain", "base"], check: ok },
     { name: "claim-issuer-fees", args: ["claim-issuer-fees", "--token", advancedToken, "--recipient-idx", "0", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
     { name: "claim-referrer-fees", args: ["claim-referrer-fees", "--token", advancedToken, "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
@@ -94,11 +107,11 @@ function commands({ token, advancedToken }) {
     { name: "claim-vested", args: ["claim-vested", "--token", advancedToken, "--allocation-id", "0", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
     { name: "cast-visibility", args: ["cast-visibility", "--token", token, "--mode", "boost", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
     { name: "add-liquidity", args: ["add-liquidity", "--token-a", WETH, "--token-b", BMX, "--amount-a", "0.01", "--amount-b", "100", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
-    { name: "remove-liquidity", args: ["remove-liquidity", "--token", token, "--liquidity", "1", "--chain", "base", "--wallet", W, "--rpc", RPC], check: gracefully(/no Boardwalk LP pool/i) },
-    { name: "stake-lp", args: ["stake-lp", "--token", token, "--amount", "1", "--chain", "base", "--wallet", W, "--rpc", RPC], check: gracefully(/not seeded|no LP token/i) },
+    { name: "remove-liquidity", args: ["remove-liquidity", "--token", token, "--liquidity", "1", "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/no Boardwalk LP pool/i) },
+    { name: "stake-lp", args: ["stake-lp", "--token", token, "--amount", "1", "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/not seeded|no LP token/i) },
     { name: "unstake-lp", args: ["unstake-lp", "--token", token, "--amount", "1", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
     { name: "claim-lp-rewards", args: ["claim-lp-rewards", "--token", token, "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
-    { name: "swap", args: ["swap", "--token", token, "--amount", "0.01", "--direction", "buy", "--chain", "base", "--wallet", W, "--rpc", RPC], check: gracefully(/no Boardwalk pool/i) },
+    { name: "swap", args: ["swap", "--token", token, "--amount", "0.01", "--direction", "buy", "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/no Boardwalk pool/i) },
   ];
 }
 

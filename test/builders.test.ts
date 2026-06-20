@@ -396,6 +396,7 @@ describe("buildClaimReferrerFeesSteps", () => {
     const steps = buildClaimReferrerFeesSteps({
       feeDistributor: FEE_DISTRIBUTOR,
     });
+    expect(steps.map((s) => s.id)).toEqual(["claim-referrer-fees"]);
     const call = encodeStep(steps[0]!, base.id);
     expect(call.to).toBe(FEE_DISTRIBUTOR);
     expect(call.data).toBe(expectedData(feeDistributorAbi, "claimReferrerFees"));
@@ -410,6 +411,7 @@ describe("buildClaimIntegratorFeesSteps", () => {
       minOut: BigInt(123),
       deadline: DEADLINE,
     });
+    expect(steps.map((s) => s.id)).toEqual(["claim-integrator-fees"]);
     const call = encodeStep(steps[0]!, base.id);
     expect(call.to).toBe(getContracts(base.id).integratorFeeCollector);
     expect(call.data).toBe(
@@ -428,6 +430,7 @@ describe("buildClaimVestedTokensSteps", () => {
       vestingStream: VESTING_STREAM,
       allocationId: BigInt(2),
     });
+    expect(steps.map((s) => s.id)).toEqual(["claim-vested"]);
     const call = encodeStep(steps[0]!, base.id);
     expect(call.to).toBe(VESTING_STREAM);
     expect(call.data).toBe(
@@ -443,6 +446,7 @@ describe("buildClaimParticipationRewardsSteps", () => {
       chainId: base.id,
       epochs,
     });
+    expect(steps.map((s) => s.id)).toEqual(["claim-participation"]);
     const call = encodeStep(steps[0]!, base.id);
     expect(call.to).toBe(getContracts(base.id).participationDistributor);
     expect(call.data).toBe(
@@ -606,13 +610,16 @@ describe("buildWithdrawLpSteps", () => {
 describe("buildClaimLpRewardsSteps", () => {
   it("builds a single claim", () => {
     const steps = buildClaimLpRewardsSteps({ lpStaking: LP_STAKING });
+    expect(steps.map((s) => s.id)).toEqual([`claim-lp-rewards-${LP_STAKING}`]);
     const call = encodeStep(steps[0]!, base.id);
     expect(call.to).toBe(LP_STAKING);
     expect(call.data).toBe(expectedData(lpStakingAbi, "claim"));
   });
 
   it("builds one claim per address for the all-variant", () => {
-    const steps = buildClaimAllLpRewardsSteps([LP_STAKING, LP_TOKEN]);
+    const steps = buildClaimAllLpRewardsSteps({
+      lpStakings: [LP_STAKING, LP_TOKEN],
+    });
     expect(steps).toHaveLength(2);
     expect(steps.map((s) => encodeStep(s, base.id).to)).toEqual([
       LP_STAKING,

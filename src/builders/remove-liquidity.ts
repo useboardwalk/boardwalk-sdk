@@ -1,6 +1,7 @@
 // Ported from token-launcher/hooks/contracts/useRemoveLiquidity.ts.
 import { boardwalkLPManagerAbi } from "../registry/abis";
-import { getContracts } from "../registry/contracts";
+import { assertDeployed } from "../registry/contracts";
+import { DEFAULT_LP_DEADLINE_SECONDS } from "../constants";
 import { buildConditionalApproveStep } from "../flow/erc20";
 import type { RemoveLiquidityParams, TxStep } from "../types";
 
@@ -25,9 +26,10 @@ export async function buildRemoveLiquiditySteps(
   } = params;
   if (liquidity <= BigInt(0))
     throw new Error("Liquidity to remove must be greater than 0");
-  const { boardwalkLPManager } = getContracts(chainId);
+  const boardwalkLPManager = assertDeployed(chainId, "boardwalkLPManager");
   const deadline =
-    params.deadline ?? BigInt(Math.floor(Date.now() / 1000) + 1800);
+    params.deadline ??
+    BigInt(Math.floor(Date.now() / 1000) + DEFAULT_LP_DEADLINE_SECONDS);
 
   const steps: TxStep[] = [];
   const approve = await buildConditionalApproveStep(client, {

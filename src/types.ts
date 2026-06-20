@@ -366,6 +366,11 @@ export interface ClaimLpRewardsParams {
   lpStaking: Address;
 }
 
+export interface ClaimAllLpRewardsParams {
+  /** Per-launch LPStaking contracts to claim from (one `claim()` each). */
+  lpStakings: Address[];
+}
+
 export interface SwapParams {
   client: PublicClient;
   account: Address;

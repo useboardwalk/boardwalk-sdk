@@ -1,7 +1,7 @@
 // Minimal read client over GET /boardwalk-launches/:token — surfaces only the
 // facts the builders/CLI need (presale address, status, path). Also resolves the
 // per-launch contract addresses on-chain (the API does not return them all).
-import { isAddress, type Address, type PublicClient } from "viem";
+import { isAddress, zeroAddress, type Address, type PublicClient } from "viem";
 import { APP_BASE_URL } from "../constants";
 import { getContracts } from "../registry/contracts";
 import { launchFactoryAbi } from "../registry/abis";
@@ -66,6 +66,13 @@ export async function getLaunchAddresses(
     functionName: "launches",
     args: [token],
   });
+  // An unregistered token returns an all-zero record; fail loudly so callers
+  // don't build txs against zero addresses.
+  if (tokenAddr === zeroAddress) {
+    throw new Error(
+      `No Boardwalk launch found for token ${token} on chain ${chainId}`,
+    );
+  }
   return {
     token: tokenAddr,
     feeDistributor,

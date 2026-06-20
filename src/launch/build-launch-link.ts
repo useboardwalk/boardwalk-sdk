@@ -13,7 +13,14 @@ import type {
   LaunchLinkPrefill,
   LaunchLinkSocials,
 } from "../types";
-import { LAUNCH_BASE_URL, LAUNCH_CATEGORY_SLUGS } from "../constants";
+import {
+  DISCORD_RE,
+  FEE_LABELS,
+  HANDLE_RE,
+  LAUNCH_BASE_URL,
+  LAUNCH_CATEGORY_SLUGS,
+  VESTING_LABELS,
+} from "../constants";
 import {
   SUPPORTED_CHAINS,
   toChainSlug,
@@ -48,20 +55,6 @@ function normalizeDiscord(raw: string): string {
   const match = trimmed.match(/(?:discord\.gg|discord\.com\/invite)\/([^/?\s]+)/i);
   return match?.[1] ?? trimmed;
 }
-
-// Social + recipient validation mirrored from token-launcher/lib/launch-prefill.ts.
-// The launch form silently DROPS handles/URLs/labels that fail these, so we reject
-// them at generation instead of emitting a link that loses fields on decode.
-const HANDLE_RE = /^[A-Za-z0-9_.]{1,64}$/;
-const DISCORD_RE = /^[A-Za-z0-9_.-]{1,64}$/;
-const FEE_LABELS = ["individual", "entity", "publicGood", "growthTeam"];
-const VESTING_LABELS = [
-  "individual",
-  "entity",
-  "referrer",
-  "publicGood",
-  "growthTeam",
-];
 
 function isYouTubeUrl(value: string): boolean {
   try {

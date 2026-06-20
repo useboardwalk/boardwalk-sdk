@@ -95,3 +95,26 @@ export const MIME_BY_EXT: Record<string, string> = {
   webp: "image/webp",
   svg: "image/svg+xml",
 };
+
+/** Fixed 404 retry backoff for the signed-metadata POST (2s, 4s, 8s, 16s ≈ 30s) —
+ *  matches token-launcher's `retryOn404` so both ride out the same indexer-lag window. */
+export const RETRY_DELAYS_MS = [2_000, 4_000, 8_000, 16_000];
+
+/** Default add/remove-liquidity tx deadline: now + this many seconds (30 min). */
+export const DEFAULT_LP_DEADLINE_SECONDS = 1800;
+
+/**
+ * Launch-form social/recipient validation (mirrors token-launcher/lib/launch-prefill.ts).
+ * The launch form silently DROPS handles/labels that fail these, so `buildLaunchLink`
+ * rejects them at generation time instead of emitting a link that loses fields on decode.
+ */
+export const HANDLE_RE = /^[A-Za-z0-9_.]{1,64}$/;
+export const DISCORD_RE = /^[A-Za-z0-9_.-]{1,64}$/;
+export const FEE_LABELS = ["individual", "entity", "publicGood", "growthTeam"];
+export const VESTING_LABELS = [
+  "individual",
+  "entity",
+  "referrer",
+  "publicGood",
+  "growthTeam",
+];

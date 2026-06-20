@@ -37,6 +37,7 @@ export type {
   StakeLpParams,
   WithdrawLpParams,
   ClaimLpRewardsParams,
+  ClaimAllLpRewardsParams,
   SwapParams,
   LaunchAddresses,
   MetadataInput,
