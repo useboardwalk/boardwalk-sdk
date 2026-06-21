@@ -35,7 +35,7 @@ boardwalk <command> [flags]                          # after: npm i -g @useboard
 npx -p @useboardwalk/sdk boardwalk <command> [flags]    # …or zero-install
 ```
 
-- The CLI is **v0.4.0** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a public RPC by default; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint (only Base has a built-in default RPC).
+- The CLI is **v0.4.1** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a public RPC by default; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint (only Base has a built-in default RPC).
 - The user supplies their own wallet address with `--wallet <addr>` (BYO wallet — get it from your harness, e.g. Base MCP `get_wallets`). The CLI builds calldata **for** that address; it never asks for a key.
 - **Every transaction command prints JSON** of this shape:
 
