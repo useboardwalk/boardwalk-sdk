@@ -1,4 +1,4 @@
-// Ported from token-launcher/hooks/contracts/useV2Swap.ts. Single-hop direct
+// Single-hop direct
 // swap through Boardwalk's deployed Uniswap V2 router (the only live trading
 // path). The quote uses the router's `getAmountsOut` (authoritative + fee-exact)
 // instead of @uniswap/v2-sdk, so the SDK pulls in no extra dependency.

@@ -1,10 +1,10 @@
-// Generates a prefilled token-launcher /launch?path=…&prefill=… URL. The launch
-// form (token-launcher app/launch route) parses `path` + the base64url `prefill`
-// JSON, re-validates every field, and navigates to its summary step — the user
-// adds a logo and signs in the UI (a URL can't carry an image, and nothing here
-// signs or sends). Validation is delegated to buildLaunchConfig (the same checks
-// the on-chain createLaunch path runs) plus link-only checks for chain, category,
-// raise goal, and the express fee recipient. Pure + client-free.
+// Generates a prefilled Boardwalk /launch?path=…&prefill=… URL. The launch form
+// parses `path` + the base64url `prefill` JSON, re-validates every field, and
+// navigates to its summary step — the user adds a logo and signs after opening
+// the link (a URL can't carry an image, and nothing here signs or sends).
+// Validation is delegated to buildLaunchConfig (the same checks the on-chain
+// createLaunch path runs) plus link-only checks for chain, category, raise goal,
+// and the express fee recipient. Pure + client-free.
 import { isAddress, parseUnits, formatUnits, type Address } from "viem";
 import type {
   BuildLaunchLinkResult,
@@ -39,8 +39,8 @@ function base64UrlEncode(json: string): string {
   return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-// YouTube/TikTok detection mirrored from token-launcher/utils/videoUrlUtils.ts, so a
-// video URL the launch form would drop fails here at generation instead of silently.
+// YouTube/TikTok detection — a video URL the launch form would drop fails here
+// at generation instead of silently.
 const YOUTUBE_RE =
   /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?\S*v=|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 const TIKTOK_RE = /^(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[\w.-]+\/video\/\d+/i;

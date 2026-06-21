@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useStakeBmx.ts.
 import { rewardRouterAbi } from "../registry/abis";
 import { assertDeployed, getContracts } from "../registry/contracts";
 import { buildConditionalApproveStep } from "../flow/erc20";

@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useRemoveLiquidity.ts.
 import { boardwalkLPManagerAbi } from "../registry/abis";
 import { assertDeployed } from "../registry/contracts";
 import { DEFAULT_LP_DEADLINE_SECONDS } from "../constants";

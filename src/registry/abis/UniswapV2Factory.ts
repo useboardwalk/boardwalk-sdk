@@ -1,6 +1,6 @@
 // Minimal Uniswap V2 Factory fragment — `getPair` resolves the pool address for
 // a token pair (used to confirm a Boardwalk pool exists and to read its LP
-// token). Trimmed from token-launcher/config/abis/UniswapV2Factory.ts.
+// token).
 export const uniswapV2FactoryAbi = [
   {
     type: "function",

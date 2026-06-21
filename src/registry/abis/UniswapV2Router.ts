@@ -1,7 +1,6 @@
 // Minimal Uniswap V2 Router02 fragment — Boardwalk's deployed router for direct
 // ERC20-to-ERC20 swaps between a launch token and its raise token. `getAmountsOut`
 // quotes the output (authoritative, fee-accurate) so the SDK needs no v2-sdk dep.
-// Trimmed from token-launcher/config/abis/UniswapV2Router.ts.
 export const uniswapV2RouterAbi = [
   {
     type: "function",

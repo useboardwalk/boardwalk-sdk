@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useWithdrawLP.ts.
 import { lpStakingAbi } from "../registry/abis";
 import type { TxStep, WithdrawLpParams } from "../types";
 

@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useClaimVestedTokens.ts.
 import { vestingStreamAbi } from "../registry/abis";
 import type { ClaimVestedTokensParams, TxStep } from "../types";
 

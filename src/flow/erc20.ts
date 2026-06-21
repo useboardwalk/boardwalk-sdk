@@ -1,6 +1,5 @@
-// Conditional ERC-20 approval — ported from
-// token-launcher/components/transaction-flow/erc20.ts, swapping the wagmi
-// `Config` + `wagmi/actions.readContract` for a viem `PublicClient`.
+// Conditional ERC-20 approval — reads the current allowance over a viem
+// `PublicClient` and emits an `approve` step only when it's short.
 import { erc20Abi, type Address, type PublicClient } from "viem";
 import type { TxStep } from "../types";
 

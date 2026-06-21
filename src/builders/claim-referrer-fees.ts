@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useClaimReferrerFees.ts.
 import { feeDistributorAbi } from "../registry/abis";
 import type { ClaimReferrerFeesParams, TxStep } from "../types";
 

@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useClaimIssuerFees.ts.
 import { feeDistributorAbi } from "../registry/abis";
 import type { ClaimIssuerFeesParams, TxStep } from "../types";
 

@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useUnstakeBmx.ts.
 import { rewardRouterAbi } from "../registry/abis";
 import { assertDeployed } from "../registry/contracts";
 import type { TxStep, UnstakeBmxParams } from "../types";

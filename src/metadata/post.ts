@@ -1,5 +1,5 @@
-// Ported from token-launcher/lib/api/mutations.ts `postSignedMetadata`, keeping
-// the retry-on-404 to ride out indexer lag on a freshly-created launch.
+// POST the signed metadata, with retry-on-404 to ride out indexer lag on a
+// freshly-created launch.
 import { isAddress, type Address, type Hex } from "viem";
 import { API_BASE_URL, RETRY_DELAYS_MS } from "../constants";
 import type {

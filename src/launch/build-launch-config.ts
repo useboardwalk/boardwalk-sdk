@@ -1,6 +1,5 @@
-// Adapted from token-launcher/lib/build-launch-config.ts — the Redux
-// `FormStateByPath` input is replaced with a clean `LaunchInput`; the
-// proportional-bps math and normalization/validation are unchanged.
+// Builds the on-chain `createLaunch` config from a clean `LaunchInput`:
+// proportional-bps fee/vesting math plus name/ticker normalization + validation.
 import { isAddress, zeroAddress, type Address } from "viem";
 import type { FeeRecipientInput, LaunchConfig, LaunchInput } from "../types";
 import { resolveDescription } from "./description";

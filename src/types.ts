@@ -3,8 +3,7 @@
 import type { Abi, Address, Hex, PublicClient } from "viem";
 
 // ---------------------------------------------------------------------------
-// Transaction model (framework-agnostic; ported from token-launcher's
-// components/transaction-flow/types.ts). The SDK resolves reads at build time,
+// Transaction model (framework-agnostic). The SDK resolves reads at build time,
 // so steps carry static requests — no React, no dynamic builders, no executor.
 // ---------------------------------------------------------------------------
 
@@ -109,9 +108,9 @@ export interface LaunchLinkSocials {
 /**
  * Superset of a launch config used to generate a prefilled `/launch?…` link.
  * Unlike `LaunchInput` (consumed by the on-chain builder), this also carries the
- * UI-only fields the launch FORM collects: chain (slug or id), raise goal, socials,
- * and video. Logo is intentionally excluded — the UI uploads it via a popup. There
- * is no homepage field because the launch form has none.
+ * fields the launch FORM collects: chain (slug or id), raise goal, socials, and
+ * video. Logo is intentionally excluded — it's added separately when the link is
+ * opened. There is no homepage field because the launch form has none.
  */
 export interface LaunchLinkInput {
   name: string;
@@ -133,7 +132,7 @@ export interface LaunchLinkInput {
   /** Advanced raise goal in raise-token units (decimal string), e.g. "12.5". */
   raiseGoalEth?: string;
 
-  // UI-only metadata (no logo — the UI popup handles that)
+  // Launch-link metadata (no logo — it's added separately when the link is opened)
   socials?: LaunchLinkSocials;
   video?: string;
 }

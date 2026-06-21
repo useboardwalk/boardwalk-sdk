@@ -1,5 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useCreateLaunch.ts and the
-// `extractTokenAddress` guard in hooks/useLaunchSubmit.ts.
 import {
   decodeEventLog,
   erc20Abi,

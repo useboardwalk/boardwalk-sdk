@@ -1,5 +1,5 @@
-// Per-chain launch defaults — ported from token-launcher/config/launch.ts.
-// These mirror the on-chain graduation thresholds (LaunchFactory.graduation*)
+// Per-chain launch defaults. These mirror the on-chain graduation thresholds
+// (LaunchFactory.graduation*)
 // and durations; kept as constants so callers don't hit RPC for static values.
 import { mainnet, base, fraxtal, katana, ink, arbitrum } from "viem/chains";
 import { parseUnits, formatUnits } from "viem";

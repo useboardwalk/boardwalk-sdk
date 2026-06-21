@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useClaimPresaleTokens.ts.
 import { presaleManagerAbi } from "../registry/abis";
 import type { ClaimParams, TxStep } from "../types";
 
