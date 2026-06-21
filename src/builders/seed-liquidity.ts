@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useSeedLiquidity.ts.
 import { presaleManagerAbi } from "../registry/abis";
 import type { SeedLiquidityParams, TxStep } from "../types";
 

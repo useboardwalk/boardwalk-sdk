@@ -1,7 +1,7 @@
-// Core contract ABIs are copied verbatim from token-launcher/config/abis (single
-// source of truth). ABIs added for additional builders are hand-authored MINIMAL
-// fragments — only the entries the SDK calls — to keep these files small; keep
-// their signatures in sync with the same token-launcher source.
+// Core contract ABIs (LaunchFactory/PresaleManager/RewardRouter/GovernanceVoter)
+// are full; ABIs added for additional builders are hand-authored MINIMAL fragments
+// — only the entries the SDK calls — to keep these files small. Keep their
+// signatures in sync with the deployed Boardwalk contracts.
 // ERC-20 reads/writes use viem's built-in `erc20Abi`.
 export { launchFactoryAbi } from "./LaunchFactory";
 export { presaleManagerAbi } from "./PresaleManager";

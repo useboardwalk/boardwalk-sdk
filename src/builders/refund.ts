@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useRefund.ts.
 import { presaleManagerAbi } from "../registry/abis";
 import type { RefundParams, TxStep } from "../types";
 

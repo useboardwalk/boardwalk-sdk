@@ -1,6 +1,6 @@
 // Minimal BoostBurn fragment — visibility boost/deboost (burns BMX) plus the
 // cost/discount/NFT-collection views the SDK reads to compute the effective
-// burn. Trimmed from token-launcher/config/abis/BoostBurn.ts.
+// burn.
 export const boostBurnAbi = [
   {
     type: "function",

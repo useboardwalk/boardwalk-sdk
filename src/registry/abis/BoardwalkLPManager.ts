@@ -1,5 +1,5 @@
 // Minimal BoardwalkLPManager fragment — add/remove liquidity for a Boardwalk
-// token pair. Trimmed from token-launcher/config/abis/BoardwalkLPManager.ts.
+// token pair.
 export const boardwalkLPManagerAbi = [
   {
     type: "function",

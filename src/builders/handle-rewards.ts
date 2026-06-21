@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useHandleRewards.ts.
 import { rewardRouterAbi } from "../registry/abis";
 import { assertDeployed } from "../registry/contracts";
 import type { HandleRewardsParams, TxStep } from "../types";

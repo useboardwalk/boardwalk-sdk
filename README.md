@@ -211,10 +211,6 @@ SDK-built transactions **on Base** carry Boardwalk's ERC-8021 builder code, appe
 
 Base (`8453`, full feature parity) · Ethereum (`1`) · Fraxtal (`252`) · Katana · Ink · Arbitrum (`42161`). Launch / contribute / claim are multi-chain; **stake-bmx and vote are Base-only** (the SDK errors clearly elsewhere via `assertDeployed`).
 
-## Provenance
-
-The transaction-building logic is lifted from the Boardwalk frontend (`token-launcher`), where it already lived as a framework-agnostic `TxRequest` model. Each module names its source in a header comment. The frontend is expected to consume this SDK over time so there is a single source of truth.
-
 ## Develop
 
 ```bash

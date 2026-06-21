@@ -1,5 +1,5 @@
-// EIP-712 launch metadata — ported from token-launcher/lib/api/mutations.ts.
-// The SDK only BUILDS the typed data; the agent's wallet signs it.
+// EIP-712 launch metadata. The SDK only BUILDS the typed data; the agent's
+// wallet signs it.
 import { METADATA_DOMAIN_NAME, METADATA_DOMAIN_VERSION } from "../constants";
 import type {
   LaunchMetadataMessage,

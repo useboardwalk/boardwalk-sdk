@@ -1,6 +1,5 @@
 // Minimal VestingStream fragment — per-launch vesting contract; `claim` releases
-// a recipient's vested launch tokens for one allocation. Trimmed from
-// token-launcher/config/abis/VestingStream.ts.
+// a recipient's vested launch tokens for one allocation.
 export const vestingStreamAbi = [
   {
     type: "function",

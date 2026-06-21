@@ -1,6 +1,5 @@
 // Minimal FeeDistributor fragment — only the per-launch fee-claim entrypoints
-// the SDK builds. Trimmed from token-launcher/config/abis/FeeDistributor.ts;
-// keep signatures in sync with that source.
+// the SDK builds. Keep signatures in sync with the deployed contract.
 export const feeDistributorAbi = [
   {
     type: "function",

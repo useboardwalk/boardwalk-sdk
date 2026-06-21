@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useClaimIntegratorFees.ts.
 import { integratorFeeCollectorAbi } from "../registry/abis";
 import { assertDeployed } from "../registry/contracts";
 import type { ClaimIntegratorFeesParams, TxStep } from "../types";

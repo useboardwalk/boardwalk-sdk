@@ -1,7 +1,4 @@
 // Single source of truth for SDK constants. Keep all magic values here.
-// Provenance: values lifted from the sibling token-launcher repo (e.g.
-// config/builder-code.ts, app/launch/constants.ts, lib/api/mutations.ts,
-// lib/launch-prefill.ts, lib/retry-helpers.ts) name their source inline below.
 
 /** Basis-point denominator (100% = 10_000 bps). */
 export const BPS_DENOMINATOR = BigInt(10_000);
@@ -23,14 +20,13 @@ export const APP_BASE_URL =
   process.env.BOARDWALK_APP_URL ?? "https://app.useboardwalk.com";
 
 /** Launch-form base URL for prefilled `/launch?path=…&prefill=…` links; override
- *  with `BOARDWALK_LAUNCH_URL`. The token-launcher launch form parses `path` + the
+ *  with `BOARDWALK_LAUNCH_URL`. The Boardwalk launch form parses `path` + the
  *  base64url `prefill` blob and navigates to its summary step itself. */
 export const LAUNCH_BASE_URL =
   process.env.BOARDWALK_LAUNCH_URL ?? `${APP_BASE_URL}/launch`;
 
 /**
- * Launch-form category slugs (verbatim from token-launcher app/launch/constants.ts
- * CATEGORIES). The launch form is a fixed picker, so `buildLaunchLink` validates
+ * Launch-form category slugs — the launch form is a fixed picker, so `buildLaunchLink` validates
  * against these to avoid emitting a link the form would silently drop. The on-chain
  * `launch` path is intentionally more permissive (any non-empty category).
  */
@@ -101,14 +97,14 @@ export const MIME_BY_EXT: Record<string, string> = {
 };
 
 /** Fixed 404 retry backoff for the signed-metadata POST (2s, 4s, 8s, 16s ≈ 30s) —
- *  matches token-launcher's `retryOn404` so both ride out the same indexer-lag window. */
+ *  rides out the indexer-lag window on a freshly-created launch. */
 export const RETRY_DELAYS_MS = [2_000, 4_000, 8_000, 16_000];
 
 /** Default add/remove-liquidity tx deadline: now + this many seconds (30 min). */
 export const DEFAULT_LP_DEADLINE_SECONDS = 1800;
 
 /**
- * Launch-form social/recipient validation (mirrors token-launcher/lib/launch-prefill.ts).
+ * Launch-form social/recipient validation.
  * The launch form silently DROPS handles/labels that fail these, so `buildLaunchLink`
  * rejects them at generation time instead of emitting a link that loses fields on decode.
  */

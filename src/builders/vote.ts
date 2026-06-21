@@ -1,5 +1,4 @@
-// Ported from token-launcher/hooks/contracts/useGovernanceVote.ts. The
-// eligibility pre-checks mirror the guards in `GovernanceVoter.vote()`
+// The eligibility pre-checks mirror the guards in `GovernanceVoter.vote()`
 // (boardwalk-contracts src/governance/GovernanceVoter.sol) so we refuse to
 // emit a tx the contract is guaranteed to revert.
 import { erc20Abi } from "viem";

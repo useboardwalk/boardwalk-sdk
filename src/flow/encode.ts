@@ -9,7 +9,7 @@ import type { EncodedCall, TxRequest, TxStep, TxWriteRequest } from "../types";
  * code is registered (base.dev Builder Codes). Non-Base chains carry no suffix:
  * the registry doesn't index them, so it would only bloat their calldata.
  *
- * The frontend appends this at the wagmi send chokepoint; agents submit through
+ * An app with its own send path can append this at that chokepoint; agents submit through
  * their own wallet (e.g. `send_calls`), so the SDK appends it directly to `data`
  * — the only way attribution survives an arbitrary submit path. The code is
  * fixed in `constants.ts` (`BUILDER_CODE`); there is intentionally no per-call,

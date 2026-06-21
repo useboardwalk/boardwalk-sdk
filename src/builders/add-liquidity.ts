@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useAddLiquidity.ts.
 import { erc20Abi } from "viem";
 import { boardwalkLPManagerAbi } from "../registry/abis";
 import { assertDeployed } from "../registry/contracts";

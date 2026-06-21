@@ -1,5 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useClaimStakingRewards.ts (single)
-// and useClaimAllStakingRewards.ts (multi).
 import type { Address } from "viem";
 import { lpStakingAbi } from "../registry/abis";
 import type {

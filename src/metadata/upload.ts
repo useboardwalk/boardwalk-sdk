@@ -1,5 +1,4 @@
-// Isomorphic logo upload — generalizes token-launcher/lib/api/mutations.ts
-// `uploadLogo(File)` to accept a Blob, raw bytes, or a data URL. The backend
+// Isomorphic logo upload — accepts a Blob, raw bytes, or a data URL. The backend
 // hard-caps at 1MB; compress (e.g. sharp) before calling if larger.
 import { API_BASE_URL, LOGO_ALLOWED_TYPES, LOGO_MAX_SIZE } from "../constants";
 import type { UploadLogoOptions, UploadLogoResult } from "../types";

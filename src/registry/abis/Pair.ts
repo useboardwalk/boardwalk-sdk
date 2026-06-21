@@ -1,7 +1,6 @@
 // Minimal Uniswap V2 Pair fragment — reserves, total LP supply, and token0
 // ordering, enough to compute remove-liquidity min-out from an LP burn. The
-// pair is itself an ERC-20 (LP token); balances use viem's erc20Abi. Trimmed
-// from token-launcher/config/abis/Pair.ts.
+// pair is itself an ERC-20 (LP token); balances use viem's erc20Abi.
 export const pairAbi = [
   {
     type: "function",

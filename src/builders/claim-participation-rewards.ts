@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useClaimParticipationRewards.ts.
 import { participationDistributorAbi } from "../registry/abis";
 import { assertDeployed } from "../registry/contracts";
 import type { ClaimParticipationRewardsParams, TxStep } from "../types";

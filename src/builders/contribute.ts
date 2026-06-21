@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useContribute.ts.
 import { presaleManagerAbi } from "../registry/abis";
 import { getContracts } from "../registry/contracts";
 import { buildConditionalApproveStep } from "../flow/erc20";

@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useCastVisibility.ts.
 import { erc20Abi, zeroAddress, type Address } from "viem";
 import { boostBurnAbi, erc721Abi } from "../registry/abis";
 import { assertDeployed, getContracts } from "../registry/contracts";

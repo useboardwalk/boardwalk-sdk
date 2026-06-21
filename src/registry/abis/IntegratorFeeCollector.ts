@@ -1,8 +1,7 @@
 // Minimal IntegratorFeeCollector fragment — the per-chain singleton where
 // integrators claim their accrued share of a launch token's tax (swapped to
 // the raise token; slot keyed on msg.sender). `quote` returns the claimable
-// amountIn and a slippage-adjusted minOut to pass into `claim`. Trimmed from
-// token-launcher/config/abis/IntegratorFeeCollector.ts.
+// amountIn and a slippage-adjusted minOut to pass into `claim`.
 export const integratorFeeCollectorAbi = [
   {
     type: "function",

@@ -1,6 +1,5 @@
 // Minimal ParticipationDistributor fragment — `claimAll` claims participation
-// BMX rewards across the given epochs (Base-only contract). Trimmed from
-// token-launcher/config/abis/ParticipationDistributor.ts.
+// BMX rewards across the given epochs (Base-only contract).
 export const participationDistributorAbi = [
   {
     type: "function",

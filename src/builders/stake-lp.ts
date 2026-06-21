@@ -1,4 +1,3 @@
-// Ported from token-launcher/hooks/contracts/useStakeLP.ts.
 import { lpStakingAbi } from "../registry/abis";
 import { buildConditionalApproveStep } from "../flow/erc20";
 import type { StakeLpParams, TxStep } from "../types";
