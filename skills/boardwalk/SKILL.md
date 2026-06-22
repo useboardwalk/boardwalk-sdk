@@ -35,7 +35,7 @@ boardwalk <command> [flags]                          # after: npm i -g @useboard
 npx -p @useboardwalk/sdk boardwalk <command> [flags]    # …or zero-install
 ```
 
-- The CLI is **v0.4.1** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a public RPC by default; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint (only Base has a built-in default RPC).
+- The CLI is **v0.4.2** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a public RPC by default; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint (only Base has a built-in default RPC).
 - The user supplies their own wallet address with `--wallet <addr>` (BYO wallet — get it from your harness, e.g. Base MCP `get_wallets`). The CLI builds calldata **for** that address; it never asks for a key.
 - **Every transaction command prints JSON** of this shape:
 
@@ -90,12 +90,12 @@ There is **no login** required for onchain actions — no Privy, no session. The
 | `launch`          | Create a launch: emits conditional BMX approve + `create-launch`               | `--chain --wallet --name --ticker --category` (+ `--issuer-fee` on express) · opt: `--path --description --rpc` · advanced: `--presale-percent --referrer --fee <label:address:percent>` (repeatable) `--vesting <label:address:percent>` (repeatable) | multi-chain   |
 | `launch-metadata` | Upload logo to CDN, then print an EIP-712 payload to sign + the submit request | `--token --chain` · logo: `--logo \| --logo-data \| --logo-url` · opt: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`                                                         | multi-chain   |
 | `submit-metadata` | POST the signed metadata (auto-retries on 404 for indexer lag)                 | `--token --chain --signature --message`                                                                                                                                                                                               | multi-chain   |
-| `contribute`      | Join a presale: conditional raise-token approve + `contribute`                 | `--token --amount --chain --wallet` · opt: `--rpc`                                                                                                                                                                                    | multi-chain   |
-| `claim`           | Claim presale tokens (only after seeded + 7-day post-seed cliff)               | `--token --chain --wallet` · opt: `--rpc`                                                                                                                                                                                             | multi-chain   |
+| `contribute`      | Join an auction: conditional raise-token approve + `contribute`                 | `--token --amount --chain --wallet` · opt: `--rpc`                                                                                                                                                                                    | multi-chain   |
+| `claim`           | Claim tokens (only after seeded + 7-day post-seed cliff)               | `--token --chain --wallet` · opt: `--rpc`                                                                                                                                                                                             | multi-chain   |
 | `stake-bmx`       | Stake BMX: conditional BMX approve + `stake-bmx`                               | `--amount --wallet` · opt: `--chain base --rpc`                                                                                                                                                                                       | **Base only** |
 | `vote`            | Vote on fee direction (optional BMX approve if burn>0) + `vote`                | `--option <1-4> --wallet` · opt: `--chain base --rpc`                                                                                                                                                                                 | **Base only** |
 | `refund`          | Reclaim a contribution on a **failed** launch + `refund`                       | `--token --chain --wallet`                                                                                                                                                                                                            | multi-chain   |
-| `seed-liquidity`  | Activate trading after a successful presale + `seedLiquidity`                  | `--token --chain --wallet`                                                                                                                                                                                                            | multi-chain   |
+| `seed-liquidity`  | Activate trading after a successful auction + `seedLiquidity`                  | `--token --chain --wallet`                                                                                                                                                                                                            | multi-chain   |
 | `unstake-bmx`     | Unstake BMX (no approve) + `unstakeBmx`                                         | `--amount --wallet` · opt: `--chain base`                                                                                                                                                                                             | **Base only** |
 | `handle-rewards`  | Claim/compound staking rewards + `handleRewards`                               | `--wallet` · opt: `--chain base --claim-op-bmx --stake-mp --claim-weth --convert-weth-to-eth` (no flags = claim all)                                                                                                                  | **Base only** |
 | `claim-issuer-fees` | Issuer claims fees as the raise token + `claimAsRaiseToken`                  | `--token --recipient-idx --chain --wallet` · opt: `--min-out --deadline --rpc`                                                                                                                                                        | multi-chain   |
@@ -257,7 +257,7 @@ The user opens `url` → reviews the prefilled summary → adds a logo → signs
 
 ---
 
-### `contribute` — join a presale auction
+### `contribute` — join an auction
 
 Deposits a raise token into the launch's presale. The CLI emits a conditional `approve-raise-token` (so the **presale manager** can pull your deposit) followed by `contribute`. **Only valid while `status == "presale"`** — check first with `status`.
 
@@ -299,7 +299,7 @@ boardwalk contribute \
 
 ---
 
-### `claim` — claim presale tokens
+### `claim` — claim tokens
 
 Contributors claim their allocation **only after the auction is `seeded` AND the 7-day post-seed cliff has ended**. Emits a single `claim` call (`claimTokens`). The CLI gates strictly: it requires `status === "seeded"` (**not** `pending_seed`), then reads `PresaleManager.cliffEnd()` and **refuses to emit any call — surfacing the `cliffEnd` timestamp — until the cliff has passed** (so you never broadcast a doomed/reverting tx). On success the output includes `cliffEnd`. Add `--rpc <url>` if the default RPC rate-limits the `cliffEnd` read.
 
@@ -323,7 +323,7 @@ boardwalk stake-bmx --amount 100 --wallet 0x3666…1CA3 --chain base
 
 ### `vote` — vote on fee direction (Base only)
 
-Casts a Boardwalk governance vote that directs where protocol swap fees flow. Pick `--option`:
+Casts a Boardwalk fee-direction vote that directs where protocol swap fees flow. Pick `--option`:
 
 | Option | Direction      |
 | ------ | -------------- |
@@ -364,7 +364,7 @@ boardwalk vote --option 1 --wallet 0x3666…1CA3 --chain base
 
 All of these print the same `{ calls, …meta }` shape and follow the same submit flow (batched `calls`, approve at `[0]` when present). The fee/vesting/LP commands take only `--token` and resolve the per-launch contract on-chain.
 
-**Presale lifecycle**
+**Auction lifecycle**
 
 ```bash
 boardwalk refund         --token 0x… --chain base --wallet 0xYou   # only when status == failed

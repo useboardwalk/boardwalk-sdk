@@ -32,8 +32,8 @@ boardwalk <command> --help
 | [`launch`](#launch)                                    | Build a token launch (approve BMX + `createLaunch`)      | multi     |
 | [`launch-metadata`](#launch-metadata--submit-metadata) | Upload logo + build the EIP-712 metadata payload to sign | multi     |
 | [`submit-metadata`](#launch-metadata--submit-metadata) | POST the signed metadata (retries through indexer lag)   | multi     |
-| [`contribute`](#contribute)                            | Join a presale (approve raise token + `contribute`)      | multi     |
-| [`claim`](#claim)                                      | Claim presale tokens after a successful auction          | multi     |
+| [`contribute`](#contribute)                            | Join an auction (approve raise token + `contribute`)      | multi     |
+| [`claim`](#claim)                                      | Claim tokens after a successful auction          | multi     |
 | [`stake-bmx`](#stake-bmx)                              | Stake BMX (approve + `stakeBmx`)                         | **Base**  |
 | [`vote`](#vote)                                        | Vote on fee direction (optional approve + `vote`)        | **Base**  |
 | [`launch-cost`](#read-commands)                        | Read the BMX burn cost to launch                         | read-only |
