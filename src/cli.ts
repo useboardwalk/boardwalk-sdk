@@ -229,7 +229,7 @@ program
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
       "Boardwalk's ERC-8021 builder code is appended on Base (where it is registered).",
   )
-  .version("0.4.1")
+  .version("0.4.2")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
 
 program
@@ -419,9 +419,9 @@ program
 
 program
   .command("contribute")
-  .summary("Join a presale (approve raise token + contribute)")
+  .summary("Join an auction (approve raise token + contribute)")
   .description(
-    "Build approve + contribute for an active presale (status must be `presale`).",
+    "Build approve + contribute for an active auction (status must be `presale`).",
   )
   .requiredOption("--token <address>", "launch token address")
   .requiredOption(
@@ -478,7 +478,7 @@ program
 
 program
   .command("claim")
-  .summary("Claim presale tokens after a successful auction")
+  .summary("Claim tokens after a successful auction")
   .description(
     "Build claimTokens for a seeded auction whose 7-day post-seed cliff has ended.",
   )
@@ -548,7 +548,7 @@ program
   .command("vote")
   .summary("Vote on fee direction (Base-only)")
   .description(
-    "Build a governance vote (Base-only). Options: 1=Treasury 2=Buy&BurnBMX 3=Buy&BurnLP 4=Participation.",
+    "Build a fee-direction vote (Base-only). Options: 1=Treasury 2=Buy&BurnBMX 3=Buy&BurnLP 4=Participation.",
   )
   .requiredOption("--option <1-4>", "vote option (1–4)")
   .requiredOption("--wallet <address>", "voter wallet address")
@@ -793,7 +793,7 @@ program
 
 program
   .command("seed-liquidity")
-  .summary("Activate trading by seeding liquidity after a successful presale")
+  .summary("Activate trading by seeding liquidity after a successful auction")
   .description(
     "Build seedLiquidity() for a launch that reached its graduation threshold.",
   )
