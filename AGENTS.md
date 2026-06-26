@@ -77,3 +77,9 @@ A user-facing change ships a version bump in the same PR; don't defer it to rele
 - the version references in `skills/boardwalk/SKILL.md` and `skills/boardwalk/plugins/boardwalk.md`
 
 Use the tag you intend to release (e.g. a new chain or action is a minor bump). After merge, `npm publish` publishes whatever `package.json` says, so if it wasn't bumped the tag and the published code drift apart.
+
+## Cursor Cloud specific instructions
+
+- Setup is just `npm install` (run automatically on startup). There is no service to start — this package is a CLI/SDK that only emits unsigned calldata, never signs or sends.
+- The standard verification commands are in the `## Commands` and `## Verification` sections above; no extra cloud-only steps are needed.
+- Outbound network to live Base RPC works in this environment, so `npm run smoke` and RPC-backed CLI reads (e.g. `npm run cli -- launch-cost --chain base --wallet 0x…`) succeed against the default public `https://mainnet.base.org` without a private RPC. Public RPCs still rate-limit, so for repeated/heavy runs pass `BOARDWALK_RPC=<url>` (smoke) or `--rpc <url>` (one-off CLI).
