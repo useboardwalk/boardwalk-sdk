@@ -1,12 +1,19 @@
 #!/usr/bin/env node
-// End-to-end smoke test: runs every `boardwalk` CLI command against a live chain
+// End-to-end smoke test: runs every `boardwalk` CLI command against live chains
 // and checks each either emits valid calldata / a read, or fails with the exact
 // gating error expected for the chosen launch's state. Non-mutating — only prints
 // unsigned calldata; never signs or submits. submit-metadata is skipped (it would
 // POST to the backend).
 //
-//   node scripts/smoke.mjs                       # default Base public RPC
-//   BOARDWALK_RPC=<url> node scripts/smoke.mjs   # private RPC (public RPCs rate-limit)
+// Launch/presale/LP/swap/visibility commands run against Base; the Ethereum-only
+// staking/governance commands (stake-bwlk, unstake-bwlk, handle-rewards, vote,
+// claim-participation) run against Ethereum mainnet. Until the redeployment's
+// addresses land in the registry, commands that hit placeholder contracts fail —
+// that is expected; run this after the addresses are filled in.
+//
+//   node scripts/smoke.mjs                          # public RPCs
+//   BOARDWALK_RPC=<url> node scripts/smoke.mjs      # private Base RPC (public RPCs rate-limit)
+//   BOARDWALK_ETH_RPC=<url> node scripts/smoke.mjs  # private Ethereum RPC
 //
 // Builds dist first if missing: `npm run build`.
 import { execFile } from "node:child_process";
@@ -17,10 +24,10 @@ import { dirname, join } from "node:path";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "dist", "cli.js");
 const RPC = process.env.BOARDWALK_RPC ?? "https://mainnet.base.org";
+const ETH_RPC = process.env.BOARDWALK_ETH_RPC; // omit → CLI uses viem's default mainnet RPC
 const API = process.env.BOARDWALK_API_URL ?? "https://api.useboardwalk.com";
 const W = "0x1111111111111111111111111111111111111111";
-const WETH = "0x4200000000000000000000000000000000000006";
-const BMX = "0x548f93779fBC992010C07467cBaf329DD5F059B7";
+const WETH = "0x4200000000000000000000000000000000000006"; // Base canonical WETH (the raise token)
 const BUILDER_CODE_HEX = "62635f736e7a696e6e3672"; // "bc_snzinn6r"
 
 if (!existsSync(CLI)) {
@@ -63,30 +70,38 @@ async function pickTokens() {
 
 /** A command + how to judge its result for the chosen launch state. */
 function commands({ token, advancedToken }) {
-  const ok = (r) => {
+  // Base calls carry the ERC-8021 builder-code suffix; Ethereum calls don't.
+  const okOn = (chainId) => (r) => {
     const j = JSON.parse(r.stdout);
     if (!Array.isArray(j.calls) || j.calls.length === 0) return "no calls[]";
     for (const c of j.calls) {
       if (!/^0x[0-9a-fA-F]{40}$/.test(c.to)) return `bad to: ${c.to}`;
       if (!c.data?.startsWith("0x")) return "bad data";
-      if (!c.data.includes(BUILDER_CODE_HEX)) return "missing builder code";
-      if (typeof c.value !== "string" || c.chainId !== 8453) return "bad value/chainId";
+      if (chainId === 8453 && !c.data.includes(BUILDER_CODE_HEX))
+        return "missing builder code";
+      if (typeof c.value !== "string" || c.chainId !== chainId)
+        return "bad value/chainId";
     }
     return null;
   };
+  const ok = okOn(8453);
+  const okEth = okOn(1);
   const readOk = (r) => (JSON.parse(r.stdout), null);
   const has = (key) => (r) => (JSON.parse(r.stdout)[key] ? null : `no ${key}`);
   // State-gated commands: accept EITHER valid calldata (the live token's state
   // allows the action) OR the known gating error (it doesn't). The smoke picks a
   // live token whose state varies between runs, so a fixed expectation is flaky.
-  const okOrGated = (re) => (r) =>
+  const okOrGated = (re, check = ok) => (r) =>
     r.code === 0
-      ? ok(r)
+      ? check(r)
       : re.test(r.stdout + r.stderr)
         ? null
         : `expected calls or error /${re.source}/`;
 
+  const eth = ETH_RPC ? ["--rpc", ETH_RPC] : [];
+
   return [
+    // --- Base: launch / presale / claims / LP / swap / visibility ---
     { name: "launch-cost", args: ["launch-cost", "--chain", "base", "--wallet", W, "--rpc", RPC], check: readOk },
     { name: "status", args: ["status", "--token", token, "--chain", "base"], check: readOk },
     { name: "launch-link", args: ["launch-link", "--chain", "base", "--name", "Smoke", "--ticker", "SMOKE", "--category", "meme-culture", "--issuer-fee", W], check: has("url") },
@@ -96,28 +111,29 @@ function commands({ token, advancedToken }) {
     { name: "claim", args: ["claim", "--token", token, "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/seeded|cliff/i) },
     { name: "refund", args: ["refund", "--token", token, "--chain", "base", "--wallet", W], check: okOrGated(/failed launch/i) },
     { name: "seed-liquidity", args: ["seed-liquidity", "--token", token, "--chain", "base", "--wallet", W], check: ok },
-    { name: "stake-bmx", args: ["stake-bmx", "--amount", "100", "--wallet", W, "--chain", "base", "--rpc", RPC], check: ok },
-    { name: "unstake-bmx", args: ["unstake-bmx", "--amount", "100", "--wallet", W, "--chain", "base"], check: ok },
-    { name: "handle-rewards", args: ["handle-rewards", "--wallet", W, "--chain", "base"], check: ok },
-    { name: "vote", args: ["vote", "--option", "1", "--wallet", W, "--chain", "base", "--rpc", RPC], check: okOrGated(/voting power|already voted|participation/i) },
-    { name: "claim-participation", args: ["claim-participation", "--epochs", "0,1", "--wallet", W, "--chain", "base"], check: ok },
     { name: "claim-issuer-fees", args: ["claim-issuer-fees", "--token", advancedToken, "--recipient-idx", "0", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
     { name: "claim-referrer-fees", args: ["claim-referrer-fees", "--token", advancedToken, "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
     { name: "claim-integrator-fees", args: ["claim-integrator-fees", "--token", token, "--min-out", "0", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
     { name: "claim-vested", args: ["claim-vested", "--token", advancedToken, "--allocation-id", "0", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
     { name: "cast-visibility", args: ["cast-visibility", "--token", token, "--mode", "boost", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
-    { name: "add-liquidity", args: ["add-liquidity", "--token-a", WETH, "--token-b", BMX, "--amount-a", "0.01", "--amount-b", "100", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
-    { name: "remove-liquidity", args: ["remove-liquidity", "--token", token, "--liquidity", "1", "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/no Boardwalk LP pool/i) },
+    { name: "add-liquidity", args: ["add-liquidity", "--token-a", token, "--token-b", WETH, "--amount-a", "100", "--amount-b", "0.01", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
+    { name: "remove-liquidity", args: ["remove-liquidity", "--token", token, "--liquidity", "1", "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/no Uniswap V2 pool/i) },
     { name: "stake-lp", args: ["stake-lp", "--token", token, "--amount", "1", "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/not seeded|no LP token/i) },
     { name: "unstake-lp", args: ["unstake-lp", "--token", token, "--amount", "1", "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
     { name: "claim-lp-rewards", args: ["claim-lp-rewards", "--token", token, "--chain", "base", "--wallet", W, "--rpc", RPC], check: ok },
-    { name: "swap", args: ["swap", "--token", token, "--amount", "0.01", "--direction", "buy", "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/no Boardwalk pool/i) },
+    { name: "swap", args: ["swap", "--token", token, "--amount", "0.01", "--direction", "buy", "--chain", "base", "--wallet", W, "--rpc", RPC], check: okOrGated(/no Uniswap V2 pool/i) },
+    // --- Ethereum: BWLK staking / governance / participation ---
+    { name: "stake-bwlk", args: ["stake-bwlk", "--amount", "100", "--wallet", W, "--chain", "ethereum", ...eth], check: okEth },
+    { name: "unstake-bwlk", args: ["unstake-bwlk", "--amount", "100", "--wallet", W, "--chain", "ethereum"], check: okEth },
+    { name: "handle-rewards", args: ["handle-rewards", "--wallet", W, "--chain", "ethereum"], check: okEth },
+    { name: "vote", args: ["vote", "--option", "1", "--wallet", W, "--chain", "ethereum", ...eth], check: okOrGated(/voting power|already voted|participation/i, okEth) },
+    { name: "claim-participation", args: ["claim-participation", "--epochs", "0,1", "--wallet", W, "--chain", "ethereum"], check: okEth },
   ];
 }
 
 async function main() {
   const tokens = await pickTokens();
-  console.log(`Smoke against Base — express=${tokens.token} advanced=${tokens.advancedToken}\nRPC=${RPC}\n`);
+  console.log(`Smoke — Base express=${tokens.token} advanced=${tokens.advancedToken}\nBase RPC=${RPC}  Ethereum RPC=${ETH_RPC ?? "(viem default)"}\n`);
   const cmds = commands(tokens);
   let failures = 0;
   for (const cmd of cmds) {

@@ -20,7 +20,7 @@ import type {
 } from "../types";
 
 /**
- * Read the live BMX burn amount, member discount, NFT collection, AND the BMX
+ * Read the live BWLK burn amount, member discount, NFT collection, AND the BWLK
  * allowance in ONE multicall (one round-trip), plus one `balanceOf` only when an
  * NFT collection is configured. Batching the allowance here lets `buildLaunchSteps`
  * skip a separate allowance read — fewer adjacent calls against rate-limited RPCs.
@@ -30,7 +30,7 @@ export async function readLaunchCost(
   account: Address,
   chainId: number,
 ): Promise<LaunchCostBreakdown> {
-  const { launchFactory, bmxToken } = getContracts(chainId);
+  const { launchFactory, bwlkToken } = getContracts(chainId);
 
   const [baseBurn, discountBps, nftCollection, allowance] =
     await client.multicall({
@@ -40,7 +40,7 @@ export async function readLaunchCost(
         {
           abi: launchFactoryAbi,
           address: launchFactory,
-          functionName: "bmxBurnAmount",
+          functionName: "bwlkBurnAmount",
         },
         {
           abi: launchFactoryAbi,
@@ -54,7 +54,7 @@ export async function readLaunchCost(
         },
         {
           abi: erc20Abi,
-          address: bmxToken,
+          address: bwlkToken,
           functionName: "allowance",
           args: [account, launchFactory],
         },
@@ -77,13 +77,13 @@ export async function readLaunchCost(
     discountBps,
     nftCollection,
     isMember,
-    bmxBurnCost: effectiveCost(baseBurn, discountBps, isMember),
+    bwlkBurnCost: effectiveCost(baseBurn, discountBps, isMember),
     allowance,
   };
 }
 
 /**
- * Build the launch flow: conditional approve BMX → `createLaunch(config)`.
+ * Build the launch flow: conditional approve BWLK → `createLaunch(config)`.
  * The off-chain metadata leg (logo upload + EIP-712 signature + POST) is a
  * separate step — see `src/metadata` and `resolveLaunchedToken`.
  */
@@ -101,7 +101,7 @@ export async function buildLaunchSteps(
       "Express launches require an issuer-fee recipient (--issuer-fee <address>, e.g. the issuer wallet; it receives 100% of the issuer fee)",
     );
   }
-  const { launchFactory, bmxToken } = getContracts(chainId);
+  const { launchFactory, bwlkToken } = getContracts(chainId);
 
   const cost = await readLaunchCost(client, account, chainId);
 
@@ -109,12 +109,12 @@ export async function buildLaunchSteps(
   const approve = await buildConditionalApproveStep(
     client,
     {
-      id: "approve-bmx",
-      label: "Approve BMX",
-      token: bmxToken,
+      id: "approve-bwlk",
+      label: "Approve BWLK",
+      token: bwlkToken,
       owner: account,
       spender: launchFactory,
-      amount: cost.bmxBurnCost,
+      amount: cost.bwlkBurnCost,
     },
     cost.allowance,
   );
@@ -131,7 +131,7 @@ export async function buildLaunchSteps(
     },
   });
 
-  return { steps, config, bmxBurnCost: cost.bmxBurnCost };
+  return { steps, config, bwlkBurnCost: cost.bwlkBurnCost };
 }
 
 /**

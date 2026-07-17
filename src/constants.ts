@@ -3,8 +3,8 @@
 /** Basis-point denominator (100% = 10_000 bps). */
 export const BPS_DENOMINATOR = BigInt(10_000);
 
-/** GovernanceVoter participation gate: a voter with staked BMX must hold staked
- *  multiplier points of at least this share of their staked BMX (150 bps = 1.5%),
+/** GovernanceVoter participation gate: a voter with staked BWLK must hold staked
+ *  multiplier points of at least this share of their staked BWLK (150 bps = 1.5%),
  *  else `vote()` reverts InsufficientParticipationPoints. Mirrors the private
  *  constant in boardwalk-contracts GovernanceVoter.sol — keep in sync. */
 export const PARTICIPATION_POINTS_GATE_BPS = BigInt(150);

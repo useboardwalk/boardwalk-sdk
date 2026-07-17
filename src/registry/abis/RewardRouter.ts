@@ -1,3 +1,7 @@
+// Ethereum BWLK staking router (Morphex RewardRouterV5, redeployed for BWLK).
+// Source: morphex-contracts contracts/staking/RewardRouterV5.sol. Verify against
+// the deployed router before go-live; approvals for stakeBwlk target the
+// stakedBwlkTracker (the tracker pulls BWLK from the caller), not this router.
 export const rewardRouterAbi = [
   {
     anonymous: false,
@@ -6,42 +10,23 @@ export const rewardRouterAbi = [
         indexed: false,
         internalType: "address",
         name: "account",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "StakeGlp",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "StakeGmx",
-    type: "event",
+    type: "event"
   },
   {
     anonymous: false,
@@ -50,333 +35,333 @@ export const rewardRouterAbi = [
         indexed: false,
         internalType: "address",
         name: "account",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "UnstakeGlp",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "account",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "address",
         name: "token",
-        type: "address",
+        type: "address"
       },
       {
         indexed: false,
         internalType: "uint256",
         name: "amount",
-        type: "uint256",
-      },
+        type: "uint256"
+      }
     ],
     name: "UnstakeGmx",
-    type: "event",
+    type: "event"
   },
   {
     inputs: [
-      { internalType: "address[]", name: "_accounts", type: "address[]" },
-      { internalType: "uint256[]", name: "_amounts", type: "uint256[]" },
+      {
+        internalType: "address[]",
+        name: "_accounts",
+        type: "address[]"
+      },
+      {
+        internalType: "uint256[]",
+        name: "_amounts",
+        type: "uint256[]"
+      }
     ],
-    name: "batchStakeBmxForAccount",
+    name: "batchStakeBwlkForAccount",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
-    name: "blt",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "bnBwlk",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address"
+      }
+    ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
-    name: "bltManager",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "bonusBwlkTracker",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address"
+      }
+    ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
-    name: "bmx",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "bwlk",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address"
+      }
+    ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "bnBmx",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "bonusBmxTracker",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
     name: "claim",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "claimBwlk",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
   },
   {
     inputs: [],
     name: "claimFees",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
-    name: "claimOpBmx",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "feeBltTracker",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "feeBwlkTracker",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address"
+      }
+    ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "feeBmxTracker",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
     name: "gov",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address"
+      }
+    ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
-      { internalType: "bool", name: "_shouldClaimOpBmx", type: "bool" },
+      {
+        internalType: "bool",
+        name: "_shouldClaimBwlk",
+        type: "bool"
+      },
       {
         internalType: "bool",
         name: "_shouldStakeMultiplierPoints",
-        type: "bool",
+        type: "bool"
       },
-      { internalType: "bool", name: "_shouldClaimWeth", type: "bool" },
-      { internalType: "bool", name: "_shouldConvertWethToEth", type: "bool" },
+      {
+        internalType: "bool",
+        name: "_shouldClaimWeth",
+        type: "bool"
+      },
+      {
+        internalType: "bool",
+        name: "_shouldConvertWethToEth",
+        type: "bool"
+      }
     ],
     name: "handleRewards",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
-      { internalType: "address", name: "_weth", type: "address" },
-      { internalType: "address", name: "_bmx", type: "address" },
-      { internalType: "address", name: "_opBmx", type: "address" },
-      { internalType: "address", name: "_bnBmx", type: "address" },
-      { internalType: "address", name: "_blt", type: "address" },
-      { internalType: "address", name: "_stakedBmxTracker", type: "address" },
-      { internalType: "address", name: "_bonusBmxTracker", type: "address" },
-      { internalType: "address", name: "_feeBmxTracker", type: "address" },
-      { internalType: "address", name: "_feeBltTracker", type: "address" },
-      { internalType: "address", name: "_stakedBltTracker", type: "address" },
-      { internalType: "address", name: "_bltManager", type: "address" },
+      {
+        internalType: "address",
+        name: "_weth",
+        type: "address"
+      },
+      {
+        internalType: "address",
+        name: "_bwlk",
+        type: "address"
+      },
+      {
+        internalType: "address",
+        name: "_bnBwlk",
+        type: "address"
+      },
+      {
+        internalType: "address",
+        name: "_stakedBwlkTracker",
+        type: "address"
+      },
+      {
+        internalType: "address",
+        name: "_bonusBwlkTracker",
+        type: "address"
+      },
+      {
+        internalType: "address",
+        name: "_feeBwlkTracker",
+        type: "address"
+      },
+      {
+        internalType: "address",
+        name: "_voter",
+        type: "address"
+      }
     ],
     name: "initialize",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
     name: "isInitialized",
-    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool"
+      }
+    ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
-      { internalType: "address", name: "_token", type: "address" },
-      { internalType: "uint256", name: "_amount", type: "uint256" },
-      { internalType: "uint256", name: "_minUsd", type: "uint256" },
-      { internalType: "uint256", name: "_minBlt", type: "uint256" },
+      {
+        internalType: "address",
+        name: "_gov",
+        type: "address"
+      }
     ],
-    name: "mintAndStakeBlt",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "uint256", name: "_minUsd", type: "uint256" },
-      { internalType: "uint256", name: "_minBlt", type: "uint256" },
-    ],
-    name: "mintAndStakeBltETH",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "payable",
-    type: "function",
-  },
-  // SONIC
-  {
-    inputs: [
-      { internalType: "address", name: "_token", type: "address" },
-      { internalType: "uint256", name: "_amount", type: "uint256" },
-      { internalType: "uint256", name: "_minUsd", type: "uint256" },
-      { internalType: "uint256", name: "_minSlt", type: "uint256" },
-    ],
-    name: "mintAndStakeSlt",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "uint256", name: "_minUsd", type: "uint256" },
-      { internalType: "uint256", name: "_minSlt", type: "uint256" },
-    ],
-    name: "mintAndStakeSltETH",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "opBmx",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "address", name: "_gov", type: "address" }],
     name: "setGov",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "uint256", name: "_amount", type: "uint256" }],
-    name: "stakeBmx",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
-      { internalType: "address", name: "_account", type: "address" },
-      { internalType: "uint256", name: "_amount", type: "uint256" },
+      {
+        internalType: "uint256",
+        name: "_amount",
+        type: "uint256"
+      }
     ],
-    name: "stakeBmxForAccount",
+    name: "stakeBwlk",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_account",
+        type: "address"
+      },
+      {
+        internalType: "uint256",
+        name: "_amount",
+        type: "uint256"
+      }
+    ],
+    name: "stakeBwlkForAccount",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
   },
   {
     inputs: [],
-    name: "stakedBltTracker",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "stakedBwlkTracker",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address"
+      }
+    ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_amount",
+        type: "uint256"
+      }
+    ],
+    name: "unstakeBwlk",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
   },
   {
     inputs: [],
-    name: "stakedBmxTracker",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "voter",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address"
+      }
+    ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "address", name: "_tokenOut", type: "address" },
-      { internalType: "uint256", name: "_bltAmount", type: "uint256" },
-      { internalType: "uint256", name: "_minOut", type: "uint256" },
-      { internalType: "address", name: "_receiver", type: "address" },
-    ],
-    name: "unstakeAndRedeemBlt",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "uint256", name: "_bltAmount", type: "uint256" },
-      { internalType: "uint256", name: "_minOut", type: "uint256" },
-      { internalType: "address payable", name: "_receiver", type: "address" },
-    ],
-    name: "unstakeAndRedeemBltETH",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  // SONIC
-  {
-    inputs: [
-      { internalType: "address", name: "_tokenOut", type: "address" },
-      { internalType: "uint256", name: "_sltAmount", type: "uint256" },
-      { internalType: "uint256", name: "_minOut", type: "uint256" },
-      { internalType: "address", name: "_receiver", type: "address" },
-    ],
-    name: "unstakeAndRedeemSlt",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "uint256", name: "_sltAmount", type: "uint256" },
-      { internalType: "uint256", name: "_minOut", type: "uint256" },
-      { internalType: "address payable", name: "_receiver", type: "address" },
-    ],
-    name: "unstakeAndRedeemSltETH",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "uint256", name: "_amount", type: "uint256" }],
-    name: "unstakeBmx",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [],
     name: "weth",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address"
+      }
+    ],
     stateMutability: "view",
-    type: "function",
+    type: "function"
   },
   {
     inputs: [
-      { internalType: "address", name: "_token", type: "address" },
-      { internalType: "address", name: "_account", type: "address" },
-      { internalType: "uint256", name: "_amount", type: "uint256" },
+      {
+        internalType: "address",
+        name: "_token",
+        type: "address"
+      },
+      {
+        internalType: "address",
+        name: "_account",
+        type: "address"
+      },
+      {
+        internalType: "uint256",
+        name: "_amount",
+        type: "uint256"
+      }
     ],
     name: "withdrawToken",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+    type: "function"
   },
-  { stateMutability: "payable", type: "receive" },
+  {
+    stateMutability: "payable",
+    type: "receive"
+  }
 ] as const;

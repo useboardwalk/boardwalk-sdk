@@ -178,22 +178,22 @@ export interface LaunchParams {
 }
 
 export interface BuildLaunchResult {
-  /** Onchain steps: conditional approve BMX → `createLaunch`. */
+  /** Onchain steps: conditional approve BWLK → `createLaunch`. */
   steps: TxStep[];
   /** The encoded `createLaunch` tuple (also useful for the metadata leg). */
   config: LaunchConfig;
-  /** Effective BMX burn cost in wei after any member discount. */
-  bmxBurnCost: bigint;
+  /** Effective BWLK burn cost in wei after any member discount. */
+  bwlkBurnCost: bigint;
 }
 
-/** Live BMX launch-cost breakdown read from the factory. */
+/** Live BWLK launch-cost breakdown read from the factory. */
 export interface LaunchCostBreakdown {
   baseBurn: bigint;
   discountBps: bigint;
   nftCollection: Address;
   isMember: boolean;
-  bmxBurnCost: bigint;
-  /** Current BMX allowance (account→launchFactory), read in the same multicall. */
+  bwlkBurnCost: bigint;
+  /** Current BWLK allowance (account→launchFactory), read in the same multicall. */
   allowance: bigint;
 }
 
@@ -216,15 +216,16 @@ export interface ClaimParams {
   presale: Address;
 }
 
-export interface StakeBmxParams {
+export interface StakeBwlkParams {
   client: PublicClient;
   account: Address;
   chainId: number;
-  /** BMX amount in wei. */
+  /** BWLK amount in wei. */
   amount: bigint;
 }
 
-/** 1 = Treasury, 2 = Buy & Burn BMX, 3 = Buy & Burn LP, 4 = Participation. */
+/** Weekly revenue-vote options (Ethereum-only):
+ *  1 = Treasury, 2 = Buy & Burn BWLK, 3 = Buy & Burn LP, 4 = Participation. */
 export type VoteOption = 1 | 2 | 3 | 4;
 
 export interface VoteParams {
@@ -249,17 +250,17 @@ export interface SeedLiquidityParams {
   presale: Address;
 }
 
-export interface UnstakeBmxParams {
+export interface UnstakeBwlkParams {
   chainId: number;
-  /** BMX amount in wei. */
+  /** BWLK amount in wei. */
   amount: bigint;
 }
 
 /** Claim staking rewards via `RewardRouter.handleRewards(...)`. Each flag maps
- *  1:1 to the contract args. Base-only. */
+ *  1:1 to the contract args. Ethereum-only. */
 export interface HandleRewardsParams {
   chainId: number;
-  shouldClaimOpBmx: boolean;
+  shouldClaimBwlk: boolean;
   shouldStakeMultiplierPoints: boolean;
   shouldClaimWeth: boolean;
   shouldConvertWethToEth: boolean;
@@ -299,13 +300,13 @@ export interface ClaimVestedTokensParams {
   allocationId: bigint;
 }
 
-/** Claim participation BMX rewards across epochs (`ParticipationDistributor.claimAll`). Base-only. */
+/** Claim participation BWLK rewards across epochs (`ParticipationDistributor.claimAll`). Ethereum-only. */
 export interface ClaimParticipationRewardsParams {
   chainId: number;
   epochs: bigint[];
 }
 
-/** Upvote ("boost") or downvote ("deboost") a token's visibility — burns BMX. */
+/** Upvote ("boost") or downvote ("deboost") a token's visibility — burns BWLK. */
 export interface CastVisibilityParams {
   client: PublicClient;
   account: Address;
@@ -315,7 +316,7 @@ export interface CastVisibilityParams {
 }
 
 // ---------------------------------------------------------------------------
-// Boardwalk LP + swap builders
+// LP + swap builders (canonical Uniswap V2 per chain)
 // ---------------------------------------------------------------------------
 
 export interface AddLiquidityParams {

@@ -68,7 +68,11 @@ export function buildLaunchConfig(input: LaunchInput): LaunchConfig {
     presalePercent = BigInt(5000); // fixed 50%
   } else {
     const pct = Number(input.presaleSupplyPercent ?? 50);
-    // Contract enforces 2500–5000 bps, divisible by 500 (the FE offers 25–50 step 5).
+    // Mirrors the factory's DEPLOY DEFAULTS: 2500–5000 bps, divisible by 500
+    // (the FE offers 25–50 step 5). The on-chain bounds are admin-tunable
+    // storage (executeSetPresaleRange, floor 500 / ceiling 5000) — if
+    // governance ever retunes them, update this check to match (or read
+    // min/maxPresalePercent live).
     if (!Number.isInteger(pct) || pct < 25 || pct > 50 || pct % 5 !== 0) {
       throw new Error(
         `Invalid presaleSupplyPercent "${input.presaleSupplyPercent}": advanced launches require an integer 25–50 divisible by 5`,
@@ -102,6 +106,15 @@ export function buildLaunchConfig(input: LaunchInput): LaunchConfig {
     throw new Error(
       "Advanced launches require at least one issuer-fee recipient (--fee)",
     );
+  }
+
+  // Contract caps: MAX_FEE_RECIPIENTS = 4, MAX_VESTING_RECIPIENTS = 5
+  // (TooManyRecipients) — reject here instead of emitting a guaranteed revert.
+  if (issuerFee.addresses.length > 4) {
+    throw new Error("At most 4 issuer-fee recipients are allowed");
+  }
+  if (vesting.addresses.length > 5) {
+    throw new Error("At most 5 vesting recipients are allowed");
   }
 
   // Contract requires vesting recipients when the presale doesn't distribute the

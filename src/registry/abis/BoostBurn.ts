@@ -1,10 +1,10 @@
-// Minimal BoostBurn fragment — visibility boost/deboost (burns BMX) plus the
+// Minimal BoostBurn fragment — visibility boost/deboost (burns BWLK) plus the
 // cost/discount/NFT-collection views the SDK reads to compute the effective
 // burn.
 export const boostBurnAbi = [
   {
     type: "function",
-    name: "bmxCost",
+    name: "bwlkCost",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",

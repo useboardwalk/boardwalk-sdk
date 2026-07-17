@@ -2,8 +2,8 @@ import { participationDistributorAbi } from "../registry/abis";
 import { assertDeployed } from "../registry/contracts";
 import type { ClaimParticipationRewardsParams, TxStep } from "../types";
 
-/** `claimAll(epochs)` — claim participation BMX rewards across the given epochs.
- *  Base-only — throws where the participation distributor is undeployed. */
+/** `claimAll(epochs)` — claim participation BWLK rewards across the given epochs.
+ *  Ethereum-only — throws where the participation distributor is undeployed. */
 export function buildClaimParticipationRewardsSteps(
   params: ClaimParticipationRewardsParams,
 ): TxStep[] {

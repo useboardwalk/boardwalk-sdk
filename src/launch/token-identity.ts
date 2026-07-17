@@ -8,10 +8,10 @@
  *
  * Additionally, popular chain-specific tickers are reserved (see
  * `CHAIN_RESERVED_TICKERS`) so users can't impersonate ecosystem tokens like
- * KAT on Katana or FRAX on Fraxtal.
+ * ARB on Arbitrum or HOOD on Robinhood Chain.
  */
 
-import { mainnet, base, fraxtal, katana, ink, arbitrum } from "viem/chains";
+import { mainnet, base, arbitrum, robinhood } from "viem/chains";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -30,7 +30,9 @@ const TICKER_RE = /[^A-Z0-9]/g;
 const ASCII_PRINTABLE_RE = /[^\x20-\x7E]/g;
 
 // ---------------------------------------------------------------------------
-// Impersonation blacklist (names + tickers that resemble Boardwalk / BMX).
+// Impersonation blacklist (names + tickers that resemble Boardwalk / BWLK;
+// legacy BMX entries stay — impersonating the predecessor token still preys
+// on the same community).
 //
 // Matching is fuzzy: input is NFKD-normalized, lowercased, stripped to
 // alphanumerics, has Cyrillic/Greek look-alikes folded to Latin, and has
@@ -56,6 +58,12 @@ const IMPERSONATION_BLACKLIST: ReadonlyArray<{ name: string; ticker: string }> =
     { name: "Boardwalk Support", ticker: "BWSUPPORT" },
     { name: "Boardwalk Security", ticker: "BWSEC" },
     { name: "Boardwalk Verified", ticker: "BWVERIFY" },
+    { name: "BWLK", ticker: "BWLK" },
+    { name: "BWLK Token", ticker: "BWLKT" },
+    { name: "BWLK Official", ticker: "BWLKO" },
+    { name: "BWLK Claim", ticker: "BWLKCLAIM" },
+    { name: "BWLK Airdrop", ticker: "BWLKAIRDROP" },
+    { name: "Wrapped BWLK", ticker: "WBWLK" },
     { name: "BMX", ticker: "BMX" },
     { name: "BMX Token", ticker: "BMXT" },
     { name: "BMX Official", ticker: "BMXO" },
@@ -73,21 +81,10 @@ const IMPERSONATION_BLACKLIST: ReadonlyArray<{ name: string; ticker: string }> =
 // ---------------------------------------------------------------------------
 
 const CHAIN_RESERVED_TICKERS: Record<number, ReadonlyArray<string>> = {
-  [katana.id]: [
-    "KAT",
-    "veKAT",
-    "vKAT",
-    "vbUSDC",
-    "vbUSDT",
-    "vbWBTC",
-    "vbETH",
-    "vbKAT",
-  ],
-  [fraxtal.id]: ["frxUSD", "FRAX", "FXS"],
   [arbitrum.id]: ["ARB"],
+  [robinhood.id]: ["HOOD"],
   [mainnet.id]: [],
   [base.id]: [],
-  [ink.id]: [],
 };
 
 // Cyrillic / Greek look-alikes → Latin. Extend if a new impersonation surfaces.
@@ -167,8 +164,8 @@ export function isImpersonatingTicker(ticker: string): boolean {
 }
 
 /**
- * True when the ticker matches a chain-specific reserved name (e.g. KAT on
- * Katana). Returns false when chainId is unknown so the gate fails open if
+ * True when the ticker matches a chain-specific reserved name (e.g. ARB on
+ * Arbitrum). Returns false when chainId is unknown so the gate fails open if
  * the form is in an unexpected state — the chain-agnostic impersonation
  * check still applies.
  */

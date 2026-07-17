@@ -98,6 +98,35 @@ describe("buildLaunchConfig", () => {
     ).toThrow(/issuer-fee/i);
   });
 
+  it("caps recipient counts at the contract bounds (4 fee, 5 vesting)", () => {
+    const many = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        address: `0x${String(i + 1).padStart(40, "0")}` as Address,
+        percent: 1,
+      }));
+    expect(() =>
+      buildLaunchConfig({
+        name: "Adv Token",
+        ticker: "ADV",
+        category: "other",
+        path: "advanced",
+        presaleSupplyPercent: 50,
+        issuerFee: many(5),
+      }),
+    ).toThrow(/at most 4/i);
+    expect(() =>
+      buildLaunchConfig({
+        name: "Adv Token",
+        ticker: "ADV",
+        category: "other",
+        path: "advanced",
+        presaleSupplyPercent: 40,
+        issuerFee: [{ address: A, percent: 100 }],
+        vesting: many(6),
+      }),
+    ).toThrow(/at most 5/i);
+  });
+
   it("uppercases/normalizes the ticker and throws on an invalid one", () => {
     expect(
       buildLaunchConfig({
@@ -126,6 +155,14 @@ describe("buildLaunchConfig", () => {
         path: "express",
       }),
     ).toThrow(/name/i);
+    expect(() =>
+      buildLaunchConfig({
+        name: "Wrapped BWLK",
+        ticker: "ABCD",
+        category: "other",
+        path: "express",
+      }),
+    ).toThrow(/name/i);
   });
 });
 
@@ -138,5 +175,10 @@ describe("effectiveCost", () => {
   });
   it("never goes below zero", () => {
     expect(effectiveCost(BigInt(1000), BigInt(10000), true)).toBe(BigInt(0));
+  });
+  it("rounds the discount down (cost up), matching the contract", () => {
+    // base=10, bps=1 → discount floors to 0, so the member still pays 10
+    // (`base - (base*bps)/10000`, NOT `base*(10000-bps)/10000` which pays 9).
+    expect(effectiveCost(BigInt(10), BigInt(1), true)).toBe(BigInt(10));
   });
 });

@@ -7,9 +7,9 @@ import { effectiveCost } from "../launch/member-discount";
 import type { CastVisibilityParams, TxStep } from "../types";
 
 /**
- * Build the visibility flow: conditional approve BMX → `boost(token)` /
- * `deboost(token)`. Reads the live BMX cost, member discount, NFT collection,
- * and BMX allowance in one multicall (plus one `balanceOf` only when an NFT
+ * Build the visibility flow: conditional approve BWLK → `boost(token)` /
+ * `deboost(token)`. Reads the live BWLK cost, member discount, NFT collection,
+ * and BWLK allowance in one multicall (plus one `balanceOf` only when an NFT
  * collection is configured) — same pattern as `readLaunchCost`.
  */
 export async function buildCastVisibilitySteps(
@@ -17,14 +17,14 @@ export async function buildCastVisibilitySteps(
 ): Promise<TxStep[]> {
   const { client, account, chainId, token, mode } = params;
   const boostBurn = assertDeployed(chainId, "boostBurn");
-  const { bmxToken } = getContracts(chainId);
+  const { bwlkToken } = getContracts(chainId);
 
-  const [bmxCost, discountBps, nftCollection, allowance] =
+  const [bwlkCost, discountBps, nftCollection, allowance] =
     await client.multicall({
       allowFailure: false,
       multicallAddress: MULTICALL3_ADDRESS,
       contracts: [
-        { abi: boostBurnAbi, address: boostBurn, functionName: "bmxCost" },
+        { abi: boostBurnAbi, address: boostBurn, functionName: "bwlkCost" },
         {
           abi: boostBurnAbi,
           address: boostBurn,
@@ -37,7 +37,7 @@ export async function buildCastVisibilitySteps(
         },
         {
           abi: erc20Abi,
-          address: bmxToken,
+          address: bwlkToken,
           functionName: "allowance",
           args: [account, boostBurn],
         },
@@ -55,15 +55,15 @@ export async function buildCastVisibilitySteps(
     isMember = balance > BigInt(0);
   }
 
-  const cost = effectiveCost(bmxCost, discountBps, isMember);
+  const cost = effectiveCost(bwlkCost, discountBps, isMember);
 
   const steps: TxStep[] = [];
   const approve = await buildConditionalApproveStep(
     client,
     {
-      id: "approve-bmx",
-      label: "Approve BMX",
-      token: bmxToken,
+      id: "approve-bwlk",
+      label: "Approve BWLK",
+      token: bwlkToken,
       owner: account,
       spender: boostBurn,
       amount: cost,
