@@ -47,7 +47,7 @@ export const chainLaunchConfig: Record<number, ChainLaunchConfig> = {
   [robinhood.id]: makeLaunchConfig(ETH_5, "wETH"),
 };
 
-const FALLBACK: ChainLaunchConfig = makeLaunchConfig(ETH_5, "ETH");
+const FALLBACK: ChainLaunchConfig = makeLaunchConfig(ETH_5, "wETH");
 
 /** Launch config (graduation threshold, raise-token symbol, durations) for a
  *  chain. Falls back to a sane default for unsupported/undefined chains so

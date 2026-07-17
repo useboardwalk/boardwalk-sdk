@@ -77,8 +77,9 @@ function commands({ token, advancedToken }) {
     for (const c of j.calls) {
       if (!/^0x[0-9a-fA-F]{40}$/.test(c.to)) return `bad to: ${c.to}`;
       if (!c.data?.startsWith("0x")) return "bad data";
-      if (chainId === 8453 && !c.data.includes(BUILDER_CODE_HEX))
-        return "missing builder code";
+      const hasSuffix = c.data.toLowerCase().endsWith(BUILDER_CODE_HEX);
+      if (chainId === 8453 && !hasSuffix) return "missing builder code suffix";
+      if (chainId !== 8453 && hasSuffix) return "unexpected builder code suffix";
       if (typeof c.value !== "string" || c.chainId !== chainId)
         return "bad value/chainId";
     }

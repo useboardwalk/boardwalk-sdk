@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   concatHex,
   encodeFunctionData,
+  erc20Abi,
   zeroAddress,
   type Address,
   type PublicClient,
@@ -191,8 +192,17 @@ describe("buildStakeBwlkSteps", () => {
       amount: BigInt(5),
     });
     expect(steps.map((s) => s.id)).toEqual(["approve-bwlk", "stake-bwlk"]);
-    // The approve targets the staked tracker (it pulls the BWLK), not the router.
-    expect(encodeStep(steps[0]!, mainnet.id).to).toBe(BWLK);
+    // The approve spends BWLK for the staked tracker (it pulls the tokens),
+    // not the router.
+    const approve = encodeStep(steps[0]!, mainnet.id);
+    expect(approve.to).toBe(BWLK);
+    expect(approve.data).toBe(
+      encodeFunctionData({
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [STAKED_BWLK_TRACKER, BigInt(5)],
+      }),
+    );
     const stake = encodeStep(steps[1]!, mainnet.id);
     expect(stake.to).toBe(REWARD_ROUTER);
     expect(stake.data).toBe(
@@ -256,6 +266,16 @@ describe("buildVoteSteps", () => {
       option: 2,
     });
     expect(steps.map((s) => s.id)).toEqual(["approve-bwlk", "vote"]);
+    // The burn approve spends BWLK for the voter, sized to the burn amount.
+    const approve = encodeStep(steps[0]!, mainnet.id);
+    expect(approve.to).toBe(BWLK);
+    expect(approve.data).toBe(
+      encodeFunctionData({
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [GOVERNANCE_VOTER, BigInt(100)],
+      }),
+    );
     expect(encodeStep(steps[1]!, mainnet.id).data).toBe(
       encodeFunctionData({
         abi: governanceVoterAbi,
@@ -576,6 +596,12 @@ describe("buildCastVisibilitySteps", () => {
       mode: "boost",
     });
     expect(steps.map((s) => s.id)).toEqual(["approve-bwlk", "boost"]);
+    // The approve spends BWLK for BoostBurn, sized to the effective cost.
+    const approve = encodeStep(steps[0]!, base.id);
+    expect(approve.to).toBe(BWLK);
+    expect(approve.data).toBe(
+      expectedData(erc20Abi, "approve", [BOOST_BURN, BigInt(100)]),
+    );
     const call = encodeStep(steps[1]!, base.id);
     expect(call.to).toBe(BOOST_BURN);
     expect(call.data).toBe(expectedData(boostBurnAbi, "boost", [TOKEN]));
@@ -720,12 +746,14 @@ describe("buildClaimLpRewardsSteps", () => {
 
 describe("buildSwapSteps", () => {
   const BPS = BigInt(10_000);
-  /** Launch-token tax reads: steady state (seed long past), 0.95% base tax. */
+  /** Launch-token tax reads: steady state (seed long past at chain time),
+   *  0.95% base tax. Chain time comes from Multicall3, not the host clock. */
   const TAX_READS = {
     baseTaxBps: BigInt(95),
     antiWhaleTaxBps: BigInt(4_000),
     antiWhaleDuration: BigInt(5_400),
     liquiditySeedTime: BigInt(1_000),
+    getCurrentBlockTimestamp: BigInt(1_000_000),
   };
 
   it("buys via SupportingFeeOnTransferTokens with a tax-adjusted min-out", async () => {

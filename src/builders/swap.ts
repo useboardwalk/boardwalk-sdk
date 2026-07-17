@@ -24,19 +24,32 @@ const DEFAULT_DEADLINE_SECONDS = 1200; // 20 min
 const isNative = (addr: Address) =>
   addr.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase();
 
+/** Multicall3's block-timestamp read — rides in the same multicall as the tax
+ *  views so the decay math runs on chain time, immune to host clock drift. */
+const multicall3TimestampAbi = [
+  {
+    type: "function",
+    name: "getCurrentBlockTimestamp",
+    inputs: [],
+    outputs: [{ name: "timestamp", type: "uint256" }],
+    stateMutability: "view",
+  },
+] as const;
+
 /** Mirror of `BoardwalkToken._calculateTax`'s phase logic for a non-exempt
  *  wallet: 0 pre-seed; linear `antiWhaleTaxBps → baseTaxBps` decay during the
- *  anti-whale window; `baseTaxBps` flat after. Client clock runs slightly
- *  behind execution, so during the decay this over-estimates the tax — the
- *  min-out floor errs safe. */
+ *  anti-whale window; `baseTaxBps` flat after. `now` is the latest block
+ *  timestamp; execution lands later, so during the decay this over-estimates
+ *  the tax — the min-out floor errs safe. */
 function currentTaxBps(
   baseTaxBps: bigint,
   antiWhaleTaxBps: bigint,
   antiWhaleDuration: bigint,
   liquiditySeedTime: bigint,
+  now: bigint,
 ): bigint {
   if (liquiditySeedTime === BigInt(0)) return BigInt(0);
-  const elapsed = BigInt(Math.floor(Date.now() / 1000)) - liquiditySeedTime;
+  const elapsed = now - liquiditySeedTime;
   if (elapsed < BigInt(0)) return antiWhaleTaxBps;
   if (elapsed >= antiWhaleDuration) return baseTaxBps;
   return (
@@ -82,9 +95,10 @@ export async function buildSwapSteps(params: SwapParams): Promise<TxStep[]> {
     params.deadline ??
     BigInt(Math.floor(Date.now() / 1000) + DEFAULT_DEADLINE_SECONDS);
 
-  // Pair existence + the launch token's tax phase in one multicall. getAmountsOut
-  // reverts on an unknown path, so the getPair read gives a clean "no pool" error.
-  const [pair, baseTaxBps, antiWhaleTaxBps, antiWhaleDuration, seedTime] =
+  // Pair existence + the launch token's tax phase + chain time in one multicall.
+  // getAmountsOut reverts on an unknown path, so the getPair read gives a clean
+  // "no pool" error.
+  const [pair, baseTaxBps, antiWhaleTaxBps, antiWhaleDuration, seedTime, now] =
     await client.multicall({
       allowFailure: false,
       multicallAddress: MULTICALL3_ADDRESS,
@@ -115,6 +129,11 @@ export async function buildSwapSteps(params: SwapParams): Promise<TxStep[]> {
           address: launchToken,
           functionName: "liquiditySeedTime",
         },
+        {
+          abi: multicall3TimestampAbi,
+          address: MULTICALL3_ADDRESS,
+          functionName: "getCurrentBlockTimestamp",
+        },
       ],
     });
   if (pair === zeroAddress)
@@ -125,6 +144,7 @@ export async function buildSwapSteps(params: SwapParams): Promise<TxStep[]> {
     antiWhaleTaxBps,
     antiWhaleDuration,
     seedTime,
+    now,
   );
 
   // Selling: the wallet→pair transfer is taxed, so the pair only receives
