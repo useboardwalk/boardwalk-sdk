@@ -7,7 +7,7 @@ import {
   type PublicClient,
 } from "viem";
 import { erc721Abi, launchFactoryAbi } from "../registry/abis";
-import { getContracts } from "../registry/contracts";
+import { assertDeployed } from "../registry/contracts";
 import { MULTICALL3_ADDRESS } from "../constants";
 import { buildConditionalApproveStep } from "../flow/erc20";
 import { effectiveCost } from "../launch/member-discount";
@@ -30,7 +30,8 @@ export async function readLaunchCost(
   account: Address,
   chainId: number,
 ): Promise<LaunchCostBreakdown> {
-  const { launchFactory, bwlkToken } = getContracts(chainId);
+  const launchFactory = assertDeployed(chainId, "launchFactory");
+  const bwlkToken = assertDeployed(chainId, "bwlkToken");
 
   const [baseBurn, discountBps, nftCollection, allowance] =
     await client.multicall({
@@ -101,7 +102,8 @@ export async function buildLaunchSteps(
       "Express launches require an issuer-fee recipient (--issuer-fee <address>, e.g. the issuer wallet; it receives 100% of the issuer fee)",
     );
   }
-  const { launchFactory, bwlkToken } = getContracts(chainId);
+  const launchFactory = assertDeployed(chainId, "launchFactory");
+  const bwlkToken = assertDeployed(chainId, "bwlkToken");
 
   const cost = await readLaunchCost(client, account, chainId);
 
@@ -147,7 +149,8 @@ export async function resolveLaunchedToken(
   chainId: number,
   options: { timeoutMs?: number } = {},
 ): Promise<{ token: Address; issuer: Address }> {
-  const { launchFactory } = getContracts(chainId);
+  // A placeholder factory would silently match no logs — fail loudly instead.
+  const launchFactory = assertDeployed(chainId, "launchFactory");
   const receipt = await client.waitForTransactionReceipt({
     hash: txHash,
     timeout: options.timeoutMs ?? 120_000,

@@ -126,7 +126,7 @@ function commands({ token, advancedToken }) {
     { name: "stake-bwlk", args: ["stake-bwlk", "--amount", "100", "--wallet", W, "--chain", "ethereum", ...eth], check: okEth },
     { name: "unstake-bwlk", args: ["unstake-bwlk", "--amount", "100", "--wallet", W, "--chain", "ethereum"], check: okEth },
     { name: "handle-rewards", args: ["handle-rewards", "--wallet", W, "--chain", "ethereum"], check: okEth },
-    { name: "vote", args: ["vote", "--option", "1", "--wallet", W, "--chain", "ethereum", ...eth], check: okOrGated(/voting power|already voted|participation/i, okEth) },
+    { name: "vote", args: ["vote", "--option", "1", "--wallet", W, "--chain", "ethereum", ...eth], check: okOrGated(/voting power|already voted|participation|ineligible/i, okEth) },
     { name: "claim-participation", args: ["claim-participation", "--epochs", "0,1", "--wallet", W, "--chain", "ethereum"], check: okEth },
   ];
 }

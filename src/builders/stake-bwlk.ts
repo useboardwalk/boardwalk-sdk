@@ -1,5 +1,5 @@
 import { rewardRouterAbi } from "../registry/abis";
-import { assertDeployed, getContracts } from "../registry/contracts";
+import { assertDeployed } from "../registry/contracts";
 import { buildConditionalApproveStep } from "../flow/erc20";
 import type { StakeBwlkParams, TxStep } from "../types";
 
@@ -14,7 +14,7 @@ export async function buildStakeBwlkSteps(
 
   const rewardRouter = assertDeployed(chainId, "rewardRouter");
   const stakedBwlkTracker = assertDeployed(chainId, "stakedBwlkTracker");
-  const { bwlkToken } = getContracts(chainId);
+  const bwlkToken = assertDeployed(chainId, "bwlkToken");
 
   const steps: TxStep[] = [];
   const approve = await buildConditionalApproveStep(client, {

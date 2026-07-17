@@ -139,6 +139,17 @@ export function getContracts(chainId: number): ChainContracts {
   return contracts;
 }
 
+/** Keys that only ever have a deployment on Ethereum (chain 1). */
+const ETHEREUM_ONLY_KEYS: ReadonlySet<keyof ChainContracts> = new Set([
+  "governanceVoter",
+  "participationDistributor",
+  "lpLocker",
+  "rewardRouter",
+  "stakedBwlkTracker",
+  "bonusBwlkTracker",
+  "rewardReader",
+]);
+
 /** Resolves a singleton contract address, throwing if it is the placeholder
  *  (undeployed) on the given chain. Call before building a tx so an agent gets a
  *  clear error instead of silently encoding a call to the zero address. */
@@ -148,9 +159,11 @@ export function assertDeployed(
 ): Address {
   const addr = getContracts(chainId)[key];
   if (addr === PLACEHOLDER) {
+    const hint = ETHEREUM_ONLY_KEYS.has(key)
+      ? "This action is unavailable here (BWLK staking, governance, and participation rewards are Ethereum-only)."
+      : "The redeployed Boardwalk contracts are not registered for this chain yet.";
     throw new Error(
-      `Boardwalk "${String(key)}" is not deployed on chain ${chainId}. ` +
-        `This action is unavailable here (BWLK staking, governance, and participation rewards are Ethereum-only).`,
+      `Boardwalk "${String(key)}" is not deployed on chain ${chainId}. ${hint}`,
     );
   }
   return addr;

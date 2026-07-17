@@ -15,5 +15,8 @@ export function effectiveCost(
   isMember: boolean,
 ): bigint {
   if (!isMember || discountBps === BigInt(0)) return base;
+  // The contract's setters cap the discount at 10_000, but clamp defensively —
+  // a negative bigint here would poison approve amounts downstream.
+  if (discountBps >= BPS_DENOMINATOR) return BigInt(0);
   return base - (base * discountBps) / BPS_DENOMINATOR;
 }

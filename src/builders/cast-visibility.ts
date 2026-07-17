@@ -1,6 +1,6 @@
 import { erc20Abi, zeroAddress, type Address } from "viem";
 import { boostBurnAbi, erc721Abi } from "../registry/abis";
-import { assertDeployed, getContracts } from "../registry/contracts";
+import { assertDeployed } from "../registry/contracts";
 import { MULTICALL3_ADDRESS } from "../constants";
 import { buildConditionalApproveStep } from "../flow/erc20";
 import { effectiveCost } from "../launch/member-discount";
@@ -17,7 +17,7 @@ export async function buildCastVisibilitySteps(
 ): Promise<TxStep[]> {
   const { client, account, chainId, token, mode } = params;
   const boostBurn = assertDeployed(chainId, "boostBurn");
-  const { bwlkToken } = getContracts(chainId);
+  const bwlkToken = assertDeployed(chainId, "bwlkToken");
 
   const [bwlkCost, discountBps, nftCollection, allowance] =
     await client.multicall({
