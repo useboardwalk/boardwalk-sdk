@@ -6,6 +6,7 @@ import {
   erc20Abi,
 } from "viem";
 import { formatCliError } from "../src/cli-error";
+import { ApiError } from "../src/read/client";
 
 // Stand-in for the Cloudflare 429 page eth.merkle.io returns when rate-limited.
 const CLOUDFLARE_HTML = `<!DOCTYPE html><html><head><title>Too Many Requests</title></head><body>${"x".repeat(4000)}</body></html>`;
@@ -72,5 +73,32 @@ describe("formatCliError", () => {
   it("returns the full error when BOARDWALK_DEBUG is set", () => {
     vi.stubEnv("BOARDWALK_DEBUG", "1");
     expect(formatCliError(http429())).toContain("<!DOCTYPE");
+  });
+});
+
+describe("ApiError message", () => {
+  it("surfaces the backend's error detail instead of the bare status text", () => {
+    expect(new ApiError(404, "Not Found", { error: "Launch not found" }).message).toBe(
+      "API 404: Launch not found",
+    );
+    expect(
+      new ApiError(400, "Bad Request", {
+        error: "Unsupported chainId. Supported chainIds: 1, 4663, 8453, 42161",
+      }).message,
+    ).toBe(
+      "API 400: Unsupported chainId. Supported chainIds: 1, 4663, 8453, 42161",
+    );
+  });
+
+  it("falls back to statusText when the body carries no detail", () => {
+    expect(new ApiError(500, "Internal Server Error", null).message).toBe(
+      "API 500: Internal Server Error",
+    );
+    expect(new ApiError(502, "Bad Gateway", "<html>down</html>").message).toBe(
+      "API 502: Bad Gateway",
+    );
+    expect(new ApiError(404, "Not Found", { error: "  " }).message).toBe(
+      "API 404: Not Found",
+    );
   });
 });

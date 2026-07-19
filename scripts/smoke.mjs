@@ -144,15 +144,26 @@ function commands(slug, { token, advancedToken, indexed }) {
   cmds.push({ name: "claim-vested", args: ["claim-vested", "--token", advancedToken, "--allocation-id", "0", "--chain", slug, "--wallet", W, ...rpcArgs], check: okOrGated(NO_LAUNCH) });
   cmds.push({ name: "claim-integrator-fees", args: ["claim-integrator-fees", "--token", token, "--min-out", "0", "--chain", slug, "--wallet", W, ...rpcArgs], check: ok });
 
-  // --- indexer-backed lifecycle (needs the launch to be indexed on this chain) ---
-  if (indexed) {
-    cmds.push({ name: "status", args: ["status", "--token", token, "--chain", slug], check: readOk });
-    cmds.push({ name: "launch-metadata", args: ["launch-metadata", "--token", token, "--chain", slug], check: has("sign") });
-    cmds.push({ name: "contribute", args: ["contribute", "--token", token, "--amount", "0.01", "--chain", slug, "--wallet", W, ...rpcArgs], check: okOrGated(/not in presale|not indexed/i) });
-    cmds.push({ name: "claim", args: ["claim", "--token", token, "--chain", slug, "--wallet", W, ...rpcArgs], check: okOrGated(/seeded|cliff/i) });
-    cmds.push({ name: "refund", args: ["refund", "--token", token, "--chain", slug, "--wallet", W], check: okOrGated(/failed launch/i) });
-    cmds.push({ name: "seed-liquidity", args: ["seed-liquidity", "--token", token, "--chain", slug, "--wallet", W], check: okOrGated(/already seeded|not indexed/i) });
-  }
+  // --- indexer-backed lifecycle ---
+  // With a launch indexed on this chain these run for real. Without one they
+  // still run against a stand-in token to prove the SDK ↔ indexer contract
+  // holds per chain: the API must answer "Launch not found", NOT reject the
+  // chain id. `unsupported chainid` is therefore a failure, not a pass.
+  const notFound = /Launch not found|not indexed/i;
+  const indexerReachedIt = (r) =>
+    r.code !== 0 && notFound.test(r.stdout + r.stderr)
+      ? null
+      : /unsupported chainid/i.test(r.stdout + r.stderr)
+        ? "indexer rejects this chain id"
+        : `expected a not-found gate, got: ${(r.stdout + r.stderr).trim().slice(0, 120)}`;
+
+  cmds.push({ name: "status", args: ["status", "--token", token, "--chain", slug], check: indexed ? readOk : indexerReachedIt });
+  cmds.push({ name: "contribute", args: ["contribute", "--token", token, "--amount", "0.01", "--chain", slug, "--wallet", W, ...rpcArgs], check: indexed ? okOrGated(/not in presale|not indexed/i) : indexerReachedIt });
+  cmds.push({ name: "claim", args: ["claim", "--token", token, "--chain", slug, "--wallet", W, ...rpcArgs], check: indexed ? okOrGated(/seeded|cliff/i) : indexerReachedIt });
+  cmds.push({ name: "refund", args: ["refund", "--token", token, "--chain", slug, "--wallet", W], check: indexed ? okOrGated(/failed launch/i) : indexerReachedIt });
+  cmds.push({ name: "seed-liquidity", args: ["seed-liquidity", "--token", token, "--chain", slug, "--wallet", W], check: indexed ? okOrGated(/already seeded|not indexed/i) : indexerReachedIt });
+  // launch-metadata builds the EIP-712 payload locally, so it works either way.
+  cmds.push({ name: "launch-metadata", args: ["launch-metadata", "--token", token, "--chain", slug], check: has("sign") });
 
   // --- Ethereum-only: build on Ethereum, must fail loudly elsewhere ---
   const ethOnly = [
@@ -191,7 +202,7 @@ async function main() {
     const { id } = CHAINS[slug];
     const picked = await pickTokens(id);
     const indexed = Boolean(picked);
-    if (!indexed) notes.push(`${slug}: no indexed launches — launch-token commands (status/contribute/claim/refund/seed-liquidity/swap) skipped`);
+    if (!indexed) notes.push(`${slug}: no indexed launches — lifecycle commands asserted against the indexer's not-found gate; swap skipped`);
     // With no indexed launch, drive the launch-scoped commands off the chain's
     // own WETH: a real ERC-20 with no Boardwalk launch behind it, so the
     // factory-resolved paths exercise their not-deployed branch.
