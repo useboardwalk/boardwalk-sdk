@@ -32,7 +32,7 @@ This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` 
 
 ```bash
 boardwalk <command> [flags]                          # after: npm i -g @useboardwalk/sdk
-npx -p @useboardwalk/sdk boardwalk <command> [flags]    # …or zero-install
+npx -p @useboardwalk/sdk@1.0.0 boardwalk <command> [flags]    # …or zero-install
 ```
 
 - The CLI is **v1.0.0** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
@@ -88,7 +88,7 @@ There is **no login** required for onchain actions — no Privy, no session. The
 | Command           | What it does                                                                   | Key flags                                                                                                                                                                                                                             | Chain scope   |
 | ----------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
 | `launch`          | Create a launch: emits conditional BWLK approve + `create-launch`              | `--chain --wallet --name --ticker --category` (+ `--issuer-fee` on express) · opt: `--path --description --rpc` · advanced: `--presale-percent --referrer --fee <label:address:percent>` (repeatable) `--vesting <label:address:percent>` (repeatable) | multi-chain   |
-| `launch-metadata` | Upload logo to CDN, then print an EIP-712 payload to sign + the submit request | `--token --chain` · logo: `--logo \| --logo-data \| --logo-url` · opt: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`                                                         | multi-chain   |
+| `launch-metadata` | Upload logo to CDN, then print an EIP-712 payload to sign + the submit request | `--tx \| --token` (`--tx` = create-launch tx hash, recommended) `--chain` · logo: `--logo \| --logo-data \| --logo-url` · opt: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`                                                         | multi-chain   |
 | `submit-metadata` | POST the signed metadata (auto-retries on 404 for indexer lag)                 | `--token --chain --signature --message`                                                                                                                                                                                               | multi-chain   |
 | `contribute`      | Join an auction: conditional raise-token approve + `contribute`                 | `--token --amount --chain --wallet` · opt: `--rpc`                                                                                                                                                                                    | multi-chain   |
 | `claim`           | Claim tokens (only after seeded + 7-day post-seed cliff)               | `--token --chain --wallet` · opt: `--rpc`                                                                                                                                                                                             | multi-chain   |
