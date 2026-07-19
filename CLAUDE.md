@@ -70,10 +70,11 @@ Run `npm run typecheck && npm test && npm run build`, then `npm run smoke` to ex
 
 ## Version update
 
-A user-facing change ships a version bump in the same PR; don't defer it to release time. Bump all four in lockstep so the tag, npm package, CLI `--version`, and docs never drift:
+A user-facing change ships a version bump in the same PR; don't defer it to release time. Bump all of these in lockstep so the tag, npm package, CLI `--version`, and docs never drift:
 
 - `package.json` `version` (the npm package version)
 - `src/cli.ts` `.version("…")` (the CLI `--version` output)
 - the version references in `skills/boardwalk/SKILL.md` and `skills/boardwalk/plugins/boardwalk.md`
+- the pinned `npx -p @useboardwalk/sdk@…` examples in `README.md`, `skills/boardwalk/SKILL.md`, and `skills/boardwalk/plugins/boardwalk.md` (pinned so a documented command can't resolve to an unexpected future release)
 
 Use the tag you intend to release (e.g. a new chain or action is a minor bump). After merge, `npm publish` publishes whatever `package.json` says, so if it wasn't bumped the tag and the published code drift apart.
