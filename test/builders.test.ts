@@ -236,14 +236,20 @@ describe("buildVoteSteps", () => {
   /** Reads for a wallet that passes every `vote()` eligibility guard:
    *  no vote cast this epoch, non-zero sbfBWLK weight, staked multiplier
    *  points above the participation gate, and an eligible option. */
+  const EPOCH_ZERO = BigInt(1_000_000);
+  const EPOCH_DURATION = BigInt(604_800); // 7 days
+
   function eligibleVoterReads(overrides: Record<string, unknown> = {}) {
     return {
       governanceBurnAmount: BigInt(0),
-      currentEpoch: BigInt(7),
       SBF_BWLK,
       STAKED_BWLK_TRACKER: STAKED_TRACKER,
       BN_BWLK,
       BWLK,
+      EPOCH_ZERO,
+      EPOCH_DURATION,
+      // Chain time, 7 epochs past EPOCH_ZERO.
+      getCurrentBlockTimestamp: EPOCH_ZERO + EPOCH_DURATION * BigInt(7),
       isOptionEligible: true,
       getUserVote: { weight: BigInt(0), option: 0 },
       balanceOf: BigInt(1_000), // sbfBWLK voting weight
@@ -350,6 +356,20 @@ describe("buildVoteSteps", () => {
         option: 1,
       }),
     ).rejects.toThrow(/participation gate/i);
+  });
+
+  it("refuses before epoch 0 opens instead of letting currentEpoch revert", async () => {
+    const client = mockClient(
+      eligibleVoterReads({ getCurrentBlockTimestamp: EPOCH_ZERO - BigInt(1) }),
+    );
+    await expect(
+      buildVoteSteps({
+        client,
+        account: ACCOUNT,
+        chainId: mainnet.id,
+        option: 1,
+      }),
+    ).rejects.toThrow(/voting opens at/i);
   });
 
   it("refuses an ineligible option (contract: OptionIneligible, 3 consecutive wins)", async () => {

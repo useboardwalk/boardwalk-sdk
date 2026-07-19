@@ -39,7 +39,7 @@ boardwalk <command> --help
 | [`launch-cost`](#read-commands)                        | Read the BWLK burn cost to launch                        | read-only |
 | [`status`](#read-commands)                             | Read a launch's status + presale address                 | read-only |
 
-**Common flags:** `--chain <slug|id>` (ethereum · base · arbitrum · robinhood), `--wallet <address>` (BYO; never a key), `--rpc <url>` (override; defaults to the chain's public RPC — `https://mainnet.base.org` for Base). **Public RPCs rate-limit** — on a 429 / timeout, retry with `--rpc <url>` pointing at a dedicated endpoint (only Base has a built-in default; the other chains fall through to viem's public RPC). Amounts (`--amount`, `--raise-goal`) are in **human units**; the CLI scales to wei.
+**Common flags:** `--chain <slug|id>` (ethereum · base · arbitrum · robinhood), `--wallet <address>` (BYO; never a key), `--rpc <url>` (override; every supported chain has a built-in public default). **Public RPCs rate-limit** — for anything beyond occasional reads, pass `--rpc <url>` pointing at a dedicated endpoint. Amounts (`--amount`, `--raise-goal`) are in **human units**; the CLI scales to wei.
 
 ### `launch`
 

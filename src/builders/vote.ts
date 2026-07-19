@@ -13,6 +13,18 @@ import {
 } from "../constants";
 import type { TxStep, VoteParams } from "../types";
 
+/** Multicall3's block-timestamp read — batched with the voter's constants so
+ *  the epoch is derived from chain time rather than the host clock. */
+const multicall3TimestampAbi = [
+  {
+    type: "function",
+    name: "getCurrentBlockTimestamp",
+    inputs: [],
+    outputs: [{ name: "timestamp", type: "uint256" }],
+    stateMutability: "view",
+  },
+] as const;
+
 /** Minimal RewardTracker fragment for the `depositBalances` eligibility reads
  *  `vote()` performs on-chain (no full RewardTracker ABI exists in the registry). */
 const rewardTrackerAbi = [
@@ -43,55 +55,78 @@ export async function buildVoteSteps(params: VoteParams): Promise<TxStep[]> {
 
   // Voter config in one multicall. The token/tracker addresses come from the
   // voter itself (not the registry) so the eligibility reads below match
-  // exactly what `vote()` checks.
-  const [burnAmount, epoch, sbfBwlk, stakedBwlkTracker, bnBwlk, bwlkToken, optionEligible] =
-    await client.multicall({
-      allowFailure: false,
-      multicallAddress: MULTICALL3_ADDRESS,
-      contracts: [
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "governanceBurnAmount",
-        },
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "currentEpoch",
-        },
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "SBF_BWLK",
-        },
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "STAKED_BWLK_TRACKER",
-        },
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "BN_BWLK",
-        },
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "BWLK",
-        },
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "isOptionEligible",
-          args: [option],
-        },
-      ],
-    });
+  // exactly what `vote()` checks. Every entry here is epoch-independent:
+  // `currentEpoch()` reverts before `EPOCH_ZERO`, so it is derived below
+  // instead — the same `(now - EPOCH_ZERO) / EPOCH_DURATION` the voter uses,
+  // off the block timestamp read in this batch.
+  const [
+    burnAmount,
+    sbfBwlk,
+    stakedBwlkTracker,
+    bnBwlk,
+    bwlkToken,
+    epochZero,
+    epochDuration,
+    now,
+  ] = await client.multicall({
+    allowFailure: false,
+    multicallAddress: MULTICALL3_ADDRESS,
+    contracts: [
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "governanceBurnAmount",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "SBF_BWLK",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "STAKED_BWLK_TRACKER",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "BN_BWLK",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "BWLK",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "EPOCH_ZERO",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "EPOCH_DURATION",
+      },
+      {
+        abi: multicall3TimestampAbi,
+        address: MULTICALL3_ADDRESS,
+        functionName: "getCurrentBlockTimestamp",
+      },
+    ],
+  });
+
+  if (now < epochZero) {
+    throw new Error(
+      `Governance voting opens at ${new Date(Number(epochZero) * 1000).toISOString()} ` +
+        `(epoch 0 start); no epoch is active yet`,
+    );
+  }
+  const epoch = (now - epochZero) / epochDuration;
 
   // Per-wallet eligibility in a second multicall (its inputs — epoch and the
   // tracker addresses — depend on the first). The BWLK allowance rides along so
   // the approve step needs no extra round-trip.
-  const [userVote, votingWeight, stakedBwlk, stakedMp, allowance] =
+  const [userVote, votingWeight, stakedBwlk, stakedMp, allowance, optionEligible] =
     await client.multicall({
       allowFailure: false,
       multicallAddress: MULTICALL3_ADDRESS,
@@ -125,6 +160,12 @@ export async function buildVoteSteps(params: VoteParams): Promise<TxStep[]> {
           address: bwlkToken,
           functionName: "allowance",
           args: [account, governanceVoter],
+        },
+        {
+          abi: governanceVoterAbi,
+          address: governanceVoter,
+          functionName: "isOptionEligible",
+          args: [option],
         },
       ],
     });

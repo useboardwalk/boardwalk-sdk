@@ -1,7 +1,6 @@
-// Ethereum BWLK staking router (Morphex RewardRouterV5, redeployed for BWLK).
-// Source: morphex-contracts contracts/staking/RewardRouterV5.sol. Verify against
-// the deployed router before go-live; approvals for stakeBwlk target the
-// stakedBwlkTracker (the tracker pulls BWLK from the caller), not this router.
+// Ethereum BWLK staking router (RewardRouterV5) over the sBWLK → sbBWLK →
+// sbfBWLK trackers. Approvals for `stakeBwlk` target the stakedBwlkTracker —
+// the tracker pulls BWLK from the caller, not this router.
 export const rewardRouterAbi = [
   {
     anonymous: false,

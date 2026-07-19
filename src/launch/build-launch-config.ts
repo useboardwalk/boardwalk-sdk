@@ -68,11 +68,9 @@ export function buildLaunchConfig(input: LaunchInput): LaunchConfig {
     presalePercent = BigInt(5000); // fixed 50%
   } else {
     const pct = Number(input.presaleSupplyPercent ?? 50);
-    // Mirrors the factory's DEPLOY DEFAULTS: 2500–5000 bps, divisible by 500
-    // (the FE offers 25–50 step 5). The on-chain bounds are admin-tunable
-    // storage (executeSetPresaleRange, floor 500 / ceiling 5000) — if
-    // governance ever retunes them, update this check to match (or read
-    // min/maxPresalePercent live).
+    // Mirrors the factory's configured range: 2500–5000 bps, divisible by 500.
+    // The on-chain bounds are admin-tunable (`min`/`maxPresalePercent`); read
+    // them from the factory if you need to track a change to that range.
     if (!Number.isInteger(pct) || pct < 25 || pct > 50 || pct % 5 !== 0) {
       throw new Error(
         `Invalid presaleSupplyPercent "${input.presaleSupplyPercent}": advanced launches require an integer 25–50 divisible by 5`,
