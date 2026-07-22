@@ -165,7 +165,7 @@ describe("buildLaunchLink", () => {
         chain: "base",
         presaleSupplyPercent: 50,
         issuerFee: [{ label: "individual", address: A, percent: 100 }],
-        raiseGoalEth: "10", // Base threshold is 10 wETH; must be strictly greater
+        raiseGoalEth: "5", // threshold is 5 wETH everywhere; must be strictly greater
       }),
     ).toThrow(/graduation threshold/i);
   });

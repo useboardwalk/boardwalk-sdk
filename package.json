@@ -1,6 +1,6 @@
 {
   "name": "@useboardwalk/sdk",
-  "version": "0.4.2",
+  "version": "1.0.0",
   "description": "Framework-agnostic SDK + CLI for building unsigned Boardwalk transactions (launch, contribute, claim, refund, presale seed, BMX stake/unstake, fee/vesting/participation claims, LP, swap, visibility, vote).",
   "license": "MIT",
   "author": "Boardwalk",
@@ -59,7 +59,7 @@
   "dependencies": {
     "commander": "^12.1.0",
     "ox": "0.14.7",
-    "viem": "^2.47.6"
+    "viem": "^2.55.2"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -3,8 +3,8 @@
 /** Basis-point denominator (100% = 10_000 bps). */
 export const BPS_DENOMINATOR = BigInt(10_000);
 
-/** GovernanceVoter participation gate: a voter with staked BMX must hold staked
- *  multiplier points of at least this share of their staked BMX (150 bps = 1.5%),
+/** GovernanceVoter participation gate: a voter with staked BWLK must hold staked
+ *  multiplier points of at least this share of their staked BWLK (150 bps = 1.5%),
  *  else `vote()` reverts InsufficientParticipationPoints. Mirrors the private
  *  constant in boardwalk-contracts GovernanceVoter.sol — keep in sync. */
 export const PARTICIPATION_POINTS_GATE_BPS = BigInt(150);
@@ -51,11 +51,16 @@ export const MULTICALL3_ADDRESS =
   "0xcA11bde05977b3631167028862bE2a173976CA11" as const;
 
 /**
- * Default RPC per chain id. The CLI falls back to viem's built-in chain RPC
- * when a chain isn't listed here; pass `--rpc` to override on any command.
+ * Default RPC per chain id. These are public endpoints and rate-limit under
+ * load — pass `--rpc` (CLI) or your own transport (SDK) for anything beyond
+ * occasional reads. The CLI falls back to viem's built-in chain RPC for a
+ * chain that isn't listed here.
  */
 export const DEFAULT_RPC_BY_CHAIN: Record<number, string> = {
+  1: "https://ethereum-rpc.publicnode.com", // Ethereum
   8453: "https://mainnet.base.org", // Base
+  42161: "https://arbitrum-one-rpc.publicnode.com", // Arbitrum
+  4663: "https://rpc.mainnet.chain.robinhood.com", // Robinhood Chain
 };
 
 /**

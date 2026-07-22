@@ -1,4 +1,4 @@
-import { mainnet, base, fraxtal, katana, ink, arbitrum } from "viem/chains";
+import { mainnet, base, arbitrum, robinhood } from "viem/chains";
 
 /**
  * Single source of truth for all chain data.
@@ -14,20 +14,6 @@ export const SUPPORTED_CHAINS = [
     image: "/images/chains/eth.png",
   },
   {
-    slug: "katana",
-    numericId: katana.id,
-    chain: katana,
-    label: "Katana",
-    image: "/images/chains/katana.png",
-  },
-  {
-    slug: "fraxtal",
-    numericId: fraxtal.id,
-    chain: fraxtal,
-    label: "Fraxtal",
-    image: "/images/chains/fraxtal.png",
-  },
-  {
     slug: "base",
     numericId: base.id,
     chain: base,
@@ -35,18 +21,18 @@ export const SUPPORTED_CHAINS = [
     image: "/images/chains/base.png",
   },
   {
-    slug: "ink",
-    numericId: ink.id,
-    chain: ink,
-    label: "Ink",
-    image: "/images/chains/ink.png",
-  },
-  {
     slug: "arbitrum",
     numericId: arbitrum.id,
     chain: arbitrum,
     label: "Arbitrum",
     image: "/images/chains/arbitrum.png",
+  },
+  {
+    slug: "robinhood",
+    numericId: robinhood.id,
+    chain: robinhood,
+    label: "Robinhood",
+    image: "/images/chains/robinhood.png",
   },
 ] as const;
 

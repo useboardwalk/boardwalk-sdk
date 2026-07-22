@@ -2,9 +2,9 @@
 // (boardwalk-contracts src/governance/GovernanceVoter.sol) so we refuse to
 // emit a tx the contract is guaranteed to revert.
 import { erc20Abi } from "viem";
-import { base } from "viem/chains";
+import { mainnet } from "viem/chains";
 import { governanceVoterAbi } from "../registry/abis";
-import { assertDeployed, getContracts } from "../registry/contracts";
+import { assertDeployed } from "../registry/contracts";
 import { buildConditionalApproveStep } from "../flow/erc20";
 import {
   BPS_DENOMINATOR,
@@ -12,6 +12,18 @@ import {
   PARTICIPATION_POINTS_GATE_BPS,
 } from "../constants";
 import type { TxStep, VoteParams } from "../types";
+
+/** Multicall3's block-timestamp read — batched with the voter's constants so
+ *  the epoch is derived from chain time rather than the host clock. */
+const multicall3TimestampAbi = [
+  {
+    type: "function",
+    name: "getCurrentBlockTimestamp",
+    inputs: [],
+    outputs: [{ name: "timestamp", type: "uint256" }],
+    stateMutability: "view",
+  },
+] as const;
 
 /** Minimal RewardTracker fragment for the `depositBalances` eligibility reads
  *  `vote()` performs on-chain (no full RewardTracker ABI exists in the registry). */
@@ -28,59 +40,93 @@ const rewardTrackerAbi = [
   },
 ] as const;
 
-/** Conditional approve BMX → governanceVoter (only if burn > 0), then `vote(option)`. Base-only. */
+/** Conditional approve BWLK → governanceVoter (only if burn > 0), then `vote(option)`.
+ *  Weekly revenue vote on Ethereum: epoch N's vote directs epoch N+1's budget. */
 export async function buildVoteSteps(params: VoteParams): Promise<TxStep[]> {
   const { client, account, chainId, option } = params;
-  if (chainId !== base.id) {
-    throw new Error("Governance voting is only available on Base");
+  if (chainId !== mainnet.id) {
+    throw new Error("Governance voting is only available on Ethereum");
   }
   if (!Number.isInteger(option) || option < 1 || option > 4) {
     throw new Error("Vote option must be an integer 1–4");
   }
 
   const governanceVoter = assertDeployed(chainId, "governanceVoter");
-  const { bmxToken } = getContracts(chainId);
 
-  // Voter config in one multicall. The tracker addresses come from the voter
-  // itself (not the registry) so the eligibility reads below match exactly
-  // what `vote()` checks.
-  const [burnAmount, epoch, sbfBmx, stakedBmxTracker, bnBmx] =
-    await client.multicall({
-      allowFailure: false,
-      multicallAddress: MULTICALL3_ADDRESS,
-      contracts: [
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "governanceBurnAmount",
-        },
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "currentEpoch",
-        },
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "SBF_BMX",
-        },
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "STAKED_BMX_TRACKER",
-        },
-        {
-          abi: governanceVoterAbi,
-          address: governanceVoter,
-          functionName: "BN_BMX",
-        },
-      ],
-    });
+  // Voter config in one multicall. The token/tracker addresses come from the
+  // voter itself (not the registry) so the eligibility reads below match
+  // exactly what `vote()` checks. Every entry here is epoch-independent:
+  // `currentEpoch()` reverts before `EPOCH_ZERO`, so it is derived below
+  // instead — the same `(now - EPOCH_ZERO) / EPOCH_DURATION` the voter uses,
+  // off the block timestamp read in this batch.
+  const [
+    burnAmount,
+    sbfBwlk,
+    stakedBwlkTracker,
+    bnBwlk,
+    bwlkToken,
+    epochZero,
+    epochDuration,
+    now,
+  ] = await client.multicall({
+    allowFailure: false,
+    multicallAddress: MULTICALL3_ADDRESS,
+    contracts: [
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "governanceBurnAmount",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "SBF_BWLK",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "STAKED_BWLK_TRACKER",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "BN_BWLK",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "BWLK",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "EPOCH_ZERO",
+      },
+      {
+        abi: governanceVoterAbi,
+        address: governanceVoter,
+        functionName: "EPOCH_DURATION",
+      },
+      {
+        abi: multicall3TimestampAbi,
+        address: MULTICALL3_ADDRESS,
+        functionName: "getCurrentBlockTimestamp",
+      },
+    ],
+  });
+
+  if (now < epochZero) {
+    throw new Error(
+      `Governance voting opens at ${new Date(Number(epochZero) * 1000).toISOString()} ` +
+        `(epoch 0 start); no epoch is active yet`,
+    );
+  }
+  const epoch = (now - epochZero) / epochDuration;
 
   // Per-wallet eligibility in a second multicall (its inputs — epoch and the
-  // tracker addresses — depend on the first). The BMX allowance rides along so
+  // tracker addresses — depend on the first). The BWLK allowance rides along so
   // the approve step needs no extra round-trip.
-  const [userVote, votingWeight, stakedBmx, stakedMp, allowance] =
+  const [userVote, votingWeight, stakedBwlk, stakedMp, allowance, optionEligible] =
     await client.multicall({
       allowFailure: false,
       multicallAddress: MULTICALL3_ADDRESS,
@@ -93,33 +139,40 @@ export async function buildVoteSteps(params: VoteParams): Promise<TxStep[]> {
         },
         {
           abi: erc20Abi,
-          address: sbfBmx,
+          address: sbfBwlk,
           functionName: "balanceOf",
           args: [account],
         },
         {
           abi: rewardTrackerAbi,
-          address: stakedBmxTracker,
+          address: stakedBwlkTracker,
           functionName: "depositBalances",
-          args: [account, bmxToken],
+          args: [account, bwlkToken],
         },
         {
           abi: rewardTrackerAbi,
-          address: sbfBmx,
+          address: sbfBwlk,
           functionName: "depositBalances",
-          args: [account, bnBmx],
+          args: [account, bnBwlk],
         },
         {
           abi: erc20Abi,
-          address: bmxToken,
+          address: bwlkToken,
           functionName: "allowance",
           args: [account, governanceVoter],
+        },
+        {
+          abi: governanceVoterAbi,
+          address: governanceVoter,
+          functionName: "isOptionEligible",
+          args: [option],
         },
       ],
     });
 
   // Same order as the contract's reverts: AlreadyVoted →
-  // InsufficientVotingWeight → InsufficientParticipationPoints.
+  // InsufficientVotingWeight → InsufficientParticipationPoints →
+  // OptionIneligible.
   if (userVote.option !== 0) {
     throw new Error(
       `Wallet has already voted in the current epoch (epoch ${epoch}, option ${userVote.option})`,
@@ -127,16 +180,21 @@ export async function buildVoteSteps(params: VoteParams): Promise<TxStep[]> {
   }
   if (votingWeight === BigInt(0)) {
     throw new Error(
-      "Wallet has no voting power for the current epoch — stake BMX before voting",
+      "Wallet has no voting power for the current epoch — stake BWLK before voting",
     );
   }
   if (
-    stakedBmx > BigInt(0) &&
-    stakedMp * BPS_DENOMINATOR < stakedBmx * PARTICIPATION_POINTS_GATE_BPS
+    stakedBwlk > BigInt(0) &&
+    stakedMp * BPS_DENOMINATOR < stakedBwlk * PARTICIPATION_POINTS_GATE_BPS
   ) {
     throw new Error(
       `Wallet's staked multiplier points are below the participation gate ` +
-        `(${Number(PARTICIPATION_POINTS_GATE_BPS) / 100}% of staked BMX) — compound multiplier points before voting`,
+        `(${Number(PARTICIPATION_POINTS_GATE_BPS) / 100}% of staked BWLK) — compound multiplier points before voting`,
+    );
+  }
+  if (!optionEligible) {
+    throw new Error(
+      `Vote option ${option} is ineligible this epoch (it won 3 consecutive epochs) — pick another option`,
     );
   }
 
@@ -145,9 +203,9 @@ export async function buildVoteSteps(params: VoteParams): Promise<TxStep[]> {
     const approve = await buildConditionalApproveStep(
       client,
       {
-        id: "approve-bmx",
-        label: "Approve BMX",
-        token: bmxToken,
+        id: "approve-bwlk",
+        label: "Approve BWLK",
+        token: bwlkToken,
         owner: account,
         spender: governanceVoter,
         amount: burnAmount,

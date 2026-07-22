@@ -5,7 +5,7 @@ export const launchFactoryAbi = [
       {
         name: "_owner",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "p",
@@ -15,82 +15,102 @@ export const launchFactoryAbi = [
           {
             name: "tokenImpl",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "feeDistributorImpl",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "presaleImpl",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "vestingImpl",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "lpStakingImpl",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
-            name: "bmx",
+            name: "bwlk",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "raiseToken",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "boardwalkRouter",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "boardwalkDexFactory",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "boardwalkLpManager",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "boardwalkFeeCollector",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
-            name: "bmxBurnAmount",
+            name: "integratorCollector",
+            type: "address",
+            internalType: "address"
+          },
+          {
+            name: "integratorBps",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
+          },
+          {
+            name: "bwlkBurnAmount",
+            type: "uint256",
+            internalType: "uint256"
           },
           {
             name: "graduationExpress",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "graduationAdvanced",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "expressDuration",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "advancedDuration",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
+          },
+          {
+            name: "antiWhaleTaxBps",
+            type: "uint256",
+            internalType: "uint256"
+          },
+          {
+            name: "antiWhaleDuration",
+            type: "uint256",
+            internalType: "uint256"
           },
           {
             name: "feeBps",
@@ -100,39 +120,44 @@ export const launchFactoryAbi = [
               {
                 name: "issuer",
                 type: "uint256",
-                internalType: "uint256",
+                internalType: "uint256"
               },
               {
                 name: "boardwalk",
                 type: "uint256",
-                internalType: "uint256",
+                internalType: "uint256"
               },
               {
                 name: "incentive",
                 type: "uint256",
-                internalType: "uint256",
+                internalType: "uint256"
               },
               {
                 name: "referrer",
                 type: "uint256",
-                internalType: "uint256",
-              },
-              {
-                name: "integrator",
-                type: "uint256",
-                internalType: "uint256",
+                internalType: "uint256"
               },
               {
                 name: "total",
                 type: "uint256",
-                internalType: "uint256",
-              },
-            ],
+                internalType: "uint256"
+              }
+            ]
           },
-        ],
-      },
+          {
+            name: "nftCollection",
+            type: "address",
+            internalType: "address"
+          },
+          {
+            name: "memberLaunchDiscountBps",
+            type: "uint256",
+            internalType: "uint256"
+          }
+        ]
+      }
     ],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -142,23 +167,36 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
-    name: "ACTION_SET_BMX_BURN",
+    name: "ACTION_SET_ANTI_WHALE",
     inputs: [],
     outputs: [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "ACTION_SET_BWLK_BURN",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "bytes32",
+        internalType: "bytes32"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -168,10 +206,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -181,10 +219,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -194,10 +232,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -207,10 +245,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -220,23 +258,36 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
-    name: "ACTION_SET_INTEGRATOR",
+    name: "ACTION_SET_MEMBER_LAUNCH_DISCOUNT",
     inputs: [],
     outputs: [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "ACTION_SET_NFT_COLLECTION",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "bytes32",
+        internalType: "bytes32"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -246,23 +297,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "BMX",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -272,10 +310,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -285,10 +323,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -298,10 +336,23 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "BWLK",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "address"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -311,10 +362,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -324,10 +375,36 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "INTEGRATOR_BPS",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256"
+      }
+    ],
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "INTEGRATOR_COLLECTOR",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "address"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -337,10 +414,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -350,10 +427,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -363,10 +440,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -376,10 +453,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -389,10 +466,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -402,10 +479,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -415,17 +492,17 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
     name: "acceptOwnership",
     inputs: [],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -435,10 +512,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -447,56 +524,43 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
-    name: "bmxBurnAmount",
+    name: "antiWhaleDuration",
     inputs: [],
     outputs: [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
-    name: "memberLaunchDiscountBps",
+    name: "antiWhaleTaxBps",
     inputs: [],
     outputs: [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "nftCollection",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -506,10 +570,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -518,17 +582,30 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "bwlkBurnAmount",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -537,11 +614,11 @@ export const launchFactoryAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -550,11 +627,11 @@ export const launchFactoryAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -568,79 +645,79 @@ export const launchFactoryAbi = [
           {
             name: "name",
             type: "string",
-            internalType: "string",
+            internalType: "string"
           },
           {
             name: "ticker",
             type: "string",
-            internalType: "string",
+            internalType: "string"
           },
           {
             name: "category",
             type: "string",
-            internalType: "string",
+            internalType: "string"
           },
           {
             name: "description",
             type: "string",
-            internalType: "string",
+            internalType: "string"
           },
           {
             name: "path",
             type: "uint8",
-            internalType: "enum LaunchFactory.LaunchPath",
+            internalType: "enum LaunchFactory.LaunchPath"
           },
           {
             name: "presalePercent",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "vestingRecipients",
             type: "address[]",
-            internalType: "address[]",
+            internalType: "address[]"
           },
           {
             name: "vestingPercents",
             type: "uint256[]",
-            internalType: "uint256[]",
+            internalType: "uint256[]"
           },
           {
             name: "vestingLabels",
             type: "string[]",
-            internalType: "string[]",
+            internalType: "string[]"
           },
           {
             name: "referrer",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "issuerFeeRecipients",
             type: "address[]",
-            internalType: "address[]",
+            internalType: "address[]"
           },
           {
             name: "issuerFeeSplits",
             type: "uint256[]",
-            internalType: "uint256[]",
+            internalType: "uint256[]"
           },
           {
             name: "issuerFeeLabels",
             type: "string[]",
-            internalType: "string[]",
-          },
-        ],
-      },
+            internalType: "string[]"
+          }
+        ]
+      }
     ],
     outputs: [
       {
         name: "tokenAddr",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -650,35 +727,35 @@ export const launchFactoryAbi = [
       {
         name: "issuer",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "boardwalk",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "incentive",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "referrer",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "integratorBps",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "total",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -687,50 +764,60 @@ export const launchFactoryAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
-    name: "executeSetAdvancedDuration",
+    name: "executeSetAntiWhale",
     inputs: [
+      {
+        name: "_taxBps",
+        type: "uint256",
+        internalType: "uint256"
+      },
       {
         name: "_duration",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
-    name: "executeSetBmxBurn",
+    name: "executeSetBwlkBurn",
     inputs: [
       {
         name: "_amount",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
-    name: "executeSetExpressDuration",
+    name: "executeSetDuration",
     inputs: [
+      {
+        name: "path",
+        type: "uint8",
+        internalType: "enum LaunchFactory.LaunchPath"
+      },
       {
         name: "_duration",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -739,11 +826,11 @@ export const launchFactoryAbi = [
       {
         name: "_collector",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -757,77 +844,77 @@ export const launchFactoryAbi = [
           {
             name: "issuer",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "boardwalk",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "incentive",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "referrer",
             type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "integrator",
-            type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "total",
             type: "uint256",
-            internalType: "uint256",
-          },
-        ],
-      },
+            internalType: "uint256"
+          }
+        ]
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
-    name: "executeSetGraduationAdvanced",
+    name: "executeSetGraduation",
     inputs: [
+      {
+        name: "path",
+        type: "uint8",
+        internalType: "enum LaunchFactory.LaunchPath"
+      },
       {
         name: "_threshold",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
-    name: "executeSetGraduationExpress",
+    name: "executeSetMemberLaunchDiscount",
     inputs: [
       {
-        name: "_threshold",
+        name: "_bps",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
-    name: "executeSetIntegrator",
+    name: "executeSetNftCollection",
     inputs: [
       {
-        name: "_integrator",
+        name: "_nft",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -836,16 +923,16 @@ export const launchFactoryAbi = [
       {
         name: "_min",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "_max",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -855,10 +942,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -867,27 +954,27 @@ export const launchFactoryAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "isPending",
         type: "bool",
-        internalType: "bool",
+        internalType: "bool"
       },
       {
         name: "executeTime",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "expiresAt",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -896,27 +983,27 @@ export const launchFactoryAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "isPending",
         type: "bool",
-        internalType: "bool",
+        internalType: "bool"
       },
       {
         name: "executeTime",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "expiresAt",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -926,10 +1013,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -939,23 +1026,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "integrator",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -964,17 +1038,17 @@ export const launchFactoryAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -983,17 +1057,17 @@ export const launchFactoryAbi = [
       {
         name: "token",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1003,10 +1077,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1015,52 +1089,52 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [
       {
         name: "token",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "feeDistributor",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "presaleManager",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "vestingStream",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "lpStaking",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "issuer",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "path",
         type: "uint8",
-        internalType: "enum LaunchFactory.LaunchPath",
+        internalType: "enum LaunchFactory.LaunchPath"
       },
       {
         name: "createdAt",
         type: "uint32",
-        internalType: "uint32",
-      },
+        internalType: "uint32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1070,10 +1144,23 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "memberLaunchDiscountBps",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1083,10 +1170,23 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "nftCollection",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "address"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1096,10 +1196,10 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1108,27 +1208,27 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "dataHash",
         type: "bytes32",
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "signalTime",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "delay",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1137,27 +1237,27 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "dataHash",
         type: "bytes32",
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "signalTime",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "delay",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1167,17 +1267,17 @@ export const launchFactoryAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
     name: "renounceOwnership",
     inputs: [],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -1186,16 +1286,16 @@ export const launchFactoryAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "dataHash",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -1204,11 +1304,11 @@ export const launchFactoryAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -1217,11 +1317,11 @@ export const launchFactoryAbi = [
       {
         name: "newOwner",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "event",
@@ -1231,10 +1331,10 @@ export const launchFactoryAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1244,10 +1344,10 @@ export const launchFactoryAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1257,41 +1357,72 @@ export const launchFactoryAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "executeTime",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "expiresAt",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
-    name: "BmxBurnAmountChanged",
+    name: "AntiWhaleConfigChanged",
+    inputs: [
+      {
+        name: "oldTaxBps",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256"
+      },
+      {
+        name: "oldDuration",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256"
+      },
+      {
+        name: "newTaxBps",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256"
+      },
+      {
+        name: "newDuration",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256"
+      }
+    ],
+    anonymous: false
+  },
+  {
+    type: "event",
+    name: "BwlkBurnAmountChanged",
     inputs: [
       {
         name: "oldAmount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "newAmount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1301,10 +1432,10 @@ export const launchFactoryAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1314,10 +1445,10 @@ export const launchFactoryAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1327,28 +1458,28 @@ export const launchFactoryAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "dataHash",
         type: "bytes32",
         indexed: false,
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "executeTime",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "expiresAt",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1358,16 +1489,16 @@ export const launchFactoryAbi = [
         name: "oldCollector",
         type: "address",
         indexed: false,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "newCollector",
         type: "address",
         indexed: false,
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1377,34 +1508,28 @@ export const launchFactoryAbi = [
         name: "issuer",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "boardwalk",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "incentive",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "referrer",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
-      {
-        name: "integrator",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1414,41 +1539,22 @@ export const launchFactoryAbi = [
         name: "path",
         type: "uint8",
         indexed: false,
-        internalType: "enum LaunchFactory.LaunchPath",
+        internalType: "enum LaunchFactory.LaunchPath"
       },
       {
         name: "oldThreshold",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "newThreshold",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
-  },
-  {
-    type: "event",
-    name: "IntegratorChanged",
-    inputs: [
-      {
-        name: "oldIntegrator",
-        type: "address",
-        indexed: false,
-        internalType: "address",
-      },
-      {
-        name: "newIntegrator",
-        type: "address",
-        indexed: false,
-        internalType: "address",
-      },
-    ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1458,58 +1564,96 @@ export const launchFactoryAbi = [
         name: "token",
         type: "address",
         indexed: true,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "issuer",
         type: "address",
         indexed: true,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "name",
         type: "string",
         indexed: false,
-        internalType: "string",
+        internalType: "string"
       },
       {
         name: "ticker",
         type: "string",
         indexed: false,
-        internalType: "string",
+        internalType: "string"
       },
       {
         name: "category",
         type: "string",
         indexed: false,
-        internalType: "string",
+        internalType: "string"
       },
       {
         name: "description",
         type: "string",
         indexed: false,
-        internalType: "string",
+        internalType: "string"
       },
       {
         name: "path",
         type: "uint8",
         indexed: false,
-        internalType: "enum LaunchFactory.LaunchPath",
+        internalType: "enum LaunchFactory.LaunchPath"
       },
       {
         name: "issuerFeeLabels",
         type: "string[]",
         indexed: false,
-        internalType: "string[]",
+        internalType: "string[]"
       },
       {
         name: "vestingLabels",
         type: "string[]",
         indexed: false,
-        internalType: "string[]",
-      },
+        internalType: "string[]"
+      }
     ],
-    anonymous: false,
+    anonymous: false
+  },
+  {
+    type: "event",
+    name: "MemberLaunchDiscountChanged",
+    inputs: [
+      {
+        name: "oldDiscount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256"
+      },
+      {
+        name: "newDiscount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256"
+      }
+    ],
+    anonymous: false
+  },
+  {
+    type: "event",
+    name: "NftCollectionChanged",
+    inputs: [
+      {
+        name: "oldCollection",
+        type: "address",
+        indexed: false,
+        internalType: "address"
+      },
+      {
+        name: "newCollection",
+        type: "address",
+        indexed: false,
+        internalType: "address"
+      }
+    ],
+    anonymous: false
   },
   {
     type: "event",
@@ -1519,16 +1663,16 @@ export const launchFactoryAbi = [
         name: "previousOwner",
         type: "address",
         indexed: true,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "newOwner",
         type: "address",
         indexed: true,
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1538,16 +1682,16 @@ export const launchFactoryAbi = [
         name: "previousOwner",
         type: "address",
         indexed: true,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "newOwner",
         type: "address",
         indexed: true,
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1557,22 +1701,22 @@ export const launchFactoryAbi = [
         name: "path",
         type: "uint8",
         indexed: false,
-        internalType: "enum LaunchFactory.LaunchPath",
+        internalType: "enum LaunchFactory.LaunchPath"
       },
       {
         name: "oldDuration",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "newDuration",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1582,33 +1726,33 @@ export const launchFactoryAbi = [
         name: "oldMin",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "oldMax",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "newMin",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "newMax",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "error",
     name: "ActionAlreadyBurned",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1617,35 +1761,40 @@ export const launchFactoryAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
-    ],
+        internalType: "bytes32"
+      }
+    ]
   },
   {
     type: "error",
     name: "ArrayLengthMismatch",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
-    name: "BmxBurnOutOfRange",
+    name: "BwlkBurnOutOfRange",
     inputs: [
       {
         name: "amount",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
+  },
+  {
+    type: "error",
+    name: "DuplicateRoleAddress",
+    inputs: []
   },
   {
     type: "error",
     name: "ExpressRequiresOneFeeRecipient",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "FailedDeployment",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1654,34 +1803,34 @@ export const launchFactoryAbi = [
       {
         name: "balance",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "needed",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
-    name: "IntegratorMismatch",
-    inputs: [],
+    name: "IntegratorCollectorMismatch",
+    inputs: []
   },
   {
     type: "error",
-    name: "IntegratorNotAllowedWithReferrer",
-    inputs: [],
+    name: "InvalidAntiWhaleConfig",
+    inputs: []
   },
   {
     type: "error",
     name: "InvalidDuration",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "InvalidFeeDefaults",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1690,9 +1839,9 @@ export const launchFactoryAbi = [
       {
         name: "percent",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
@@ -1701,24 +1850,35 @@ export const launchFactoryAbi = [
       {
         name: "min",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "max",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
     name: "InvalidSplitsSum",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "IssuerVestingRecipientsRequired",
-    inputs: [],
+    inputs: []
+  },
+  {
+    type: "error",
+    name: "MemberDiscountOutOfRange",
+    inputs: [
+      {
+        name: "bps",
+        type: "uint256",
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
@@ -1727,9 +1887,9 @@ export const launchFactoryAbi = [
       {
         name: "owner",
         type: "address",
-        internalType: "address",
-      },
-    ],
+        internalType: "address"
+      }
+    ]
   },
   {
     type: "error",
@@ -1738,19 +1898,19 @@ export const launchFactoryAbi = [
       {
         name: "account",
         type: "address",
-        internalType: "address",
-      },
-    ],
+        internalType: "address"
+      }
+    ]
   },
   {
     type: "error",
     name: "PresalePercentNotDivisibleBy5",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "ReferrerNotAllowedOnExpressPath",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1759,14 +1919,14 @@ export const launchFactoryAbi = [
       {
         name: "bits",
         type: "uint8",
-        internalType: "uint8",
+        internalType: "uint8"
       },
       {
         name: "value",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
@@ -1775,14 +1935,14 @@ export const launchFactoryAbi = [
       {
         name: "token",
         type: "address",
-        internalType: "address",
-      },
-    ],
+        internalType: "address"
+      }
+    ]
   },
   {
     type: "error",
     name: "TimelockDataMismatch",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1791,14 +1951,14 @@ export const launchFactoryAbi = [
       {
         name: "expiredAt",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
     name: "TimelockNotSignaled",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1807,9 +1967,9 @@ export const launchFactoryAbi = [
       {
         name: "executeTime",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
@@ -1818,23 +1978,28 @@ export const launchFactoryAbi = [
       {
         name: "count",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
+  },
+  {
+    type: "error",
+    name: "VestingNotAllowedAtFullPresale",
+    inputs: []
   },
   {
     type: "error",
     name: "VestingNotAllowedOnExpressPath",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "ZeroAddress",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "ZeroGraduation",
-    inputs: [],
-  },
+    inputs: []
+  }
 ] as const;

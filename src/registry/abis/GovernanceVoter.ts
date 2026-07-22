@@ -5,7 +5,7 @@ export const governanceVoterAbi = [
       {
         name: "_owner",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "p",
@@ -13,88 +13,88 @@ export const governanceVoterAbi = [
         internalType: "struct GovernanceVoter.DeployParams",
         components: [
           {
-            name: "sbfBmx",
+            name: "sbfBwlk",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
-            name: "stakedBmxTracker",
+            name: "stakedBwlkTracker",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
-            name: "bnBmx",
+            name: "bnBwlk",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
-            name: "bmx",
+            name: "bwlk",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "weth",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "universalRouter",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "v4PositionManager",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "treasury",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "fallbackTreasury",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "epochZero",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "epochDuration",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "poolFee",
             type: "uint24",
-            internalType: "uint24",
+            internalType: "uint24"
           },
           {
             name: "poolTickSpacing",
             type: "int24",
-            internalType: "int24",
+            internalType: "int24"
           },
           {
             name: "poolHooks",
             type: "address",
-            internalType: "address",
+            internalType: "address"
           },
           {
             name: "keeper",
             type: "address",
-            internalType: "address",
-          },
-        ],
-      },
+            internalType: "address"
+          }
+        ]
+      }
     ],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "receive",
-    stateMutability: "payable",
+    stateMutability: "payable"
   },
   {
     type: "function",
@@ -104,10 +104,23 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "ACTION_SET_FEE_COLLECTOR",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "bytes32",
+        internalType: "bytes32"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -117,10 +130,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -130,10 +143,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -143,36 +156,36 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
-    name: "BMX",
+    name: "BN_BWLK",
     inputs: [],
     outputs: [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
-    name: "BN_BMX",
+    name: "BWLK",
     inputs: [],
     outputs: [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -182,10 +195,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -195,10 +208,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -208,10 +221,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -221,23 +234,23 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
-    name: "OPTION_BUY_BURN_BMX",
+    name: "OPTION_BUY_BURN_BWLK",
     inputs: [],
     outputs: [
       {
         name: "",
         type: "uint8",
-        internalType: "uint8",
-      },
+        internalType: "uint8"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -247,10 +260,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint8",
-        internalType: "uint8",
-      },
+        internalType: "uint8"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -260,10 +273,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint8",
-        internalType: "uint8",
-      },
+        internalType: "uint8"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -273,10 +286,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint8",
-        internalType: "uint8",
-      },
+        internalType: "uint8"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -286,10 +299,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint24",
-        internalType: "uint24",
-      },
+        internalType: "uint24"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -299,10 +312,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -312,36 +325,36 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "int24",
-        internalType: "int24",
-      },
+        internalType: "int24"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
-    name: "SBF_BMX",
+    name: "SBF_BWLK",
     inputs: [],
     outputs: [
       {
         name: "",
         type: "address",
-        internalType: "contract IRewardTracker",
-      },
+        internalType: "contract IRewardTracker"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
-    name: "STAKED_BMX_TRACKER",
+    name: "STAKED_BWLK_TRACKER",
     inputs: [],
     outputs: [
       {
         name: "",
         type: "address",
-        internalType: "contract IRewardTracker",
-      },
+        internalType: "contract IRewardTracker"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -351,10 +364,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -364,10 +377,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -377,10 +390,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -390,10 +403,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -403,17 +416,17 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
     name: "acceptOwnership",
     inputs: [],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -423,10 +436,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -435,17 +448,17 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -454,11 +467,11 @@ export const governanceVoterAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -467,11 +480,11 @@ export const governanceVoterAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -480,17 +493,17 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -500,10 +513,23 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "depositRevenue",
+    inputs: [
+      {
+        name: "amount",
+        type: "uint256",
+        internalType: "uint256"
+      }
+    ],
+    outputs: [],
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -512,52 +538,71 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [
       {
         name: "snapshotTotalWeight",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "budget",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "totalVoteWeight",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "voterCount",
         type: "uint64",
-        internalType: "uint64",
+        internalType: "uint64"
       },
       {
         name: "winningOption",
         type: "uint8",
-        internalType: "uint8",
+        internalType: "uint8"
       },
       {
         name: "snapshotSet",
         type: "bool",
-        internalType: "bool",
+        internalType: "bool"
       },
       {
         name: "finalized",
         type: "bool",
-        internalType: "bool",
+        internalType: "bool"
       },
       {
         name: "executed",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "epochRevenue",
+    inputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256"
+      }
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -566,21 +611,26 @@ export const governanceVoterAbi = [
       {
         name: "epoch",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "amountOutMin",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "liquidity",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
+      {
+        name: "deadline",
+        type: "uint256",
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -589,11 +639,11 @@ export const governanceVoterAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -602,11 +652,24 @@ export const governanceVoterAbi = [
       {
         name: "_fallbackTreasury",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
+  },
+  {
+    type: "function",
+    name: "executeSetFeeCollector",
+    inputs: [
+      {
+        name: "_newFeeCollector",
+        type: "address",
+        internalType: "address"
+      }
+    ],
+    outputs: [],
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -615,11 +678,11 @@ export const governanceVoterAbi = [
       {
         name: "_amount",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -628,11 +691,11 @@ export const governanceVoterAbi = [
       {
         name: "_keeper",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -641,11 +704,11 @@ export const governanceVoterAbi = [
       {
         name: "_treasury",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -655,10 +718,23 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "feeCollector",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "address"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -668,10 +744,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -680,16 +756,35 @@ export const governanceVoterAbi = [
       {
         name: "epoch",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "maxBatch",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
+  },
+  {
+    type: "function",
+    name: "finalizedAt",
+    inputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256"
+      }
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -698,11 +793,11 @@ export const governanceVoterAbi = [
       {
         name: "epoch",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -711,8 +806,8 @@ export const governanceVoterAbi = [
       {
         name: "epoch",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [
       {
@@ -723,52 +818,52 @@ export const governanceVoterAbi = [
           {
             name: "snapshotTotalWeight",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "budget",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "totalVoteWeight",
             type: "uint256",
-            internalType: "uint256",
+            internalType: "uint256"
           },
           {
             name: "optionWeights",
             type: "uint256[4]",
-            internalType: "uint256[4]",
+            internalType: "uint256[4]"
           },
           {
             name: "voterCount",
             type: "uint64",
-            internalType: "uint64",
+            internalType: "uint64"
           },
           {
             name: "winningOption",
             type: "uint8",
-            internalType: "uint8",
+            internalType: "uint8"
           },
           {
             name: "snapshotSet",
             type: "bool",
-            internalType: "bool",
+            internalType: "bool"
           },
           {
             name: "finalized",
             type: "bool",
-            internalType: "bool",
+            internalType: "bool"
           },
           {
             name: "executed",
             type: "bool",
-            internalType: "bool",
-          },
-        ],
-      },
+            internalType: "bool"
+          }
+        ]
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -777,17 +872,17 @@ export const governanceVoterAbi = [
       {
         name: "epoch",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "address[]",
-        internalType: "address[]",
-      },
+        internalType: "address[]"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -796,27 +891,27 @@ export const governanceVoterAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "isPending",
         type: "bool",
-        internalType: "bool",
+        internalType: "bool"
       },
       {
         name: "executeTime",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "expiresAt",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -825,27 +920,27 @@ export const governanceVoterAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "isPending",
         type: "bool",
-        internalType: "bool",
+        internalType: "bool"
       },
       {
         name: "executeTime",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "expiresAt",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -854,13 +949,13 @@ export const governanceVoterAbi = [
       {
         name: "epoch",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "user",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [
       {
@@ -871,17 +966,17 @@ export const governanceVoterAbi = [
           {
             name: "weight",
             type: "uint248",
-            internalType: "uint248",
+            internalType: "uint248"
           },
           {
             name: "option",
             type: "uint8",
-            internalType: "uint8",
-          },
-        ],
-      },
+            internalType: "uint8"
+          }
+        ]
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -891,10 +986,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -903,16 +998,21 @@ export const governanceVoterAbi = [
       {
         name: "_lpLocker",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "_participationDistributor",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
+      {
+        name: "_feeCollector",
+        type: "address",
+        internalType: "address"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -921,17 +1021,17 @@ export const governanceVoterAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -940,17 +1040,17 @@ export const governanceVoterAbi = [
       {
         name: "option",
         type: "uint8",
-        internalType: "uint8",
-      },
+        internalType: "uint8"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -960,10 +1060,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -973,10 +1073,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -985,17 +1085,17 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1005,10 +1105,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1018,10 +1118,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1031,10 +1131,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1044,10 +1144,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1056,27 +1156,27 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "dataHash",
         type: "bytes32",
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "signalTime",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "delay",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1085,27 +1185,27 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [
       {
         name: "dataHash",
         type: "bytes32",
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "signalTime",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "delay",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1115,17 +1215,43 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "poolHooksSet",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "bool",
+        internalType: "bool"
+      }
+    ],
+    stateMutability: "view"
   },
   {
     type: "function",
     name: "renounceOwnership",
     inputs: [],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
+  },
+  {
+    type: "function",
+    name: "setPoolHooks",
+    inputs: [
+      {
+        name: "poolHooks",
+        type: "address",
+        internalType: "address"
+      }
+    ],
+    outputs: [],
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -1134,16 +1260,16 @@ export const governanceVoterAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "dataHash",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -1152,11 +1278,11 @@ export const governanceVoterAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -1165,11 +1291,11 @@ export const governanceVoterAbi = [
       {
         name: "newOwner",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -1179,10 +1305,10 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1191,27 +1317,27 @@ export const governanceVoterAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [
       {
         name: "weight",
         type: "uint248",
-        internalType: "uint248",
+        internalType: "uint248"
       },
       {
         name: "option",
         type: "uint8",
-        internalType: "uint8",
-      },
+        internalType: "uint8"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -1220,11 +1346,11 @@ export const governanceVoterAbi = [
       {
         name: "option",
         type: "uint8",
-        internalType: "uint8",
-      },
+        internalType: "uint8"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "event",
@@ -1234,10 +1360,10 @@ export const governanceVoterAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1247,10 +1373,10 @@ export const governanceVoterAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1260,22 +1386,22 @@ export const governanceVoterAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "executeTime",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "expiresAt",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1285,10 +1411,10 @@ export const governanceVoterAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1298,10 +1424,10 @@ export const governanceVoterAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
-      },
+        internalType: "bytes32"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1311,28 +1437,28 @@ export const governanceVoterAbi = [
         name: "action",
         type: "bytes32",
         indexed: true,
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "dataHash",
         type: "bytes32",
         indexed: false,
-        internalType: "bytes32",
+        internalType: "bytes32"
       },
       {
         name: "executeTime",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "expiresAt",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1342,34 +1468,34 @@ export const governanceVoterAbi = [
         name: "epoch",
         type: "uint256",
         indexed: true,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "option",
         type: "uint8",
         indexed: false,
-        internalType: "uint8",
+        internalType: "uint8"
       },
       {
         name: "raiseTokenAmount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "forced",
         type: "bool",
         indexed: false,
-        internalType: "bool",
+        internalType: "bool"
       },
       {
         name: "destination",
         type: "address",
         indexed: false,
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1379,28 +1505,28 @@ export const governanceVoterAbi = [
         name: "epoch",
         type: "uint256",
         indexed: true,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "winningOption",
         type: "uint8",
         indexed: false,
-        internalType: "uint8",
+        internalType: "uint8"
       },
       {
         name: "quorumMet",
         type: "bool",
         indexed: false,
-        internalType: "bool",
+        internalType: "bool"
       },
       {
         name: "budget",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1410,16 +1536,35 @@ export const governanceVoterAbi = [
         name: "oldAddress",
         type: "address",
         indexed: false,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "newAddress",
         type: "address",
         indexed: false,
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    anonymous: false,
+    anonymous: false
+  },
+  {
+    type: "event",
+    name: "FeeCollectorChanged",
+    inputs: [
+      {
+        name: "oldFeeCollector",
+        type: "address",
+        indexed: false,
+        internalType: "address"
+      },
+      {
+        name: "newFeeCollector",
+        type: "address",
+        indexed: false,
+        internalType: "address"
+      }
+    ],
+    anonymous: false
   },
   {
     type: "event",
@@ -1429,16 +1574,16 @@ export const governanceVoterAbi = [
         name: "oldAmount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "newAmount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1448,16 +1593,16 @@ export const governanceVoterAbi = [
         name: "oldKeeper",
         type: "address",
         indexed: false,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "newKeeper",
         type: "address",
         indexed: false,
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1467,16 +1612,16 @@ export const governanceVoterAbi = [
         name: "previousOwner",
         type: "address",
         indexed: true,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "newOwner",
         type: "address",
         indexed: true,
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1486,16 +1631,16 @@ export const governanceVoterAbi = [
         name: "previousOwner",
         type: "address",
         indexed: true,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "newOwner",
         type: "address",
         indexed: true,
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1505,16 +1650,54 @@ export const governanceVoterAbi = [
         name: "lpLocker",
         type: "address",
         indexed: false,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "participationDistributor",
         type: "address",
         indexed: false,
-        internalType: "address",
+        internalType: "address"
       },
+      {
+        name: "feeCollector",
+        type: "address",
+        indexed: false,
+        internalType: "address"
+      }
     ],
-    anonymous: false,
+    anonymous: false
+  },
+  {
+    type: "event",
+    name: "PoolHooksSet",
+    inputs: [
+      {
+        name: "poolHooks",
+        type: "address",
+        indexed: false,
+        internalType: "address"
+      }
+    ],
+    anonymous: false
+  },
+  {
+    type: "event",
+    name: "RevenueDeposited",
+    inputs: [
+      {
+        name: "epoch",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256"
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256"
+      }
+    ],
+    anonymous: false
   },
   {
     type: "event",
@@ -1524,16 +1707,16 @@ export const governanceVoterAbi = [
         name: "oldAddress",
         type: "address",
         indexed: false,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "newAddress",
         type: "address",
         indexed: false,
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -1543,33 +1726,33 @@ export const governanceVoterAbi = [
         name: "epoch",
         type: "uint256",
         indexed: true,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "voter",
         type: "address",
         indexed: true,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "option",
         type: "uint8",
         indexed: false,
-        internalType: "uint8",
+        internalType: "uint8"
       },
       {
         name: "weight",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "error",
     name: "ActionAlreadyBurned",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1578,49 +1761,49 @@ export const governanceVoterAbi = [
       {
         name: "action",
         type: "bytes32",
-        internalType: "bytes32",
-      },
-    ],
+        internalType: "bytes32"
+      }
+    ]
   },
   {
     type: "error",
     name: "AlreadyVoted",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "EpochAlreadyExecuted",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "EpochAlreadyFinalized",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "EpochNotActive",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "EpochNotExecutable",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "EpochNotFinalized",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "EpochNotOverdue",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "FinalizationInProgress",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1629,34 +1812,39 @@ export const governanceVoterAbi = [
       {
         name: "amount",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
     name: "InsufficientParticipationPoints",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "InsufficientVotingWeight",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "InvalidOption",
-    inputs: [],
+    inputs: []
+  },
+  {
+    type: "error",
+    name: "NotFeeCollector",
+    inputs: []
   },
   {
     type: "error",
     name: "NotKeeper",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "OnlyWETH",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1665,9 +1853,9 @@ export const governanceVoterAbi = [
       {
         name: "option",
         type: "uint8",
-        internalType: "uint8",
-      },
-    ],
+        internalType: "uint8"
+      }
+    ]
   },
   {
     type: "error",
@@ -1676,9 +1864,9 @@ export const governanceVoterAbi = [
       {
         name: "owner",
         type: "address",
-        internalType: "address",
-      },
-    ],
+        internalType: "address"
+      }
+    ]
   },
   {
     type: "error",
@@ -1687,29 +1875,39 @@ export const governanceVoterAbi = [
       {
         name: "account",
         type: "address",
-        internalType: "address",
-      },
-    ],
+        internalType: "address"
+      }
+    ]
   },
   {
     type: "error",
     name: "PeerWiringMismatch",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "PeersAlreadyInitialized",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "PeersNotInitialized",
-    inputs: [],
+    inputs: []
+  },
+  {
+    type: "error",
+    name: "PoolHooksAlreadySet",
+    inputs: []
+  },
+  {
+    type: "error",
+    name: "PoolHooksNotSet",
+    inputs: []
   },
   {
     type: "error",
     name: "PreviousEpochNotExecuted",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1718,14 +1916,14 @@ export const governanceVoterAbi = [
       {
         name: "bits",
         type: "uint8",
-        internalType: "uint8",
+        internalType: "uint8"
       },
       {
         name: "value",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
@@ -1734,14 +1932,14 @@ export const governanceVoterAbi = [
       {
         name: "token",
         type: "address",
-        internalType: "address",
-      },
-    ],
+        internalType: "address"
+      }
+    ]
   },
   {
     type: "error",
     name: "TimelockDataMismatch",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1750,14 +1948,14 @@ export const governanceVoterAbi = [
       {
         name: "expiredAt",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
     name: "TimelockNotSignaled",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -1766,23 +1964,23 @@ export const governanceVoterAbi = [
       {
         name: "executeTime",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
     name: "WrongFinalizeEpoch",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "ZeroAddress",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "ZeroBatch",
-    inputs: [],
-  },
+    inputs: []
+  }
 ] as const;

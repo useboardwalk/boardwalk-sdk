@@ -2,7 +2,7 @@ export const presaleManagerAbi = [
   {
     type: "constructor",
     inputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -12,10 +12,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -25,10 +25,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -38,10 +38,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -51,10 +51,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -64,10 +64,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -76,24 +76,24 @@ export const presaleManagerAbi = [
       {
         name: "account",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
     name: "claimTokens",
     inputs: [],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -102,17 +102,17 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -122,10 +122,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -134,11 +134,11 @@ export const presaleManagerAbi = [
       {
         name: "amount",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -147,22 +147,22 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [
       {
         name: "totalContributed",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "weightedContributed",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -172,10 +172,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -185,10 +185,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -198,10 +198,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -211,10 +211,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -224,10 +224,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -236,61 +236,61 @@ export const presaleManagerAbi = [
       {
         name: "_token",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "_feeDistributor",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "_vestingStreamAddr",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "_lpStaking",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "_router",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "_raiseToken",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "_dexFactory",
         type: "address",
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "_duration",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "_presalePercent",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "_graduationThreshold",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "_hasDelay",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -300,10 +300,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -313,10 +313,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -326,10 +326,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -339,10 +339,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -352,10 +352,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -365,10 +365,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -378,17 +378,17 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "contract IERC20",
-      },
+        internalType: "contract IERC20"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
     name: "refund",
     inputs: [],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -397,17 +397,17 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
     outputs: [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -417,17 +417,17 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
     name: "seedLiquidity",
     inputs: [],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -437,10 +437,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "bool",
-        internalType: "bool",
-      },
+        internalType: "bool"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -449,21 +449,16 @@ export const presaleManagerAbi = [
       {
         name: "recipients",
         type: "address[]",
-        internalType: "address[]",
+        internalType: "address[]"
       },
       {
         name: "amounts",
         type: "uint256[]",
-        internalType: "uint256[]",
-      },
-      {
-        name: "labels",
-        type: "string[]",
-        internalType: "string[]",
-      },
+        internalType: "uint256[]"
+      }
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -473,10 +468,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -486,10 +481,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -499,10 +494,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "uint256",
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "function",
@@ -512,10 +507,10 @@ export const presaleManagerAbi = [
       {
         name: "",
         type: "address",
-        internalType: "address",
-      },
+        internalType: "address"
+      }
     ],
-    stateMutability: "view",
+    stateMutability: "view"
   },
   {
     type: "event",
@@ -525,22 +520,22 @@ export const presaleManagerAbi = [
         name: "user",
         type: "address",
         indexed: true,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "amount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "bonusMultiplier",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -550,10 +545,10 @@ export const presaleManagerAbi = [
         name: "version",
         type: "uint64",
         indexed: false,
-        internalType: "uint64",
-      },
+        internalType: "uint64"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -563,22 +558,22 @@ export const presaleManagerAbi = [
         name: "raiseAmount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "tokenAmount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "lpTokens",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -588,28 +583,28 @@ export const presaleManagerAbi = [
         name: "token",
         type: "address",
         indexed: false,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "presaleStart",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "presaleEnd",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "graduationThreshold",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -619,16 +614,16 @@ export const presaleManagerAbi = [
         name: "user",
         type: "address",
         indexed: true,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "amount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -638,16 +633,16 @@ export const presaleManagerAbi = [
         name: "user",
         type: "address",
         indexed: true,
-        internalType: "address",
+        internalType: "address"
       },
       {
         name: "amount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "event",
@@ -657,30 +652,30 @@ export const presaleManagerAbi = [
         name: "recipientCount",
         type: "uint256",
         indexed: false,
-        internalType: "uint256",
-      },
+        internalType: "uint256"
+      }
     ],
-    anonymous: false,
+    anonymous: false
   },
   {
     type: "error",
     name: "AlreadyClaimed",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "AlreadyRefunded",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "AlreadySeeded",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "ArrayLengthMismatch",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -689,14 +684,14 @@ export const presaleManagerAbi = [
       {
         name: "raised",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "required",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
@@ -705,69 +700,69 @@ export const presaleManagerAbi = [
       {
         name: "cliffEnd",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "currentTime",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
     name: "InvalidDuration",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "InvalidInitialization",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "NoContribution",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "NotInitializing",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "OnlyFactory",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "PairCreationFailed",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "PresaleEnded",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "PresaleNotFailed",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "PresaleNotStarted",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "PresaleStillActive",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "RouterFactoryMismatch",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
@@ -776,9 +771,9 @@ export const presaleManagerAbi = [
       {
         name: "token",
         type: "address",
-        internalType: "address",
-      },
-    ],
+        internalType: "address"
+      }
+    ]
   },
   {
     type: "error",
@@ -787,23 +782,23 @@ export const presaleManagerAbi = [
       {
         name: "seedableTime",
         type: "uint256",
-        internalType: "uint256",
+        internalType: "uint256"
       },
       {
         name: "currentTime",
         type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+        internalType: "uint256"
+      }
+    ]
   },
   {
     type: "error",
     name: "ZeroAddress",
-    inputs: [],
+    inputs: []
   },
   {
     type: "error",
     name: "ZeroContribution",
-    inputs: [],
-  },
+    inputs: []
+  }
 ] as const;

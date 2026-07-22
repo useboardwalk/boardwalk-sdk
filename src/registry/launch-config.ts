@@ -1,21 +1,21 @@
 // Per-chain launch defaults. These mirror the on-chain graduation thresholds
 // (LaunchFactory.graduation*)
 // and durations; kept as constants so callers don't hit RPC for static values.
-import { mainnet, base, fraxtal, katana, ink, arbitrum } from "viem/chains";
+import { mainnet, base, arbitrum, robinhood } from "viem/chains";
 import { parseUnits, formatUnits } from "viem";
 
 export interface ChainLaunchConfig {
   /** Minimum raise (in the raise token, wei) for an auction to graduate. */
   graduationThresholdWei: bigint;
-  /** Display unit for the raise token (wETH / frxUSD / KAT). */
+  /** Display unit for the raise token (canonical WETH on every chain). */
   raiseTokenSymbol: string;
-  /** Human display of the threshold with thousands separators (e.g. "2,000,000 KAT"). */
+  /** Human display of the threshold with thousands separators (e.g. "5 wETH"). */
   graduationDisplay: string;
   expressDuration: string;
   advancedDuration: string;
 }
 
-const ETH_10 = parseUnits("10", 18);
+const ETH_5 = parseUnits("5", 18);
 
 /** Thousands-separated human display of a wei threshold (mirrors the FE
  *  `formatValue` output for these whole-number thresholds). */
@@ -39,17 +39,15 @@ function makeLaunchConfig(
   };
 }
 
-/** Graduation thresholds per chain (in the raise token). */
+/** Graduation thresholds per chain — 5 WETH everywhere, both paths. */
 export const chainLaunchConfig: Record<number, ChainLaunchConfig> = {
-  [mainnet.id]: makeLaunchConfig(ETH_10, "wETH"),
-  [base.id]: makeLaunchConfig(ETH_10, "wETH"),
-  [fraxtal.id]: makeLaunchConfig(parseUnits("20000", 18), "frxUSD"),
-  [katana.id]: makeLaunchConfig(parseUnits("2000000", 18), "KAT"),
-  [ink.id]: makeLaunchConfig(ETH_10, "wETH"),
-  [arbitrum.id]: makeLaunchConfig(ETH_10, "wETH"),
+  [mainnet.id]: makeLaunchConfig(ETH_5, "wETH"),
+  [base.id]: makeLaunchConfig(ETH_5, "wETH"),
+  [arbitrum.id]: makeLaunchConfig(ETH_5, "wETH"),
+  [robinhood.id]: makeLaunchConfig(ETH_5, "wETH"),
 };
 
-const FALLBACK: ChainLaunchConfig = makeLaunchConfig(ETH_10, "ETH");
+const FALLBACK: ChainLaunchConfig = makeLaunchConfig(ETH_5, "wETH");
 
 /** Launch config (graduation threshold, raise-token symbol, durations) for a
  *  chain. Falls back to a sane default for unsupported/undefined chains so

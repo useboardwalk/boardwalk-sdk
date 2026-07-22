@@ -19,12 +19,12 @@ export type {
   LaunchCostBreakdown,
   ContributeParams,
   ClaimParams,
-  StakeBmxParams,
+  StakeBwlkParams,
   VoteParams,
   VoteOption,
   RefundParams,
   SeedLiquidityParams,
-  UnstakeBmxParams,
+  UnstakeBwlkParams,
   HandleRewardsParams,
   ClaimIssuerFeesParams,
   ClaimReferrerFeesParams,
@@ -108,13 +108,13 @@ export {
 } from "./builders/launch";
 export { buildContributeSteps } from "./builders/contribute";
 export { buildClaimSteps } from "./builders/claim";
-export { buildStakeBmxSteps } from "./builders/stake-bmx";
+export { buildStakeBwlkSteps } from "./builders/stake-bwlk";
 export { buildVoteSteps } from "./builders/vote";
 
 // Builders — presale lifecycle / staking / claims / visibility
 export { buildRefundSteps } from "./builders/refund";
 export { buildSeedLiquiditySteps } from "./builders/seed-liquidity";
-export { buildUnstakeBmxSteps } from "./builders/unstake-bmx";
+export { buildUnstakeBwlkSteps } from "./builders/unstake-bwlk";
 export { buildHandleRewardsSteps } from "./builders/handle-rewards";
 export { buildClaimIssuerFeesSteps } from "./builders/claim-issuer-fees";
 export { buildClaimReferrerFeesSteps } from "./builders/claim-referrer-fees";
@@ -123,7 +123,7 @@ export { buildClaimVestedTokensSteps } from "./builders/claim-vested-tokens";
 export { buildClaimParticipationRewardsSteps } from "./builders/claim-participation-rewards";
 export { buildCastVisibilitySteps } from "./builders/cast-visibility";
 
-// Builders — Boardwalk LP + swap
+// Builders — LP + swap (canonical Uniswap V2)
 export { buildAddLiquiditySteps } from "./builders/add-liquidity";
 export { buildRemoveLiquiditySteps } from "./builders/remove-liquidity";
 export { buildStakeLpSteps } from "./builders/stake-lp";

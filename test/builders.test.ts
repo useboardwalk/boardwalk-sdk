@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   concatHex,
   encodeFunctionData,
+  erc20Abi,
   zeroAddress,
   type Address,
   type PublicClient,
@@ -10,11 +11,11 @@ import { base, mainnet } from "viem/chains";
 import { buildContributeSteps } from "../src/builders/contribute";
 import { buildClaimSteps } from "../src/builders/claim";
 import { buildLaunchSteps } from "../src/builders/launch";
-import { buildStakeBmxSteps } from "../src/builders/stake-bmx";
+import { buildStakeBwlkSteps } from "../src/builders/stake-bwlk";
 import { buildVoteSteps } from "../src/builders/vote";
 import { buildRefundSteps } from "../src/builders/refund";
 import { buildSeedLiquiditySteps } from "../src/builders/seed-liquidity";
-import { buildUnstakeBmxSteps } from "../src/builders/unstake-bmx";
+import { buildUnstakeBwlkSteps } from "../src/builders/unstake-bwlk";
 import { buildHandleRewardsSteps } from "../src/builders/handle-rewards";
 import { buildClaimIssuerFeesSteps } from "../src/builders/claim-issuer-fees";
 import { buildClaimReferrerFeesSteps } from "../src/builders/claim-referrer-fees";
@@ -44,11 +45,47 @@ import {
   uniswapV2RouterAbi,
   vestingStreamAbi,
 } from "../src/registry/abis";
-import { getContracts } from "../src/registry/contracts";
+import { chainContracts, getContracts } from "../src/registry/contracts";
 import { encodeStep, BUILDER_CODE_SUFFIX } from "../src/flow/encode";
 
 const ACCOUNT = "0x1111111111111111111111111111111111111111" as Address;
 const PRESALE = "0x2222222222222222222222222222222222222222" as Address;
+
+// ---------------------------------------------------------------------------
+// The registry ships placeholder (zero) addresses until the redeployment lands,
+// and `assertDeployed` correctly refuses them — so tests inject dummy singleton
+// addresses. Base doubles as the "any chain" fixture; Ethereum (mainnet) hosts
+// the Ethereum-only staking/governance stack. Base keeps its governance/staking
+// placeholders so the Ethereum-only gating paths stay testable.
+// ---------------------------------------------------------------------------
+const LAUNCH_FACTORY = "0xaaaa00000000000000000000000000000000aaa1" as Address;
+const BOOST_BURN = "0xaaaa00000000000000000000000000000000aaa2" as Address;
+const INTEGRATOR_COLLECTOR =
+  "0xaaaa00000000000000000000000000000000aaa3" as Address;
+const LP_MANAGER = "0xaaaa00000000000000000000000000000000aaa4" as Address;
+const BWLK = "0xaaaa00000000000000000000000000000000aaa5" as Address;
+const REWARD_ROUTER = "0xaaaa00000000000000000000000000000000aaa6" as Address;
+const STAKED_BWLK_TRACKER =
+  "0xaaaa00000000000000000000000000000000aaa7" as Address;
+const GOVERNANCE_VOTER =
+  "0xaaaa00000000000000000000000000000000aaa8" as Address;
+const PARTICIPATION_DISTRIBUTOR =
+  "0xaaaa00000000000000000000000000000000aaa9" as Address;
+
+Object.assign(chainContracts[base.id]!, {
+  launchFactory: LAUNCH_FACTORY,
+  boostBurn: BOOST_BURN,
+  integratorFeeCollector: INTEGRATOR_COLLECTOR,
+  boardwalkLPManager: LP_MANAGER,
+  bwlkToken: BWLK,
+});
+Object.assign(chainContracts[mainnet.id]!, {
+  rewardRouter: REWARD_ROUTER,
+  stakedBwlkTracker: STAKED_BWLK_TRACKER,
+  governanceVoter: GOVERNANCE_VOTER,
+  participationDistributor: PARTICIPATION_DISTRIBUTOR,
+  bwlkToken: BWLK,
+});
 
 /** Expected encoded `data` for a write = calldata + the enforced builder-code suffix. */
 function expectedData(
@@ -145,30 +182,45 @@ describe("buildClaimSteps", () => {
   });
 });
 
-describe("buildStakeBmxSteps", () => {
-  it("approves the staked-BMX tracker then stakes", async () => {
+describe("buildStakeBwlkSteps", () => {
+  it("approves the staked-BWLK tracker then stakes (Ethereum)", async () => {
     const client = mockClient({ allowance: BigInt(0) });
-    const steps = await buildStakeBmxSteps({
+    const steps = await buildStakeBwlkSteps({
       client,
       account: ACCOUNT,
-      chainId: base.id,
+      chainId: mainnet.id,
       amount: BigInt(5),
     });
-    expect(steps.map((s) => s.id)).toEqual(["approve-bmx", "stake-bmx"]);
-    const stake = encodeStep(steps[1]!, base.id);
-    expect(stake.to).toBe(getContracts(base.id).rewardRouter);
+    expect(steps.map((s) => s.id)).toEqual(["approve-bwlk", "stake-bwlk"]);
+    // The approve spends BWLK for the staked tracker (it pulls the tokens),
+    // not the router.
+    const approve = encodeStep(steps[0]!, mainnet.id);
+    expect(approve.to).toBe(BWLK);
+    expect(approve.data).toBe(
+      encodeFunctionData({
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [STAKED_BWLK_TRACKER, BigInt(5)],
+      }),
+    );
+    const stake = encodeStep(steps[1]!, mainnet.id);
+    expect(stake.to).toBe(REWARD_ROUTER);
     expect(stake.data).toBe(
-      expectedData(rewardRouterAbi, "stakeBmx", [BigInt(5)]),
+      encodeFunctionData({
+        abi: rewardRouterAbi,
+        functionName: "stakeBwlk",
+        args: [BigInt(5)],
+      }),
     );
   });
 
-  it("throws on a chain where rewardRouter is a placeholder", async () => {
+  it("throws on a chain where the reward router is a placeholder (Base)", async () => {
     const client = mockClient({});
     await expect(
-      buildStakeBmxSteps({
+      buildStakeBwlkSteps({
         client,
         account: ACCOUNT,
-        chainId: mainnet.id,
+        chainId: base.id,
         amount: BigInt(5),
       }),
     ).rejects.toThrow();
@@ -176,26 +228,34 @@ describe("buildStakeBmxSteps", () => {
 });
 
 describe("buildVoteSteps", () => {
-  const SBF_BMX = "0x3333333333333333333333333333333333333333" as Address;
-  const STAKED_BMX_TRACKER =
+  const SBF_BWLK = "0x3333333333333333333333333333333333333333" as Address;
+  const STAKED_TRACKER =
     "0x4444444444444444444444444444444444444444" as Address;
-  const BN_BMX = "0x5555555555555555555555555555555555555555" as Address;
+  const BN_BWLK = "0x5555555555555555555555555555555555555555" as Address;
 
   /** Reads for a wallet that passes every `vote()` eligibility guard:
-   *  no vote cast this epoch, non-zero sbfBMX weight, and staked multiplier
-   *  points above the participation gate. */
+   *  no vote cast this epoch, non-zero sbfBWLK weight, staked multiplier
+   *  points above the participation gate, and an eligible option. */
+  const EPOCH_ZERO = BigInt(1_000_000);
+  const EPOCH_DURATION = BigInt(604_800); // 7 days
+
   function eligibleVoterReads(overrides: Record<string, unknown> = {}) {
     return {
       governanceBurnAmount: BigInt(0),
-      currentEpoch: BigInt(7),
-      SBF_BMX,
-      STAKED_BMX_TRACKER,
-      BN_BMX,
+      SBF_BWLK,
+      STAKED_BWLK_TRACKER: STAKED_TRACKER,
+      BN_BWLK,
+      BWLK,
+      EPOCH_ZERO,
+      EPOCH_DURATION,
+      // Chain time, 7 epochs past EPOCH_ZERO.
+      getCurrentBlockTimestamp: EPOCH_ZERO + EPOCH_DURATION * BigInt(7),
+      isOptionEligible: true,
       getUserVote: { weight: BigInt(0), option: 0 },
-      balanceOf: BigInt(1_000), // sbfBMX voting weight
-      // stakedBmxTracker → staked BMX; sbfBMX tracker → staked multiplier points
+      balanceOf: BigInt(1_000), // sbfBWLK voting weight
+      // stakedBwlkTracker → staked BWLK; sbfBWLK tracker → staked multiplier points
       depositBalances: ({ address }: { address: Address }) =>
-        address === STAKED_BMX_TRACKER ? BigInt(1_000) : BigInt(100),
+        address === STAKED_TRACKER ? BigInt(1_000) : BigInt(100),
       allowance: BigInt(0),
       ...overrides,
     };
@@ -208,12 +268,26 @@ describe("buildVoteSteps", () => {
     const steps = await buildVoteSteps({
       client,
       account: ACCOUNT,
-      chainId: base.id,
+      chainId: mainnet.id,
       option: 2,
     });
-    expect(steps.map((s) => s.id)).toEqual(["approve-bmx", "vote"]);
-    expect(encodeStep(steps[1]!, base.id).data).toBe(
-      expectedData(governanceVoterAbi, "vote", [2]),
+    expect(steps.map((s) => s.id)).toEqual(["approve-bwlk", "vote"]);
+    // The burn approve spends BWLK for the voter, sized to the burn amount.
+    const approve = encodeStep(steps[0]!, mainnet.id);
+    expect(approve.to).toBe(BWLK);
+    expect(approve.data).toBe(
+      encodeFunctionData({
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [GOVERNANCE_VOTER, BigInt(100)],
+      }),
+    );
+    expect(encodeStep(steps[1]!, mainnet.id).data).toBe(
+      encodeFunctionData({
+        abi: governanceVoterAbi,
+        functionName: "vote",
+        args: [2],
+      }),
     );
   });
 
@@ -222,22 +296,22 @@ describe("buildVoteSteps", () => {
     const steps = await buildVoteSteps({
       client,
       account: ACCOUNT,
-      chainId: base.id,
+      chainId: mainnet.id,
       option: 1,
     });
     expect(steps.map((s) => s.id)).toEqual(["vote"]);
   });
 
-  it("rejects non-Base chains", async () => {
+  it("rejects non-Ethereum chains", async () => {
     const client = mockClient({});
     await expect(
       buildVoteSteps({
         client,
         account: ACCOUNT,
-        chainId: mainnet.id,
+        chainId: base.id,
         option: 1,
       }),
-    ).rejects.toThrow(/Base/);
+    ).rejects.toThrow(/Ethereum/);
   });
 
   it("refuses when the wallet already voted this epoch (contract: AlreadyVoted)", async () => {
@@ -245,38 +319,79 @@ describe("buildVoteSteps", () => {
       eligibleVoterReads({ getUserVote: { weight: BigInt(500), option: 3 } }),
     );
     await expect(
-      buildVoteSteps({ client, account: ACCOUNT, chainId: base.id, option: 1 }),
+      buildVoteSteps({
+        client,
+        account: ACCOUNT,
+        chainId: mainnet.id,
+        option: 1,
+      }),
     ).rejects.toThrow(/already voted/i);
   });
 
   it("refuses when the wallet has no voting power (contract: InsufficientVotingWeight)", async () => {
     const client = mockClient(eligibleVoterReads({ balanceOf: BigInt(0) }));
     await expect(
-      buildVoteSteps({ client, account: ACCOUNT, chainId: base.id, option: 1 }),
+      buildVoteSteps({
+        client,
+        account: ACCOUNT,
+        chainId: mainnet.id,
+        option: 1,
+      }),
     ).rejects.toThrow(/no voting power/i);
   });
 
   it("refuses when multiplier points are below the gate (contract: InsufficientParticipationPoints)", async () => {
-    // staked 10_000 BMX needs ≥ 150 staked multiplier points (1.5%); 100 is short.
+    // staked 10_000 BWLK needs ≥ 150 staked multiplier points (1.5%); 100 is short.
     const client = mockClient(
       eligibleVoterReads({
         depositBalances: ({ address }: { address: Address }) =>
-          address === STAKED_BMX_TRACKER ? BigInt(10_000) : BigInt(100),
+          address === STAKED_TRACKER ? BigInt(10_000) : BigInt(100),
       }),
     );
     await expect(
-      buildVoteSteps({ client, account: ACCOUNT, chainId: base.id, option: 1 }),
+      buildVoteSteps({
+        client,
+        account: ACCOUNT,
+        chainId: mainnet.id,
+        option: 1,
+      }),
     ).rejects.toThrow(/participation gate/i);
   });
 
-  it("skips the participation gate when no BMX is staked but weight is non-zero", async () => {
+  it("refuses before epoch 0 opens instead of letting currentEpoch revert", async () => {
+    const client = mockClient(
+      eligibleVoterReads({ getCurrentBlockTimestamp: EPOCH_ZERO - BigInt(1) }),
+    );
+    await expect(
+      buildVoteSteps({
+        client,
+        account: ACCOUNT,
+        chainId: mainnet.id,
+        option: 1,
+      }),
+    ).rejects.toThrow(/voting opens at/i);
+  });
+
+  it("refuses an ineligible option (contract: OptionIneligible, 3 consecutive wins)", async () => {
+    const client = mockClient(eligibleVoterReads({ isOptionEligible: false }));
+    await expect(
+      buildVoteSteps({
+        client,
+        account: ACCOUNT,
+        chainId: mainnet.id,
+        option: 2,
+      }),
+    ).rejects.toThrow(/ineligible/i);
+  });
+
+  it("skips the participation gate when no BWLK is staked but weight is non-zero", async () => {
     const client = mockClient(
       eligibleVoterReads({ depositBalances: () => BigInt(0) }),
     );
     const steps = await buildVoteSteps({
       client,
       account: ACCOUNT,
-      chainId: base.id,
+      chainId: mainnet.id,
       option: 4,
     });
     expect(steps.map((s) => s.id)).toEqual(["vote"]);
@@ -293,7 +408,7 @@ const FEE_DISTRIBUTOR =
 const VESTING_STREAM = "0x8888888888888888888888888888888888888888" as Address;
 const LP_STAKING = "0x9999999999999999999999999999999999999999" as Address;
 const LP_TOKEN = "0x1010101010101010101010101010101010101010" as Address;
-const RAISE = "0x1212121212121212121212121212121212121212" as Address;
+const RAISE = getContracts(base.id).raiseToken; // canonical Base WETH
 const DEADLINE = BigInt(9_999_999_999);
 
 describe("buildRefundSteps", () => {
@@ -316,26 +431,33 @@ describe("buildSeedLiquiditySteps", () => {
   });
 });
 
-describe("buildUnstakeBmxSteps", () => {
-  it("builds unstakeBmx on Base", () => {
-    const steps = buildUnstakeBmxSteps({ chainId: base.id, amount: BigInt(5) });
-    expect(steps.map((s) => s.id)).toEqual(["unstake-bmx"]);
-    const call = encodeStep(steps[0]!, base.id);
-    expect(call.to).toBe(getContracts(base.id).rewardRouter);
+describe("buildUnstakeBwlkSteps", () => {
+  it("builds unstakeBwlk on Ethereum", () => {
+    const steps = buildUnstakeBwlkSteps({
+      chainId: mainnet.id,
+      amount: BigInt(5),
+    });
+    expect(steps.map((s) => s.id)).toEqual(["unstake-bwlk"]);
+    const call = encodeStep(steps[0]!, mainnet.id);
+    expect(call.to).toBe(REWARD_ROUTER);
     expect(call.data).toBe(
-      expectedData(rewardRouterAbi, "unstakeBmx", [BigInt(5)]),
+      encodeFunctionData({
+        abi: rewardRouterAbi,
+        functionName: "unstakeBwlk",
+        args: [BigInt(5)],
+      }),
     );
   });
 
-  it("throws on a placeholder (non-Base) chain", () => {
+  it("throws on a placeholder (non-Ethereum) chain", () => {
     expect(() =>
-      buildUnstakeBmxSteps({ chainId: mainnet.id, amount: BigInt(5) }),
+      buildUnstakeBwlkSteps({ chainId: base.id, amount: BigInt(5) }),
     ).toThrow();
   });
 
   it("throws on a zero amount", () => {
     expect(() =>
-      buildUnstakeBmxSteps({ chainId: base.id, amount: BigInt(0) }),
+      buildUnstakeBwlkSteps({ chainId: mainnet.id, amount: BigInt(0) }),
     ).toThrow();
   });
 });
@@ -343,25 +465,29 @@ describe("buildUnstakeBmxSteps", () => {
 describe("buildHandleRewardsSteps", () => {
   it("builds handleRewards with the four flags in order", () => {
     const steps = buildHandleRewardsSteps({
-      chainId: base.id,
-      shouldClaimOpBmx: true,
+      chainId: mainnet.id,
+      shouldClaimBwlk: true,
       shouldStakeMultiplierPoints: false,
       shouldClaimWeth: true,
       shouldConvertWethToEth: false,
     });
     expect(steps.map((s) => s.id)).toEqual(["handle-rewards"]);
-    const call = encodeStep(steps[0]!, base.id);
-    expect(call.to).toBe(getContracts(base.id).rewardRouter);
+    const call = encodeStep(steps[0]!, mainnet.id);
+    expect(call.to).toBe(REWARD_ROUTER);
     expect(call.data).toBe(
-      expectedData(rewardRouterAbi, "handleRewards", [true, false, true, false]),
+      encodeFunctionData({
+        abi: rewardRouterAbi,
+        functionName: "handleRewards",
+        args: [true, false, true, false],
+      }),
     );
   });
 
-  it("throws on a placeholder (non-Base) chain", () => {
+  it("throws on a placeholder (non-Ethereum) chain", () => {
     expect(() =>
       buildHandleRewardsSteps({
-        chainId: mainnet.id,
-        shouldClaimOpBmx: true,
+        chainId: base.id,
+        shouldClaimBwlk: true,
         shouldStakeMultiplierPoints: true,
         shouldClaimWeth: true,
         shouldConvertWethToEth: true,
@@ -413,7 +539,7 @@ describe("buildClaimIntegratorFeesSteps", () => {
     });
     expect(steps.map((s) => s.id)).toEqual(["claim-integrator-fees"]);
     const call = encodeStep(steps[0]!, base.id);
-    expect(call.to).toBe(getContracts(base.id).integratorFeeCollector);
+    expect(call.to).toBe(INTEGRATOR_COLLECTOR);
     expect(call.data).toBe(
       expectedData(integratorFeeCollectorAbi, "claim", [
         TOKEN,
@@ -440,24 +566,28 @@ describe("buildClaimVestedTokensSteps", () => {
 });
 
 describe("buildClaimParticipationRewardsSteps", () => {
-  it("builds claimAll(epochs) on Base", () => {
+  it("builds claimAll(epochs) on Ethereum", () => {
     const epochs = [BigInt(0), BigInt(1)];
     const steps = buildClaimParticipationRewardsSteps({
-      chainId: base.id,
+      chainId: mainnet.id,
       epochs,
     });
     expect(steps.map((s) => s.id)).toEqual(["claim-participation"]);
-    const call = encodeStep(steps[0]!, base.id);
-    expect(call.to).toBe(getContracts(base.id).participationDistributor);
+    const call = encodeStep(steps[0]!, mainnet.id);
+    expect(call.to).toBe(PARTICIPATION_DISTRIBUTOR);
     expect(call.data).toBe(
-      expectedData(participationDistributorAbi, "claimAll", [epochs]),
+      encodeFunctionData({
+        abi: participationDistributorAbi,
+        functionName: "claimAll",
+        args: [epochs],
+      }),
     );
   });
 
-  it("throws on a placeholder (non-Base) chain", () => {
+  it("throws on a placeholder (non-Ethereum) chain", () => {
     expect(() =>
       buildClaimParticipationRewardsSteps({
-        chainId: mainnet.id,
+        chainId: base.id,
         epochs: [BigInt(0)],
       }),
     ).toThrow();
@@ -465,15 +595,15 @@ describe("buildClaimParticipationRewardsSteps", () => {
 
   it("throws on empty epochs", () => {
     expect(() =>
-      buildClaimParticipationRewardsSteps({ chainId: base.id, epochs: [] }),
+      buildClaimParticipationRewardsSteps({ chainId: mainnet.id, epochs: [] }),
     ).toThrow();
   });
 });
 
 describe("buildCastVisibilitySteps", () => {
-  it("approves BMX then boosts", async () => {
+  it("approves BWLK then boosts", async () => {
     const client = mockClient({
-      bmxCost: BigInt(100),
+      bwlkCost: BigInt(100),
       memberBoostDiscountBps: BigInt(0),
       nftCollection: zeroAddress,
       allowance: BigInt(0),
@@ -485,15 +615,21 @@ describe("buildCastVisibilitySteps", () => {
       token: TOKEN,
       mode: "boost",
     });
-    expect(steps.map((s) => s.id)).toEqual(["approve-bmx", "boost"]);
+    expect(steps.map((s) => s.id)).toEqual(["approve-bwlk", "boost"]);
+    // The approve spends BWLK for BoostBurn, sized to the effective cost.
+    const approve = encodeStep(steps[0]!, base.id);
+    expect(approve.to).toBe(BWLK);
+    expect(approve.data).toBe(
+      expectedData(erc20Abi, "approve", [BOOST_BURN, BigInt(100)]),
+    );
     const call = encodeStep(steps[1]!, base.id);
-    expect(call.to).toBe(getContracts(base.id).boostBurn);
+    expect(call.to).toBe(BOOST_BURN);
     expect(call.data).toBe(expectedData(boostBurnAbi, "boost", [TOKEN]));
   });
 
   it("skips approve when allowance covers the cost and can deboost", async () => {
     const client = mockClient({
-      bmxCost: BigInt(100),
+      bwlkCost: BigInt(100),
       memberBoostDiscountBps: BigInt(0),
       nftCollection: zeroAddress,
       allowance: BigInt(1_000),
@@ -533,7 +669,7 @@ describe("buildAddLiquiditySteps", () => {
       "add-liquidity",
     ]);
     const call = encodeStep(steps[2]!, base.id);
-    expect(call.to).toBe(getContracts(base.id).boardwalkLPManager);
+    expect(call.to).toBe(LP_MANAGER);
     expect(call.data).toBe(
       expectedData(boardwalkLPManagerAbi, "addLiquidity", [
         TOKEN,
@@ -566,7 +702,7 @@ describe("buildRemoveLiquiditySteps", () => {
     });
     expect(steps.map((s) => s.id)).toEqual(["approve-lp", "remove-liquidity"]);
     const call = encodeStep(steps[1]!, base.id);
-    expect(call.to).toBe(getContracts(base.id).boardwalkLPManager);
+    expect(call.to).toBe(LP_MANAGER);
     expect(call.data).toBe(
       expectedData(boardwalkLPManagerAbi, "removeLiquidity", [
         TOKEN,
@@ -629,12 +765,24 @@ describe("buildClaimLpRewardsSteps", () => {
 });
 
 describe("buildSwapSteps", () => {
-  it("quotes via getAmountsOut and builds approve + swap (buy)", async () => {
+  const BPS = BigInt(10_000);
+  /** Launch-token tax reads: steady state (seed long past at chain time),
+   *  0.95% base tax. Chain time comes from Multicall3, not the host clock. */
+  const TAX_READS = {
+    baseTaxBps: BigInt(95),
+    antiWhaleTaxBps: BigInt(4_000),
+    antiWhaleDuration: BigInt(5_400),
+    liquiditySeedTime: BigInt(1_000),
+    getCurrentBlockTimestamp: BigInt(1_000_000),
+  };
+
+  it("buys via SupportingFeeOnTransferTokens with a tax-adjusted min-out", async () => {
     const out = BigInt(1_000);
     const client = mockClient({
       getPair: LP_TOKEN,
       getAmountsOut: [BigInt(500), out],
       allowance: BigInt(0),
+      ...TAX_READS,
     });
     const steps = await buildSwapSteps({
       client,
@@ -647,22 +795,73 @@ describe("buildSwapSteps", () => {
       deadline: DEADLINE,
     });
     expect(steps.map((s) => s.id)).toEqual(["approve-sell-token", "swap"]);
-    const amountOutMin = (out * BigInt(10_000 - 50)) / BigInt(10_000);
+    // Buy: the pair→wallet transfer is taxed, then the slippage floor applies.
+    const outAfterTax = (out * (BPS - BigInt(95))) / BPS;
+    const amountOutMin = (outAfterTax * (BPS - BigInt(50))) / BPS;
     const call = encodeStep(steps[1]!, base.id);
     expect(call.to).toBe(getContracts(base.id).uniswapV2Router);
     expect(call.data).toBe(
-      expectedData(uniswapV2RouterAbi, "swapExactTokensForTokens", [
-        BigInt(500),
-        amountOutMin,
-        [RAISE, TOKEN],
-        ACCOUNT,
-        DEADLINE,
-      ]),
+      expectedData(
+        uniswapV2RouterAbi,
+        "swapExactTokensForTokensSupportingFeeOnTransferTokens",
+        [BigInt(500), amountOutMin, [RAISE, TOKEN], ACCOUNT, DEADLINE],
+      ),
     );
   });
 
-  it("throws when no Boardwalk pool exists", async () => {
-    const client = mockClient({ getPair: zeroAddress });
+  it("sells with the quote taken on the post-tax effective input", async () => {
+    const sellAmount = BigInt(500);
+    const effectiveIn = (sellAmount * (BigInt(10_000) - BigInt(95))) / BigInt(10_000);
+    const out = BigInt(1_000);
+    const client = mockClient({
+      getPair: LP_TOKEN,
+      // The quote must be requested for the post-tax amount the pair receives.
+      getAmountsOut: ({ args }: { args: readonly [bigint, unknown] }) => {
+        expect(args[0]).toBe(effectiveIn);
+        return [args[0], out];
+      },
+      allowance: BigInt(0),
+      ...TAX_READS,
+    });
+    const steps = await buildSwapSteps({
+      client,
+      account: ACCOUNT,
+      chainId: base.id,
+      sellToken: TOKEN,
+      buyToken: RAISE,
+      sellAmount,
+      slippageBps: 50,
+      deadline: DEADLINE,
+    });
+    // Sell: WETH out is untaxed — only the slippage floor applies; the full
+    // sellAmount still goes into the router call.
+    const amountOutMin = (out * (BPS - BigInt(50))) / BPS;
+    const call = encodeStep(steps[1]!, base.id);
+    expect(call.data).toBe(
+      expectedData(
+        uniswapV2RouterAbi,
+        "swapExactTokensForTokensSupportingFeeOnTransferTokens",
+        [sellAmount, amountOutMin, [TOKEN, RAISE], ACCOUNT, DEADLINE],
+      ),
+    );
+  });
+
+  it("rejects a swap where neither side is the raise token", async () => {
+    const client = mockClient({});
+    await expect(
+      buildSwapSteps({
+        client,
+        account: ACCOUNT,
+        chainId: base.id,
+        sellToken: TOKEN,
+        buyToken: LP_TOKEN,
+        sellAmount: BigInt(500),
+      }),
+    ).rejects.toThrow(/raise token/i);
+  });
+
+  it("throws when no pool exists", async () => {
+    const client = mockClient({ getPair: zeroAddress, ...TAX_READS });
     await expect(
       buildSwapSteps({
         client,
@@ -672,7 +871,7 @@ describe("buildSwapSteps", () => {
         buyToken: TOKEN,
         sellAmount: BigInt(500),
       }),
-    ).rejects.toThrow(/no Boardwalk pool/i);
+    ).rejects.toThrow(/no Uniswap V2 pool/i);
   });
 
   it("throws on a zero-output quote", async () => {
@@ -680,6 +879,7 @@ describe("buildSwapSteps", () => {
       getPair: LP_TOKEN,
       getAmountsOut: [BigInt(500), BigInt(0)],
       allowance: BigInt(0),
+      ...TAX_READS,
     });
     await expect(
       buildSwapSteps({

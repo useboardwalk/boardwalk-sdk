@@ -3,12 +3,12 @@ import { assertDeployed } from "../registry/contracts";
 import type { HandleRewardsParams, TxStep } from "../types";
 
 /** `handleRewards(...)` — claim/compound staking rewards. The four flags map 1:1
- *  to the contract args (claim OP BMX, stake multiplier points, claim WETH,
- *  convert WETH→ETH). Base-only. No approve needed. */
+ *  to the contract args (claim BWLK, stake multiplier points, claim WETH,
+ *  convert WETH→ETH). Ethereum-only. No approve needed. */
 export function buildHandleRewardsSteps(params: HandleRewardsParams): TxStep[] {
   const {
     chainId,
-    shouldClaimOpBmx,
+    shouldClaimBwlk,
     shouldStakeMultiplierPoints,
     shouldClaimWeth,
     shouldConvertWethToEth,
@@ -23,7 +23,7 @@ export function buildHandleRewardsSteps(params: HandleRewardsParams): TxStep[] {
         address: rewardRouter,
         functionName: "handleRewards",
         args: [
-          shouldClaimOpBmx,
+          shouldClaimBwlk,
           shouldStakeMultiplierPoints,
           shouldClaimWeth,
           shouldConvertWethToEth,

@@ -1,5 +1,5 @@
 // Minimal ParticipationDistributor fragment — `claimAll` claims participation
-// BMX rewards across the given epochs (Base-only contract).
+// BWLK rewards across the given epochs (Ethereum-only contract).
 export const participationDistributorAbi = [
   {
     type: "function",

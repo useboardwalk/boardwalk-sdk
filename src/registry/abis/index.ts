@@ -10,6 +10,7 @@ export { governanceVoterAbi } from "./GovernanceVoter";
 export { erc721Abi } from "./ERC721";
 
 // Minimal fragments (only the entries the SDK builds/reads).
+export { boardwalkTokenAbi } from "./BoardwalkToken";
 export { feeDistributorAbi } from "./FeeDistributor";
 export { integratorFeeCollectorAbi } from "./IntegratorFeeCollector";
 export { vestingStreamAbi } from "./VestingStream";

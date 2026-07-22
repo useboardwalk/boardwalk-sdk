@@ -1,12 +1,23 @@
 import { API_BASE_URL } from "../constants";
 
+/** The backend reports failures as `{ error }` (and occasionally `{ message }`).
+ *  Surfacing it keeps "Launch not found" / "Unsupported chainId" in the thrown
+ *  message instead of a bare status line. */
+function detailOf(body: unknown): string | undefined {
+  if (typeof body !== "object" || body === null) return undefined;
+  const { error, message } = body as { error?: unknown; message?: unknown };
+  const detail = typeof error === "string" ? error : message;
+  return typeof detail === "string" && detail.trim() ? detail.trim() : undefined;
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,
     public statusText: string,
     public body: unknown,
   ) {
-    super(`API ${status}: ${statusText}`);
+    const detail = detailOf(body);
+    super(`API ${status}: ${detail ?? statusText}`);
     this.name = "ApiError";
   }
 }

@@ -34,11 +34,11 @@ import {
 } from "./builders/launch";
 import { buildContributeSteps } from "./builders/contribute";
 import { buildClaimSteps } from "./builders/claim";
-import { buildStakeBmxSteps } from "./builders/stake-bmx";
+import { buildStakeBwlkSteps } from "./builders/stake-bwlk";
 import { buildVoteSteps } from "./builders/vote";
 import { buildRefundSteps } from "./builders/refund";
 import { buildSeedLiquiditySteps } from "./builders/seed-liquidity";
-import { buildUnstakeBmxSteps } from "./builders/unstake-bmx";
+import { buildUnstakeBwlkSteps } from "./builders/unstake-bwlk";
 import { buildHandleRewardsSteps } from "./builders/handle-rewards";
 import { buildClaimIssuerFeesSteps } from "./builders/claim-issuer-fees";
 import { buildClaimReferrerFeesSteps } from "./builders/claim-referrer-fees";
@@ -229,14 +229,14 @@ program
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
       "Boardwalk's ERC-8021 builder code is appended on Base (where it is registered).",
   )
-  .version("0.4.2")
+  .version("1.0.0")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
 
 program
   .command("launch")
-  .summary("Build a token launch (approve BMX + createLaunch)")
+  .summary("Build a token launch (approve BWLK + createLaunch)")
   .description(
-    "Build the launch flow (approve BMX → createLaunch). Then run launch-metadata with the tx hash.",
+    "Build the launch flow (approve BWLK → createLaunch). Then run launch-metadata with the tx hash.",
   )
   .requiredOption(
     "--chain <chain>",
@@ -309,7 +309,7 @@ program
     const advanced = path === "advanced";
     emitCalls(result.steps, chainId, {
       action: "launch",
-      bmxBurnCost: result.bmxBurnCost.toString(),
+      bwlkBurnCost: result.bwlkBurnCost.toString(),
       config: serializeConfig(result.config),
       graduationThreshold: {
         wei: grad.graduationThresholdWei.toString(),
@@ -519,40 +519,41 @@ program
   });
 
 program
-  .command("stake-bmx")
-  .summary("Stake BMX (Base-only)")
+  .command("stake-bwlk")
+  .summary("Stake BWLK (Ethereum-only)")
   .description(
-    "Build approve + stakeBmx. Base-only — errors clearly on other chains.",
+    "Build approve + stakeBwlk. Ethereum-only — errors clearly on other chains.",
   )
-  .requiredOption("--amount <amount>", "BMX amount in human units (e.g. 100)")
+  .requiredOption("--amount <amount>", "BWLK amount in human units (e.g. 100)")
   .requiredOption("--wallet <address>", "staker wallet address")
-  .option("--chain <chain>", "chain slug or numeric id", "base")
+  .option("--chain <chain>", "chain slug or numeric id", "ethereum")
   .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
   .action(async (opts) => {
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
     const account = requireAddress(opts.wallet, "wallet");
-    const amount = parseUnits(opts.amount, 18); // BMX is 18 decimals
-    const steps = await buildStakeBmxSteps({
+    const amount = parseUnits(opts.amount, 18); // BWLK is 18 decimals
+    const steps = await buildStakeBwlkSteps({
       client,
       account,
       chainId,
       amount,
     });
     emitCalls(steps, chainId, {
-      action: "stake-bmx",
+      action: "stake-bwlk",
       amount: amount.toString(),
     });
   });
 
 program
   .command("vote")
-  .summary("Vote on fee direction (Base-only)")
+  .summary("Vote on the weekly revenue direction (Ethereum-only)")
   .description(
-    "Build a fee-direction vote (Base-only). Options: 1=Treasury 2=Buy&BurnBMX 3=Buy&BurnLP 4=Participation.",
+    "Build a weekly revenue vote (Ethereum-only; epoch N's vote directs epoch N+1's budget). " +
+      "Options: 1=Treasury 2=Buy&BurnBWLK 3=Buy&BurnLP 4=Participation.",
   )
   .requiredOption("--option <1-4>", "vote option (1–4)")
   .requiredOption("--wallet <address>", "voter wallet address")
-  .option("--chain <chain>", "chain slug or numeric id", "base")
+  .option("--chain <chain>", "chain slug or numeric id", "ethereum")
   .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
   .action(async (opts) => {
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
@@ -564,8 +565,8 @@ program
 
 program
   .command("launch-cost")
-  .summary("Read the BMX burn cost to launch (with member discount)")
-  .description("Read-only: the effective BMX burn cost to launch on a chain.")
+  .summary("Read the BWLK burn cost to launch (with member discount)")
+  .description("Read-only: the effective BWLK burn cost to launch on a chain.")
   .requiredOption("--chain <chain>", "chain slug or numeric id")
   .requiredOption(
     "--wallet <address>",
@@ -581,7 +582,7 @@ program
       baseBurn: cost.baseBurn.toString(),
       discountBps: cost.discountBps.toString(),
       isMember: cost.isMember,
-      bmxBurnCost: cost.bmxBurnCost.toString(),
+      bwlkBurnCost: cost.bwlkBurnCost.toString(),
     });
   });
 
@@ -816,35 +817,37 @@ program
   });
 
 // ---------------------------------------------------------------------------
-// BMX staking
+// BWLK staking
 // ---------------------------------------------------------------------------
 
 program
-  .command("unstake-bmx")
-  .summary("Unstake BMX (Base-only)")
-  .description("Build unstakeBmx. Base-only — errors clearly on other chains.")
-  .requiredOption("--amount <amount>", "BMX amount in human units (e.g. 100)")
+  .command("unstake-bwlk")
+  .summary("Unstake BWLK (Ethereum-only)")
+  .description(
+    "Build unstakeBwlk. Ethereum-only — errors clearly on other chains.",
+  )
+  .requiredOption("--amount <amount>", "BWLK amount in human units (e.g. 100)")
   .requiredOption("--wallet <address>", "staker wallet address")
-  .option("--chain <chain>", "chain slug or numeric id", "base")
+  .option("--chain <chain>", "chain slug or numeric id", "ethereum")
   .action((opts) => {
     const chainId = chainIdOf(opts.chain);
     requireAddress(opts.wallet, "wallet");
-    const amount = parseUnits(opts.amount, 18); // BMX is 18 decimals
-    emitCalls(buildUnstakeBmxSteps({ chainId, amount }), chainId, {
-      action: "unstake-bmx",
+    const amount = parseUnits(opts.amount, 18); // BWLK is 18 decimals
+    emitCalls(buildUnstakeBwlkSteps({ chainId, amount }), chainId, {
+      action: "unstake-bwlk",
       amount: amount.toString(),
     });
   });
 
 program
   .command("handle-rewards")
-  .summary("Claim/compound staking rewards (Base-only)")
+  .summary("Claim/compound staking rewards (Ethereum-only)")
   .description(
     "Build handleRewards(...). With no flags it claims everything; pass flags to select actions.",
   )
   .requiredOption("--wallet <address>", "staker wallet address")
-  .option("--chain <chain>", "chain slug or numeric id", "base")
-  .option("--claim-op-bmx", "claim OP BMX rewards")
+  .option("--chain <chain>", "chain slug or numeric id", "ethereum")
+  .option("--claim-bwlk", "claim BWLK rewards")
   .option("--stake-mp", "stake multiplier points")
   .option("--claim-weth", "claim WETH rewards")
   .option("--convert-weth-to-eth", "convert claimed WETH to ETH")
@@ -852,12 +855,12 @@ program
     const chainId = chainIdOf(opts.chain);
     requireAddress(opts.wallet, "wallet");
     const anyFlag =
-      opts.claimOpBmx || opts.stakeMp || opts.claimWeth || opts.convertWethToEth;
+      opts.claimBwlk || opts.stakeMp || opts.claimWeth || opts.convertWethToEth;
     const all = !anyFlag; // no flags → claim everything
     emitCalls(
       buildHandleRewardsSteps({
         chainId,
-        shouldClaimOpBmx: all || !!opts.claimOpBmx,
+        shouldClaimBwlk: all || !!opts.claimBwlk,
         shouldStakeMultiplierPoints: all || !!opts.stakeMp,
         shouldClaimWeth: all || !!opts.claimWeth,
         shouldConvertWethToEth: all || !!opts.convertWethToEth,
@@ -953,7 +956,8 @@ program
     const deadline = parseDeadline(opts.deadline, 1200);
 
     // With --min-out we can skip the quote read entirely. Otherwise derive minOut
-    // from the collector's quote; it reverts when there's nothing claimable.
+    // from the collector's quote; it returns (0, 0) when nothing is claimable
+    // and reverts NotIntegrator for a wallet that holds no slot.
     let minOut: bigint;
     let amountIn = "0";
     if (opts.minOut != null) {
@@ -969,8 +973,11 @@ program
         })) as readonly [bigint, bigint];
       } catch {
         fail(
-          "no claimable integrator fees for this token (or this wallet is not the integrator). Pass --min-out to override.",
+          "this wallet is not a registered integrator on this chain (or the quote failed). Pass --min-out to override.",
         );
+      }
+      if (quote[0] === BigInt(0)) {
+        fail("no claimable integrator fees for this token right now");
       }
       minOut = quote[1];
       amountIn = quote[0].toString();
@@ -1011,11 +1018,11 @@ program
 
 program
   .command("claim-participation")
-  .summary("Claim participation BMX rewards (Base-only)")
+  .summary("Claim participation BWLK rewards (Ethereum-only)")
   .description("Build claimAll(epochs) on the ParticipationDistributor.")
   .requiredOption("--epochs <csv>", "comma-separated epoch numbers (e.g. 0,1,2)")
   .requiredOption("--wallet <address>", "wallet address")
-  .option("--chain <chain>", "chain slug or numeric id", "base")
+  .option("--chain <chain>", "chain slug or numeric id", "ethereum")
   .action((opts) => {
     const chainId = chainIdOf(opts.chain);
     requireAddress(opts.wallet, "wallet");
@@ -1033,9 +1040,9 @@ program
 
 program
   .command("cast-visibility")
-  .summary("Upvote (boost) or downvote (deboost) a token — burns BMX")
+  .summary("Upvote (boost) or downvote (deboost) a token — burns BWLK")
   .description(
-    "Build approve BMX + boost/deboost. Reads the live BMX cost (with member discount).",
+    "Build approve BWLK + boost/deboost. Reads the live BWLK cost (with member discount).",
   )
   .requiredOption("--token <address>", "launch token address")
   .requiredOption("--mode <mode>", "boost | deboost")
@@ -1068,9 +1075,10 @@ program
 
 program
   .command("add-liquidity")
-  .summary("Add liquidity to a Boardwalk pair")
+  .summary("Add liquidity to a launch-token/WETH pair (tax-free via the LP manager)")
   .description(
-    "Build approve(s) + addLiquidity on the Boardwalk LP manager. Min amounts use --slippage-bps off the desired amounts.",
+    "Build approve(s) + addLiquidity on the Boardwalk LP manager (tax-exempt wrapper over Uniswap V2; " +
+      "one side must be the chain's WETH). Min amounts use --slippage-bps off the desired amounts.",
   )
   .requiredOption("--token-a <address>", "first token")
   .requiredOption("--token-b <address>", "second token (e.g. the raise token)")
@@ -1118,7 +1126,7 @@ program
 
 program
   .command("remove-liquidity")
-  .summary("Remove liquidity from a Boardwalk token/raise-token pair")
+  .summary("Remove liquidity from a launch-token/WETH pair")
   .description(
     "Build approve LP + removeLiquidity. Min amounts are derived from pool reserves and --slippage-bps.",
   )
@@ -1140,7 +1148,7 @@ program
       functionName: "getPair",
       args: [token, raiseToken],
     })) as Address;
-    if (pair === zeroAddress) fail("no Boardwalk LP pool for this token");
+    if (pair === zeroAddress) fail("no Uniswap V2 pool for this token");
     const liquidity = parseUnits(opts.liquidity, 18); // V2 LP tokens are 18 decimals
     const [reserves, totalSupply, token0] = await client.multicall({
       allowFailure: false,
@@ -1269,10 +1277,11 @@ program
 
 program
   .command("swap")
-  .summary("Swap via the Boardwalk DEX (raise token ↔ launch token)")
+  .summary("Swap a launch token against WETH on Uniswap V2")
   .description(
-    "Build approve + swapExactTokensForTokens through Boardwalk's V2 router. " +
-      "--direction buy spends the raise token for the launch token; sell does the reverse.",
+    "Build approve + swapExactTokensForTokensSupportingFeeOnTransferTokens through the chain's " +
+      "canonical Uniswap V2 router (launch tokens are fee-on-transfer; the quote is tax-adjusted). " +
+      "--direction buy spends WETH for the launch token; sell does the reverse.",
   )
   .requiredOption("--token <address>", "launch token address")
   .requiredOption("--amount <amount>", "input amount in human units of the sell token")
@@ -1330,7 +1339,7 @@ Examples:
   $ boardwalk launch-link --chain base --name "My Token" --ticker MYT \\
       --category meme-culture --issuer-fee 0xYou   # prefilled /launch link (no wallet, no shell)
   $ boardwalk contribute --token 0xLaunch --amount 0.1 --chain base --wallet 0xYou
-  $ boardwalk vote --option 1 --wallet 0xYou           # Base-only
+  $ boardwalk vote --option 1 --wallet 0xYou           # Ethereum-only
 
 The CLI only prints unsigned calldata — it never signs or sends.`,
 );
