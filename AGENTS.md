@@ -66,7 +66,7 @@ src/
 
 ## Verification
 
-Run `npm run typecheck && npm test && npm run build`, then `npm run smoke` to exercise every CLI command against live chains — all four of them (Ethereum, Base, Arbitrum, Robinhood), asserting that the Ethereum-only commands fail loudly on the other three (`scripts/smoke.mjs` checks each emits valid calldata or a read, or fails with the gating error expected for the launch's state; non-mutating). It auto-builds `dist` when missing. Public RPCs rate-limit, so pass private RPCs via `BOARDWALK_ETH_RPC` (1) / `BOARDWALK_RPC` (8453) / `BOARDWALK_ARB_RPC` (42161) / `BOARDWALK_RH_RPC` (4663) for smoke, or `--rpc` for one-off CLI calls.
+Run `npm run typecheck && npm test && npm run build`, then `npm run smoke` to exercise every CLI command against live chains — all four of them (Ethereum, Base, Arbitrum, Robinhood), asserting that the Ethereum-only commands fail loudly on the other three (`scripts/smoke.mjs` checks each emits valid calldata or a read, or fails with the gating error expected for the launch's state; non-mutating). Run `npm run build` first: `scripts/smoke.mjs` imports `dist/index.js` at the top level, before its own `existsSync` check, so on a clean checkout it dies with `ERR_MODULE_NOT_FOUND`. The script header comment claiming it builds `dist` first is wrong. Public RPCs rate-limit, so pass private RPCs via `BOARDWALK_ETH_RPC` (1) / `BOARDWALK_RPC` (8453) / `BOARDWALK_ARB_RPC` (42161) / `BOARDWALK_RH_RPC` (4663) for smoke, or `--rpc` for one-off CLI calls.
 
 ## Version update
 

@@ -221,4 +221,4 @@ npm test            # vitest
 npm run build       # tsup → dist (ESM + CJS + d.ts)
 ```
 
-See [CLAUDE.md](CLAUDE.md) for architecture and conventions.
+See [AGENTS.md](AGENTS.md) for architecture and conventions.
