@@ -1,0 +1,52 @@
+# CodeRabbit configuration.
+# Schema: https://storage.googleapis.com/coderabbit_public_assets/schema.v2.json
+#
+# No knowledge_base.code_guidelines block here on purpose: **/AGENTS.md and
+# **/CLAUDE.md are already CodeRabbit defaults, and setting filePatterns REPLACES the
+# default set rather than extending it. Overriding it would drop coverage and buy
+# nothing. This repo has no .github/REVIEW-PROCESS.md — review guidance is not split out.
+
+reviews:
+  path_instructions:
+    - path: "**"
+      instructions: |
+        Repo conventions live in AGENTS.md, which CodeRabbit already loads as a coding
+        guideline. Where it conflicts with your defaults, the file wins. Lead with
+        blocking findings and cite file:line.
+
+        Scope findings to the PR diff — do not report pre-existing issues the diff did
+        not introduce, and do not request refactors beyond the stated change.
+
+        This package emits UNSIGNED calldata for the user's own wallet to sign. It must
+        never accept a private key, sign, or broadcast; flag any change that would. The
+        other high-value checks:
+
+        - Actions are `build*Steps()` functions returning `TxStep[]`, or
+          `Promise<TxStep[]>` when the builder needs live reads — 9 of the current
+          builders are async, so an async builder is not by itself a finding. What
+          matters is that steps are encoded through src/flow/encode.ts: the ERC-8021
+          builder-code suffix is applied in `encodeRequest` (which `encodeStep` and
+          `encodeSteps` delegate to) and only on Base. Hand-rolling encoding elsewhere
+          silently drops it. The builder code is deliberately not overridable
+          per-call, by CLI flag, or by env var — do not add an override.
+        - A new builder must be exported from src/index.ts. Tests import builders by
+          direct path, so an unexported builder still passes typecheck, test and build
+          while being unreachable for every consumer of the package.
+        - ABIs under src/registry must match the deployed contracts and are never
+          hand-edited to diverge. The four core ABIs are full; the rest are minimal
+          fragments by design.
+        - Chain data comes from src/registry (SUPPORTED_CHAINS, and toNumericChainId
+          for CLI slugs). Note the repo does use bare chain-id literals in
+          src/constants.ts and `base.id` from viem in src/flow/encode.ts — those are
+          existing, accepted patterns, so do not flag them. Ethereum-only actions must
+          be gated with assertDeployed so undeployed chains fail loudly.
+        - Batch reads with client.multicall rather than Promise.all of readContract;
+          public RPCs rate-limit.
+
+        A user-facing change bumps the version in five places in lockstep — see the
+        `## Version update` section of AGENTS.md. publish.yml publishes whatever
+        package.json says on release, so a missed bump silently drifts the tag from the
+        code.
+
+        This repo does have tests (vitest) — missing coverage for changed behaviour is
+        a legitimate finding.
