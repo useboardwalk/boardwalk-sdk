@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for Codex when working in boardwalk-sdk, the `@useboardwalk/sdk` package: a framework-agnostic TypeScript SDK and `boardwalk` CLI that builds unsigned Boardwalk transactions (and EIP-712 metadata payloads) for agents to sign and submit. It decouples the onchain Boardwalk action layer from the `token-launcher` frontend; both target the same deployed Boardwalk contracts, so constants, validation, and addresses must stay in sync with that repo and `boardwalk-contracts`.
+Guidance for coding agents (Codex, Claude Code, Cursor) when working in boardwalk-sdk, the `@useboardwalk/sdk` package: a framework-agnostic TypeScript SDK and `boardwalk` CLI that builds unsigned Boardwalk transactions (and EIP-712 metadata payloads) for agents to sign and submit. It decouples the onchain Boardwalk action layer from the `token-launcher` frontend; both target the same deployed Boardwalk contracts, so constants, validation, and addresses must stay in sync with that repo and `boardwalk-contracts`.
 
 ## Commands
 
@@ -10,7 +10,7 @@ npm run typecheck   # tsc --noEmit (strict)
 npm test            # vitest run
 npm run build       # tsup → dist (ESM + CJS + .d.ts + CLI bin)
 npm run cli -- <args>   # run the CLI from source (tsx), e.g. npm run cli -- status --token 0x… --chain base
-npm run smoke       # run every CLI command against live Base + Ethereum (BOARDWALK_RPC / BOARDWALK_ETH_RPC=<url> to avoid public-RPC rate limits)
+npm run smoke       # run every CLI command against all four live chains (--chain <slug> narrows; per-chain RPC overrides below)
 ```
 
 Node >= 18 (uses global `fetch`/`Blob`/`FormData`). If the shell defaults to an older Node, switch to the required version (e.g. via nvm) before running.
@@ -66,7 +66,7 @@ src/
 
 ## Verification
 
-Run `npm run typecheck && npm test && npm run build`, then `npm run smoke` to exercise every CLI command against live chains — Base for the app-layer commands, Ethereum for staking/governance (`scripts/smoke.mjs` checks each emits valid calldata or a read, or fails with the gating error expected for the launch's state; non-mutating). Public RPCs rate-limit, so pass private RPCs via `BOARDWALK_RPC=<url>` / `BOARDWALK_ETH_RPC=<url>` for smoke or `--rpc` for one-off CLI calls.
+Run `npm run typecheck && npm test && npm run build`, then `npm run smoke` to exercise every CLI command against live chains — all four of them (Ethereum, Base, Arbitrum, Robinhood), asserting that the Ethereum-only commands fail loudly on the other three (`scripts/smoke.mjs` checks each emits valid calldata or a read, or fails with the gating error expected for the launch's state; non-mutating). Run `npm run build` first: `scripts/smoke.mjs` imports `dist/index.js` at the top level, before its own `existsSync` check, so on a clean checkout it dies with `ERR_MODULE_NOT_FOUND`. The script header comment claiming it builds `dist` first is wrong. Public RPCs rate-limit, so pass private RPCs via `BOARDWALK_ETH_RPC` (1) / `BOARDWALK_RPC` (8453) / `BOARDWALK_ARB_RPC` (42161) / `BOARDWALK_RH_RPC` (4663) for smoke, or `--rpc` for one-off CLI calls.
 
 ## Version update
 
