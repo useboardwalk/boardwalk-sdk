@@ -11,7 +11,7 @@ Framework-agnostic builders for **unsigned** [Boardwalk](https://www.useboardwal
 ```bash
 npm install @useboardwalk/sdk                  # library
 npm install -g @useboardwalk/sdk               # CLI, then:  boardwalk --help
-npx -p @useboardwalk/sdk@1.0.0 boardwalk --help   # …or zero-install (pinned)
+npx -p @useboardwalk/sdk@1.0.1 boardwalk --help   # …or zero-install (pinned)
 ```
 
 Requires Node ≥ 18 (uses global `fetch`/`Blob`/`FormData`). The bin is `boardwalk` (the package is `@useboardwalk/sdk`).

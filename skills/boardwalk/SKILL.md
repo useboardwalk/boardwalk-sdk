@@ -32,10 +32,10 @@ This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` 
 
 ```bash
 boardwalk <command> [flags]                          # after: npm i -g @useboardwalk/sdk
-npx -p @useboardwalk/sdk@1.0.0 boardwalk <command> [flags]    # …or zero-install
+npx -p @useboardwalk/sdk@1.0.1 boardwalk <command> [flags]    # …or zero-install
 ```
 
-- The CLI is **v1.0.0** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
+- The CLI is **v1.0.1** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
 - The user supplies their own wallet address with `--wallet <addr>` (BYO wallet — get it from your harness, e.g. Base MCP `get_wallets`). The CLI builds calldata **for** that address; it never asks for a key.
 - **Every transaction command prints JSON** of this shape:
 
@@ -139,7 +139,7 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 | `--fee` / `--vesting` (advanced) | `<label>:<address>:<percent>`, percent **> 0**. Advanced needs **≥1 `--fee`**; **`--vesting` is required when presale < 50**. Labels — fee: `individual\|entity\|publicGood\|growthTeam`; vesting also allows `referrer` |
 | `--raise-goal` (advanced metadata / link) | **strictly greater** than the chain's graduation threshold (the `launch` output surfaces it as `graduationThreshold`, a top-level field) |
 | `--tx` (`launch-metadata`) | matches `^0x[0-9a-fA-F]{64}$` |
-| `--signature` (`submit-metadata`) | `0x`-prefixed hex |
+| `--signature` (`submit-metadata`) | `0x`-prefixed hex, any length — smart-account (ERC-1271) signatures exceed 65 bytes; pass them through whole |
 | `--message` (`submit-metadata`) | the exact `sign.message` JSON from `launch-metadata` (must parse) |
 
 ### Pre-flight gates (read state first)
