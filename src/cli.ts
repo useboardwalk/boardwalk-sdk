@@ -212,10 +212,11 @@ function parseUintOption(value: string, flag: string): bigint {
 }
 
 /** Validate the launch `--path` option (anything but "advanced" was otherwise
- *  silently treated as advanced). */
+ *  silently treated as advanced). "advanced" is the launch Boardwalk's docs
+ *  and UI call "standard"; the flag value tracks the contracts, not the docs. */
 function requireLaunchPath(value: string): "express" | "advanced" {
   if (value !== "express" && value !== "advanced") {
-    fail('--path must be "express" or "advanced"');
+    fail('--path must be "express" or "advanced" (a "standard" launch is --path advanced)');
   }
   return value;
 }
@@ -229,7 +230,7 @@ program
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
       "Boardwalk's ERC-8021 builder code is appended on Base (where it is registered).",
   )
-  .version("1.0.1")
+  .version("1.0.2")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
 
 program
@@ -254,7 +255,7 @@ program
   )
   .option(
     "--path <path>",
-    "launch path: express (24h) | advanced (7d)",
+    "launch path: express (24h) | advanced (7d) — \"advanced\" is the standard launch",
     "express",
   )
   .option(
@@ -267,21 +268,21 @@ program
   )
   .option(
     "--fee <spec>",
-    "advanced issuer-fee recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|publicGood|growthTeam)",
+    "standard-path issuer-fee recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|publicGood|growthTeam)",
     collectRecipient,
     [] as FeeRecipientInput[],
   )
   .option(
     "--vesting <spec>",
-    "advanced vesting recipient as <label>:<address>:<percent>, repeatable; required when --presale-percent < 50, not allowed at 50 (labels: individual|entity|referrer|publicGood|growthTeam)",
+    "standard-path vesting recipient as <label>:<address>:<percent>, repeatable; required when --presale-percent < 50, not allowed at 50 (labels: individual|entity|referrer|publicGood|growthTeam)",
     collectRecipient,
     [] as FeeRecipientInput[],
   )
   .option(
     "--presale-percent <n>",
-    "presale supply percent (advanced path; 25–50 in steps of 5; default 50)",
+    "presale supply percent (standard path, --path advanced; 25–50 in steps of 5; default 50)",
   )
-  .option("--referrer <address>", "referrer address (advanced path)")
+  .option("--referrer <address>", "referrer address (standard path, --path advanced)")
   .option("--rpc <url>", "RPC URL override (default: chain's public RPC)")
   .action(async (opts) => {
     const { client, chainId } = makeClient(opts.chain, opts.rpc);
@@ -319,7 +320,7 @@ program
         note:
           "Submit `calls` (batched: approve + createLaunch). After the create-launch tx confirms, finalize metadata — the token is resolved from the tx automatically." +
           (advanced
-            ? " Advanced launches must set --raise-goal greater than the graduation threshold above."
+            ? " Standard launches must set --raise-goal greater than the graduation threshold above."
             : ""),
         command: `boardwalk launch-metadata --tx <create-launch tx hash> --chain ${opts.chain} [--logo <file>] [--twitter <handle>]${advanced ? " --raise-goal <amount>" : ""}`,
       },
@@ -347,7 +348,7 @@ program
   )
   .option(
     "--path <path>",
-    "launch path: express (24h) | advanced (7d)",
+    "launch path: express (24h) | advanced (7d) — \"advanced\" is the standard launch",
     "express",
   )
   .option("--description <text>", "token description")
@@ -357,24 +358,24 @@ program
   )
   .option(
     "--fee <spec>",
-    "advanced issuer-fee recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|publicGood|growthTeam)",
+    "standard-path issuer-fee recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|publicGood|growthTeam)",
     collectRecipient,
     [] as FeeRecipientInput[],
   )
   .option(
     "--vesting <spec>",
-    "advanced vesting recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|referrer|publicGood|growthTeam)",
+    "standard-path vesting recipient as <label>:<address>:<percent>, repeatable (labels: individual|entity|referrer|publicGood|growthTeam)",
     collectRecipient,
     [] as FeeRecipientInput[],
   )
   .option(
     "--presale-percent <n>",
-    "presale supply percent (advanced path; 25–50 in steps of 5; default 50)",
+    "presale supply percent (standard path, --path advanced; 25–50 in steps of 5; default 50)",
   )
-  .option("--referrer <address>", "referrer address (advanced path)")
+  .option("--referrer <address>", "referrer address (standard path, --path advanced)")
   .option(
     "--raise-goal <amount>",
-    "advanced raise goal in raise-token units (must exceed the graduation threshold)",
+    "standard-path raise goal in raise-token units (must exceed the graduation threshold)",
   )
   .option("--x, --twitter <handle>", "X/Twitter handle (either flag)")
   .option("--discord <invite>", "Discord invite code")
@@ -632,7 +633,7 @@ program
   )
   .option(
     "--raise-goal <amount>",
-    "raise goal in raise-token units (advanced; visual only)",
+    "raise goal in raise-token units (standard path; visual only)",
   )
   .option("--tos-uri <uri>", "Terms of Service URI", TOS_URI)
   .option("--tos-version <v>", "Terms of Service version", TOS_VERSION)
@@ -676,7 +677,7 @@ program
     if (opts.raiseGoal) {
       const wei = parseUnits(opts.raiseGoal, 18);
       const grad = getLaunchConfig(chainId);
-      // Advanced raise goal must exceed the graduation threshold (mirrors the FE).
+      // Standard-path raise goal must exceed the graduation threshold (mirrors the FE).
       if (wei <= grad.graduationThresholdWei) {
         fail(
           `raise goal (${opts.raiseGoal} ${grad.raiseTokenSymbol}) must be greater than the graduation threshold (${formatUnits(grad.graduationThresholdWei, 18)} ${grad.raiseTokenSymbol}) on this chain`,

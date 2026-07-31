@@ -32,10 +32,10 @@ This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` 
 
 ```bash
 boardwalk <command> [flags]                          # after: npm i -g @useboardwalk/sdk
-npx -p @useboardwalk/sdk@1.0.1 boardwalk <command> [flags]    # …or zero-install
+npx -p @useboardwalk/sdk@1.0.2 boardwalk <command> [flags]    # …or zero-install
 ```
 
-- The CLI is **v1.0.1** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
+- The CLI is **v1.0.2** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
 - The user supplies their own wallet address with `--wallet <addr>` (BYO wallet — get it from your harness, e.g. Base MCP `get_wallets`). The CLI builds calldata **for** that address; it never asks for a key.
 - **Every transaction command prints JSON** of this shape:
 
@@ -87,7 +87,7 @@ There is **no login** required for onchain actions — no Privy, no session. The
 
 | Command           | What it does                                                                   | Key flags                                                                                                                                                                                                                             | Chain scope   |
 | ----------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `launch`          | Create a launch: emits conditional BWLK approve + `create-launch`              | `--chain --wallet --name --ticker --category` (+ `--issuer-fee` on express) · opt: `--path --description --rpc` · advanced: `--presale-percent --referrer --fee <label:address:percent>` (repeatable) `--vesting <label:address:percent>` (repeatable) | multi-chain   |
+| `launch`          | Create a launch: emits conditional BWLK approve + `create-launch`              | `--chain --wallet --name --ticker --category` (+ `--issuer-fee` on express) · opt: `--path --description --rpc` · standard (`--path advanced`): `--presale-percent --referrer --fee <label:address:percent>` (repeatable) `--vesting <label:address:percent>` (repeatable) | multi-chain   |
 | `launch-metadata` | Upload logo to CDN, then print an EIP-712 payload to sign + the submit request | `--tx \| --token` (`--tx` = create-launch tx hash, recommended) `--chain` · logo: `--logo \| --logo-data \| --logo-url` · opt: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`                                                         | multi-chain   |
 | `submit-metadata` | POST the signed metadata (auto-retries on 404 for indexer lag)                 | `--token --chain --signature --message`                                                                                                                                                                                               | multi-chain   |
 | `contribute`      | Join an auction: conditional raise-token approve + `contribute`                 | `--token --amount --chain --wallet` · opt: `--rpc`                                                                                                                                                                                    | multi-chain   |
@@ -127,7 +127,7 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 | `--chain` | one of `ethereum`, `base`, `arbitrum`, `robinhood` (or its numeric id) |
 | `--amount` / `--amount-a` / `--amount-b` / `--liquidity` / `--min-out` | a number **> 0**, in human units |
 | `--option` (`vote`) | integer **1–4** |
-| `--path` (`launch`, `launch-link`) | `express` or `advanced` (rejected otherwise) |
+| `--path` (`launch`, `launch-link`) | `express` or `advanced` (rejected otherwise). `advanced` is the launch the docs/UI call **standard** — pass the literal `advanced` |
 | `--mode` (`cast-visibility`) | `boost` or `deboost` |
 | `--direction` (`swap`) | `buy` or `sell` |
 | `--epochs` (`claim-participation`) | comma-separated non-negative integers, **≥ 1** (e.g. `0,1,2`) |
@@ -135,9 +135,9 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 | `--slippage-bps` (`swap`, LP, `claim-integrator-fees`) | integer **0–9999** (default 50 = 0.5%) |
 | `--deadline` (fee claims) | unix-seconds integer (default now + 1200s) |
 | `--category` | a launch slug: `meme-culture, gaming, creator-media, protocol-defi, infra-tools, app-consumer, nft-collectibles, community, ai-agents, public-goods, other` |
-| `--presale-percent` (advanced) | integer **25–50, divisible by 5** |
-| `--fee` / `--vesting` (advanced) | `<label>:<address>:<percent>`, percent **> 0**. Advanced needs **≥1 `--fee`**; **`--vesting` is required when presale < 50**. Labels — fee: `individual\|entity\|publicGood\|growthTeam`; vesting also allows `referrer` |
-| `--raise-goal` (advanced metadata / link) | **strictly greater** than the chain's graduation threshold (the `launch` output surfaces it as `graduationThreshold`, a top-level field) |
+| `--presale-percent` (standard path) | integer **25–50, divisible by 5** |
+| `--fee` / `--vesting` (standard path) | `<label>:<address>:<percent>`, percent **> 0**. The standard path needs **≥1 `--fee`**; **`--vesting` is required when presale < 50**. Labels — fee: `individual\|entity\|publicGood\|growthTeam`; vesting also allows `referrer` |
+| `--raise-goal` (standard-path metadata / link) | **strictly greater** than the chain's graduation threshold (the `launch` output surfaces it as `graduationThreshold`, a top-level field) |
 | `--tx` (`launch-metadata`) | matches `^0x[0-9a-fA-F]{64}$` |
 | `--signature` (`submit-metadata`) | `0x`-prefixed hex, any length — smart-account (ERC-1271) signatures exceed 65 bytes; pass them through whole |
 | `--message` (`submit-metadata`) | the exact `sign.message` JSON from `launch-metadata` (must parse) |
@@ -162,9 +162,10 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 Builds the launch transaction. Boardwalk requires **burning BWLK** to launch (the burn cost is discounted for Boardwalk NFT members — the NFT is **not** required, it only lowers the cost). The CLI emits a conditional `approve-bwlk` (so the launch contract can pull the burn) followed by `create-launch`. Alongside `calls`, the output carries `bwlkBurnCost` (wei) and the full `config` tuple passed to `createLaunch`.
 
 - **Paths:** `--path express` (24-hour auction, simpler fees, fully distributed supply) or `--path advanced` (7-day auction after a 24-hour start delay, customizable fee breakdown + token vesting).
-- **Express-path params:** `--issuer-fee <address>` is **required** (the contract demands exactly one fee recipient; it receives 100% of the issuer fee — typically the issuer wallet). `--fee`, `--vesting`, and `--referrer` are advanced-only.
+- **Naming:** the 7-day path is called a **standard** launch in Boardwalk's docs and UI; the CLI flag, the SDK types, and the onchain contracts all still spell it `advanced`. They are the same path. When a user says "standard launch", pass `--path advanced`; when reporting back, "standard" is the name to use.
+- **Express-path params:** `--issuer-fee <address>` is **required** (the contract demands exactly one fee recipient; it receives 100% of the issuer fee — typically the issuer wallet). `--fee`, `--vesting`, and `--referrer` are standard-path only.
 - **Prereqs:** the wallet holds **≥ bwlkBurnCost** BWLK, on the right chain.
-- **Advanced-path params:**
+- **Standard-path params (`--path advanced`):**
   - `--fee <label:address:percent>` (**repeatable**) — the issuer-fee split across recipients; valid labels: `individual` | `entity` | `publicGood` | `growthTeam`. **1–4 recipients; at least one is required** for `--path advanced`.
   - `--vesting <label:address:percent>` (**repeatable**, up to 5) — token vesting recipients; valid labels: `individual` | `entity` | `referrer` | `publicGood` | `growthTeam`. **Required when `--presale-percent` < 50; not allowed at 50** (full presale leaves nothing to vest).
   - `--presale-percent` is **25–50 in steps of 5**.
@@ -180,7 +181,7 @@ boardwalk launch \
 ```
 
 ```bash
-# advanced path: issuer-fee split + vesting (presale-percent < 50 requires vesting)
+# standard path (--path advanced): issuer-fee split + vesting (presale-percent < 50 requires vesting)
 boardwalk launch --chain base --wallet 0xYou \
   --name "My Token" --ticker MYT --category ai-agents \
   --path advanced --presale-percent 40 \
@@ -219,7 +220,7 @@ Once the `create-launch` tx confirms, **always** attach the token's public metad
    - `sign` is the EIP-712 typed data: `{ domain, types, primaryType, message }`.
    - **Logo** is provided one of three ways: `--logo <file>`, `--logo-data <base64-or-dataURL>`, or `--logo-url <url>`.
    - Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`. (Already have the token address? Use `--token <addr>` instead of `--tx`.)
-   - **`--raise-goal` (advanced) must EXCEED the chain's graduation threshold** — the CLI validates it and errors otherwise. The threshold is **5 wETH** on every chain, both paths. Set advanced `--raise-goal` above the graduation threshold (which the `launch` output surfaces as the top-level `graduationThreshold`).
+   - **`--raise-goal` (standard path) must EXCEED the chain's graduation threshold** — the CLI validates it and errors otherwise. The threshold is **5 wETH** on every chain, both paths. Set the standard-path `--raise-goal` above the graduation threshold (which the `launch` output surfaces as the top-level `graduationThreshold`).
 2. **Sign** the `sign` payload (EIP-712 typed-data signing) with the **issuer wallet** — the same wallet that launched. (Base MCP can sign typed data.)
 3. **`submit-metadata`** — POSTs the signed metadata. Pass `--token <token>`, `--signature <hex>`, and `--message <sign.message-json>`. It **auto-retries on 404** to ride out backend indexer lag, so a transient 404 right after launch is expected, not a failure.
 
@@ -243,8 +244,8 @@ boardwalk submit-metadata --token 0x<token> --chain base \
 Returns a `…/launch?path=…&prefill=…` URL that opens the Boardwalk launch form on its **summary** step, fully prefilled. **No wallet, no RPC, no signing** — pure URL generation, so it works on shell-less surfaces (plain chat) where the CLI can't run. The user opens the link, **adds a logo in the UI** (an image can't ride in a URL), connects a wallet, and signs. Nothing auto-submits.
 
 - **Required:** `--chain --name --ticker --category`.
-- **Optional:** `--path` (default express) `--description --issuer-fee`; advanced: `--presale-percent --fee --vesting --referrer --raise-goal`; socials: `--twitter`/`--x --discord --telegram --youtube --video`.
-- **Validate** the same inputs as `launch` (see [Validate before you call](#validate-before-you-call)) — `launch-link` runs the identical checks and throws on bad input. Advanced `--raise-goal` must exceed the graduation threshold.
+- **Optional:** `--path` (default express) `--description --issuer-fee`; standard (`--path advanced`): `--presale-percent --fee --vesting --referrer --raise-goal`; socials: `--twitter`/`--x --discord --telegram --youtube --video`.
+- **Validate** the same inputs as `launch` (see [Validate before you call](#validate-before-you-call)) — `launch-link` runs the identical checks and throws on bad input. The standard path's `--raise-goal` must exceed the graduation threshold.
 - **No `--logo`** (the UI collects it) and **no `--homepage`** (the launch form has no homepage field; set it later via `launch-metadata`).
 
 ```bash
@@ -431,7 +432,7 @@ boardwalk status --token 0xYourToken --chain base
   "token": "0xYourToken",
   "chainId": 8453,
   "status": "presale", // gate: presale → contribute; seeded (+ 7-day post-seed cliff) → claim
-  "path": "ADVANCED",
+  "path": "ADVANCED", // the API mirrors the contract naming — report this as a "standard" launch
   "presaleManager": "0x…",
   "raiseToken": "0x4200000000000000000000000000000000000006", // WETH on Base
   "seeded": false,
@@ -500,7 +501,7 @@ Attribution is **automatic** on **Base**: every transaction the SDK builds there
 
 - "Launch a meme token called Agent Test Token, ticker AGENTX, on Base, express path." → `launch --chain base --path express --name "Agent Test Token" --ticker AGENTX --category meme-culture --wallet <addr> --issuer-fee <addr>`
 - "How much BWLK does it cost me to launch on Base?" → `launch-cost --chain base --wallet <addr>`
-- "Create an advanced 7-day launch on Arbitrum with my address as the fee recipient." → `launch --chain arbitrum --path advanced --fee individual:<addr>:100 …`
+- "Create a standard 7-day launch on Arbitrum with my address as the fee recipient." → `launch --chain arbitrum --path advanced --fee individual:<addr>:100 …` (standard = `--path advanced`)
 - "Do I get a launch discount?" → `launch-cost …` (read `isMember` / `discountBps`).
 - "Set the logo and Twitter for my new token and publish its profile." → `launch-metadata --logo … --twitter …` → sign EIP-712 → `submit-metadata`.
 - "Add a description, homepage, and raise goal to token 0xYourToken." → `launch-metadata --description … --homepage … --raise-goal …` → sign → `submit-metadata`.

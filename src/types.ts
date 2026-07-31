@@ -79,6 +79,9 @@ export interface LaunchInput {
   ticker: string;
   category: string;
   description?: string;
+  /** Launch path. "advanced" is the launch Boardwalk's docs and UI call
+   *  "standard" — same path, different name. The literal stays "advanced"
+   *  because the onchain contracts and the CLI flag use it. */
   path: "express" | "advanced";
   /** Numeric chain id — used only to validate chain-reserved tickers. */
   chainId?: number;
@@ -87,7 +90,7 @@ export interface LaunchInput {
   /** Single issuer-fee recipient (receives 100% of the issuer fee). */
   issuerFeeRecipient?: Address;
 
-  // Advanced
+  // Standard (path: "advanced")
   /** Presale supply percent (default 50). */
   presaleSupplyPercent?: number;
   issuerFee?: FeeRecipientInput[];
@@ -117,6 +120,7 @@ export interface LaunchLinkInput {
   ticker: string;
   category: string;
   description?: string;
+  /** Launch path — "advanced" is the "standard" launch (see LaunchInput.path). */
   path: "express" | "advanced";
   /** Chain slug ("base"…) or numeric id; normalized to a slug in the link. */
   chain: string | number;
@@ -124,12 +128,12 @@ export interface LaunchLinkInput {
   // Express
   issuerFeeRecipient?: Address;
 
-  // Advanced
+  // Standard (path: "advanced")
   presaleSupplyPercent?: number;
   issuerFee?: FeeRecipientInput[];
   vesting?: FeeRecipientInput[];
   referrer?: Address;
-  /** Advanced raise goal in raise-token units (decimal string), e.g. "12.5". */
+  /** Standard-path raise goal in raise-token units (decimal string), e.g. "12.5". */
   raiseGoalEth?: string;
 
   // Launch-link metadata (no logo — it's added separately when the link is opened)
@@ -149,9 +153,9 @@ export interface LaunchLinkPrefill {
   socials?: LaunchLinkSocials;
   /** Express single fee recipient. */
   feeRecipient?: Address;
-  /** Advanced presale supply percent (raw percent, not bps). */
+  /** Standard-path presale supply percent (raw percent, not bps). */
   presalePercent?: number;
-  /** Advanced raise goal (decimal string). */
+  /** Standard-path raise goal (decimal string). */
   raiseGoalEth?: string;
   fees?: Array<{ label: string; address: Address; percent: number }>;
   vesting?: Array<{ label: string; address: Address; percent: number }>;
