@@ -73,7 +73,7 @@ export function buildLaunchConfig(input: LaunchInput): LaunchConfig {
     // them from the factory if you need to track a change to that range.
     if (!Number.isInteger(pct) || pct < 25 || pct > 50 || pct % 5 !== 0) {
       throw new Error(
-        `Invalid presaleSupplyPercent "${input.presaleSupplyPercent}": advanced launches require an integer 25–50 divisible by 5`,
+        `Invalid presaleSupplyPercent "${input.presaleSupplyPercent}": standard launches (--path advanced) require an integer 25–50 divisible by 5`,
       );
     }
     presalePercent = BigInt(pct * 100);
@@ -98,11 +98,11 @@ export function buildLaunchConfig(input: LaunchInput): LaunchConfig {
     ? { addresses: [], splits: [], labels: [] }
     : toProportionalBps(input.vesting ?? []);
 
-  // Advanced launches split the issuer fee across recipients — at least one is
+  // Standard launches (path "advanced") split the issuer fee across recipients — at least one is
   // required (mirrors the FE fee-breakdown step's "hasAnyRecipient" gate).
   if (!isExpress && issuerFee.addresses.length === 0) {
     throw new Error(
-      "Advanced launches require at least one issuer-fee recipient (--fee)",
+      "Standard launches (--path advanced) require at least one issuer-fee recipient (--fee)",
     );
   }
 
@@ -123,7 +123,7 @@ export function buildLaunchConfig(input: LaunchInput): LaunchConfig {
     vesting.addresses.length === 0
   ) {
     throw new Error(
-      "Advanced launches with presaleSupplyPercent < 50 require at least one vesting recipient",
+      "Standard launches with presaleSupplyPercent < 50 require at least one vesting recipient",
     );
   }
 
@@ -135,7 +135,7 @@ export function buildLaunchConfig(input: LaunchInput): LaunchConfig {
     vesting.addresses.length > 0
   ) {
     throw new Error(
-      "Advanced launches with presaleSupplyPercent = 50 cannot have vesting recipients (the presale sells the full supply); use 25–45 with vesting, or drop --vesting",
+      "Standard launches with presaleSupplyPercent = 50 cannot have vesting recipients (the presale sells the full supply); use 25–45 with vesting, or drop --vesting",
     );
   }
 
