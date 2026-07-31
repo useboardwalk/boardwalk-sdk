@@ -13,8 +13,10 @@ const sleep = (ms: number) =>
 
 /**
  * POST a signed metadata payload. The backend verifies `signer == issuer`
- * (EOA via `verifyTypedData` or EIP-1271). Retries on 404 with backoff because
- * a just-created launch may not be indexed yet.
+ * (EOA via `verifyTypedData`, or EIP-1271 `isValidSignature` for smart
+ * accounts). The signature is forwarded unmodified — smart-account signatures
+ * are variable-length, so never assume a 65-byte shape. Retries on 404 with
+ * backoff because a just-created launch may not be indexed yet.
  */
 export async function postSignedMetadata(
   token: Address,

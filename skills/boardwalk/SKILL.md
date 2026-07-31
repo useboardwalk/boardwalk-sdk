@@ -139,7 +139,7 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 | `--fee` / `--vesting` (advanced) | `<label>:<address>:<percent>`, percent **> 0**. Advanced needs **≥1 `--fee`**; **`--vesting` is required when presale < 50**. Labels — fee: `individual\|entity\|publicGood\|growthTeam`; vesting also allows `referrer` |
 | `--raise-goal` (advanced metadata / link) | **strictly greater** than the chain's graduation threshold (the `launch` output surfaces it as `graduationThreshold`, a top-level field) |
 | `--tx` (`launch-metadata`) | matches `^0x[0-9a-fA-F]{64}$` |
-| `--signature` (`submit-metadata`) | `0x`-prefixed hex |
+| `--signature` (`submit-metadata`) | `0x`-prefixed hex, any length — smart-account (ERC-1271) signatures exceed 65 bytes; pass them through whole |
 | `--message` (`submit-metadata`) | the exact `sign.message` JSON from `launch-metadata` (must parse) |
 
 ### Pre-flight gates (read state first)
