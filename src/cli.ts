@@ -212,10 +212,11 @@ function parseUintOption(value: string, flag: string): bigint {
 }
 
 /** Validate the launch `--path` option (anything but "advanced" was otherwise
- *  silently treated as advanced). */
+ *  silently treated as advanced). "advanced" is the launch Boardwalk's docs
+ *  and UI call "standard"; the flag value tracks the contracts, not the docs. */
 function requireLaunchPath(value: string): "express" | "advanced" {
   if (value !== "express" && value !== "advanced") {
-    fail('--path must be "express" or "advanced"');
+    fail('--path must be "express" or "advanced" (a "standard" launch is --path advanced)');
   }
   return value;
 }
@@ -229,7 +230,7 @@ program
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
       "Boardwalk's ERC-8021 builder code is appended on Base (where it is registered).",
   )
-  .version("1.0.1")
+  .version("1.0.2")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
 
 program
@@ -254,7 +255,7 @@ program
   )
   .option(
     "--path <path>",
-    "launch path: express (24h) | advanced (7d)",
+    "launch path: express (24h) | advanced (7d) — \"advanced\" is the standard launch",
     "express",
   )
   .option(
@@ -347,7 +348,7 @@ program
   )
   .option(
     "--path <path>",
-    "launch path: express (24h) | advanced (7d)",
+    "launch path: express (24h) | advanced (7d) — \"advanced\" is the standard launch",
     "express",
   )
   .option("--description <text>", "token description")
