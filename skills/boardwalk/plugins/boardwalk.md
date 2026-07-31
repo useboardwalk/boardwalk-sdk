@@ -5,7 +5,7 @@ tags: [token-launches, staking, governance, liquidity]
 name: boardwalk
 version: 1.0.0
 integration: hybrid
-chains: [ethereum, base, arbitrum, robinhood]
+chains: [ethereum, base, arbitrum]
 requires:
   shell: optional
   allowlist: []
@@ -24,7 +24,7 @@ risk: [low-liquidity, slippage, irreversible]
 
 Boardwalk is a fee-protection token-launch platform: every launch gets permanently-locked liquidity (the LP can never be pulled) plus a built-in swap-fee equivalent — a 0.95% token tax split between the issuer (0.35%), Boardwalk (0.35%), LP incentives (0.15%), and integrators (0.10%). Launches run as fixed-window presale auctions — contributors deposit the chain's canonical WETH (the raise token on every chain) during the presale, and on a successful close the contract seeds permanent liquidity and lets contributors claim.
 
-This plugin drives the `boardwalk` CLI (the `@useboardwalk/sdk` npm package), which turns a natural-language intent into **unsigned transaction calldata** — an ordered array of `{ to, data, value }` calls (plus, for launch metadata, an **EIP-712** payload to sign). The CLI never signs and never broadcasts. Calldata is submitted through Base MCP `send_calls` where the user's Base Account approves; the launch-metadata leg is signed with Base MCP `sign`. On a no-shell surface there is no calldata to submit — the plugin emits a prefilled `…/launch?path=…&prefill=…` URL the user opens in the Boardwalk UI. Base MCP can route launch / contribute / claim on `ethereum`, `base`, `arbitrum`, and `robinhood`; BWLK staking and governance voting are Ethereum-only.
+This plugin drives the `boardwalk` CLI (the `@useboardwalk/sdk` npm package), which turns a natural-language intent into **unsigned transaction calldata** — an ordered array of `{ to, data, value }` calls (plus, for launch metadata, an **EIP-712** payload to sign). The CLI never signs and never broadcasts. Calldata is submitted through Base MCP `send_calls` where the user's Base Account approves; the launch-metadata leg is signed with Base MCP `sign`. On a no-shell surface there is no calldata to submit — the plugin emits a prefilled `…/launch?path=…&prefill=…` URL the user opens in the Boardwalk UI. Base MCP can route launch / contribute / claim on `ethereum`, `base`, and `arbitrum`; BWLK staking and governance voting are Ethereum-only. The CLI also supports Robinhood Chain (4663), but Base MCP can't route `send_calls` there — see `## Notes`.
 
 ## Installation
 
@@ -139,7 +139,7 @@ Target tool: **`send_calls`** for every on-chain action (and **`sign`** for the 
 | `to` | `to` | target contract |
 | `data` | `data` | full unsigned calldata (hex) — submit exactly as printed |
 | `value` | `value` | decimal **wei** string (`"0"` for all v1) |
-| `chainId` | (request chain) | map to Base MCP's chain string — `1 → ethereum`, `8453 → base`, `42161 → arbitrum`, `4663 → robinhood` |
+| `chainId` | (request chain) | map to Base MCP's chain string — `1 → ethereum`, `8453 → base`, `42161 → arbitrum`. Chain 4663 (Robinhood) is outside Base MCP — see `## Notes` |
 | `id` / `label` | — | human context only; not sent on-chain |
 
 Submit the **entire array as ONE batch** — the conditional approve and the action ride in the same request, so the user signs once, and order is preserved (approve at `[0]` before the action). Then poll **`get_request_status`** until it settles. See [../references/batch-calls.md](../references/batch-calls.md) and [../references/approval-mode.md](../references/approval-mode.md). The launch-metadata `sign` payload is EIP-712 typed data, not a `calls` entry — sign it with `sign`, then run `submit-metadata`.
@@ -177,7 +177,7 @@ I'm in a plain chat with no terminal — help me launch a token on Base
 
 ## Notes
 
-- **Chains.** `chains` lists every network the CLI supports: `ethereum` (1), `base` (8453), `arbitrum` (42161), `robinhood` (4663). `stake-bwlk`, `unstake-bwlk`, `handle-rewards`, `claim-participation`, and `vote` are **Ethereum-only** (the staking/governance contracts are placeholders elsewhere; the CLI errors clearly); everything else works on all four chains.
+- **Chains.** `chains` is the intersection of Boardwalk's deployments and Base MCP's `send_calls` support: `ethereum` (1), `base` (8453), `arbitrum` (42161). Boardwalk and the CLI also run on **Robinhood Chain** (4663), but Base MCP can't route `send_calls` there, so it's out of scope for this plugin — for Robinhood Chain, point the user at the Boardwalk UI (`launch-link` emits the prefilled URL for launches). `stake-bwlk`, `unstake-bwlk`, `handle-rewards`, `claim-participation`, and `vote` are **Ethereum-only** (the staking/governance contracts are placeholders elsewhere; the CLI errors clearly); everything else works on all three chains above.
 - **Attribution.** On **Base** every call's `data` carries Boardwalk's ERC-8021 builder-code suffix (Base is where the code is registered), so Base volume is attributed even when submitted through the agent's own wallet. Non-Base chains carry no suffix. There is no flag to set, and it never alters the action, recipient, or amount.
 - **No login.** There is no Privy/session step for on-chain actions — the only prerequisites are on-chain (enough BWLK to launch/vote; enough WETH to contribute; the wallet on the right chain).
 - **Graduation threshold** (advanced `--raise-goal` must exceed it): 5 WETH on every chain, both paths.
