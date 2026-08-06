@@ -238,7 +238,7 @@ program
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
       "Boardwalk's ERC-8021 builder code is appended on Base (where it is registered).",
   )
-  .version("1.0.2")
+  .version("2.0.0")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
 
 program
@@ -691,18 +691,22 @@ program
       // the FE). The launch already exists here, so compare against the value
       // its own PresaleManager snapshotted rather than the current factory
       // setting — an admin change never moves an existing launch's bar.
-      const launch = await getLaunch(token, chainId);
-      const thresholdWei = launch.presaleManager
-        ? await client.readContract({
-            abi: presaleManagerAbi,
-            address: launch.presaleManager,
-            functionName: "graduationThreshold",
-          })
-        : await fetchGraduationThreshold(
-            client,
-            chainId,
-            launch.path === "EXPRESS" ? "express" : "advanced",
-          );
+      //
+      // Resolve the PresaleManager on-chain, not through the API: this runs
+      // straight after createLaunch, inside the same indexer-lag window that
+      // `postSignedMetadata` retries around, whereas `launches(token)` is
+      // readable as soon as the tx is mined. It also throws on an unregistered
+      // token instead of reading a zero address.
+      const { presaleManager } = await getLaunchAddresses(
+        client,
+        token,
+        chainId,
+      );
+      const thresholdWei = await client.readContract({
+        abi: presaleManagerAbi,
+        address: presaleManager,
+        functionName: "graduationThreshold",
+      });
       if (wei <= thresholdWei) {
         fail(
           `raise goal (${opts.raiseGoal} ${raiseTokenSymbol}) must be greater than the graduation threshold (${formatUnits(thresholdWei, 18)} ${raiseTokenSymbol}) for this launch`,

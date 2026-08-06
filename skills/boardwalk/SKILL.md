@@ -32,10 +32,10 @@ This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` 
 
 ```bash
 boardwalk <command> [flags]                          # after: npm i -g @useboardwalk/sdk
-npx -p @useboardwalk/sdk@1.0.2 boardwalk <command> [flags]    # …or zero-install
+npx -p @useboardwalk/sdk@2.0.0 boardwalk <command> [flags]    # …or zero-install
 ```
 
-- The CLI is **v1.0.2** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
+- The CLI is **v2.0.0** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
 - The user supplies their own wallet address with `--wallet <addr>` (BYO wallet — get it from your harness, e.g. Base MCP `get_wallets`). The CLI builds calldata **for** that address; it never asks for a key.
 - **Every transaction command prints JSON** of this shape:
 
