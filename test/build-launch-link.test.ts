@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { Address } from "viem";
+import { formatUnits, type Address } from "viem";
 import { buildLaunchLink } from "../src/launch/build-launch-link";
+import { getGraduationThresholdWei } from "../src/registry/launch-config";
 import { LAUNCH_BASE_URL } from "../src/constants";
 
 const A = "0x1111111111111111111111111111111111111111" as Address;
@@ -165,7 +166,9 @@ describe("buildLaunchLink", () => {
         chain: "base",
         presaleSupplyPercent: 50,
         issuerFee: [{ label: "individual", address: A, percent: 100 }],
-        raiseGoalEth: "5", // threshold is 5 wETH everywhere; must be strictly greater
+        // Exactly at the threshold — the rule is strictly greater. Derived so
+        // the case survives a timelocked threshold change.
+        raiseGoalEth: formatUnits(getGraduationThresholdWei("advanced"), 18),
       }),
     ).toThrow(/graduation threshold/i);
   });

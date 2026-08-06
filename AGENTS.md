@@ -35,7 +35,7 @@ src/
   registry/           ← addresses + ABIs + chains + launch config (mirror the deployed Boardwalk contracts; do not hand-edit ABIs)
     contracts.ts        getContracts / assertDeployed (throws on placeholder/undeployed)
     chains.ts           SUPPORTED_CHAINS: Ethereum, Base, Arbitrum, Robinhood Chain (viem chain objects — never hardcode chain ids)
-    launch-config.ts    getLaunchConfig (raise token = canonical WETH, durations, 5 WETH graduation threshold)
+    launch-config.ts    getLaunchConfig (raise token = canonical WETH, durations) + getGraduationThresholdWei(path) fallback (2.5 WETH); live value via fetchGraduationThreshold
     abis/               *.ts ABI consts (core 4 full; the rest are minimal fragments)
   flow/               ← TxStep execution primitives
     encode.ts           encodeStep/encodeSteps + BUILDER_CODE_SUFFIX (the ERC-8021 suffix, Base-only)

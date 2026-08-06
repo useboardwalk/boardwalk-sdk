@@ -11,7 +11,7 @@ Framework-agnostic builders for **unsigned** [Boardwalk](https://www.useboardwal
 ```bash
 npm install @useboardwalk/sdk                  # library
 npm install -g @useboardwalk/sdk               # CLI, then:  boardwalk --help
-npx -p @useboardwalk/sdk@1.0.2 boardwalk --help   # …or zero-install (pinned)
+npx -p @useboardwalk/sdk@2.0.0 boardwalk --help   # …or zero-install (pinned)
 ```
 
 Requires Node ≥ 18 (uses global `fetch`/`Blob`/`FormData`). The bin is `boardwalk` (the package is `@useboardwalk/sdk`).
@@ -74,7 +74,7 @@ boardwalk submit-metadata --token 0x<token> --chain base \
   --signature 0x<sig> --message '<sign.message json>'
 ```
 
-Already have the token address? Use `--token 0x…` instead of `--tx`. **Logo** (one of): `--logo <file>` (path on disk) · `--logo-data <base64|dataURL>` (e.g. an agent-generated image) · `--logo-url <url>` (already hosted) — see [Logos](#logos). Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`. **`--raise-goal`** (standard launches) is validated to exceed the chain's graduation threshold (5 wETH on every chain). A launch is valid onchain even if you skip metadata.
+Already have the token address? Use `--token 0x…` instead of `--tx`. **Logo** (one of): `--logo <file>` (path on disk) · `--logo-data <base64|dataURL>` (e.g. an agent-generated image) · `--logo-url <url>` (already hosted) — see [Logos](#logos). Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`. **`--raise-goal`** (standard launches) is validated to exceed that launch's own graduation threshold, read from its PresaleManager. Each launch keeps the threshold it snapshotted at creation, so an older launch can require more than a new one. A launch is valid onchain even if you skip metadata.
 
 ### `contribute`
 

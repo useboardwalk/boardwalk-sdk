@@ -26,7 +26,10 @@ import {
   toChainSlug,
   toNumericChainId,
 } from "../registry/chains";
-import { getLaunchConfig } from "../registry/launch-config";
+import {
+  getGraduationThresholdWei,
+  getLaunchConfig,
+} from "../registry/launch-config";
 import { buildLaunchConfig } from "./build-launch-config";
 import { validateDescription } from "./description";
 
@@ -218,10 +221,14 @@ export function buildLaunchLink(input: LaunchLinkInput): BuildLaunchLinkResult {
       } catch {
         throw new Error("raiseGoalEth must be a decimal number");
       }
-      const grad = getLaunchConfig(chainId);
-      if (wei <= grad.graduationThresholdWei) {
+      // This builder is synchronous, so it pre-checks against the
+      // `launch-config` fallback; the wizard re-validates the opened link
+      // against the live factory value.
+      const { raiseTokenSymbol } = getLaunchConfig(chainId);
+      const thresholdWei = getGraduationThresholdWei("advanced");
+      if (wei <= thresholdWei) {
         throw new Error(
-          `raiseGoalEth (${input.raiseGoalEth} ${grad.raiseTokenSymbol}) must be greater than the graduation threshold (${formatUnits(grad.graduationThresholdWei, 18)} ${grad.raiseTokenSymbol}) on this chain`,
+          `raiseGoalEth (${input.raiseGoalEth} ${raiseTokenSymbol}) must be greater than the graduation threshold (${formatUnits(thresholdWei, 18)} ${raiseTokenSymbol}) on this chain`,
         );
       }
       prefill.raiseGoalEth = input.raiseGoalEth;

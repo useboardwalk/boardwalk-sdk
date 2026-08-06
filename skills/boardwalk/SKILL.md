@@ -32,10 +32,10 @@ This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` 
 
 ```bash
 boardwalk <command> [flags]                          # after: npm i -g @useboardwalk/sdk
-npx -p @useboardwalk/sdk@1.0.2 boardwalk <command> [flags]    # …or zero-install
+npx -p @useboardwalk/sdk@2.0.0 boardwalk <command> [flags]    # …or zero-install
 ```
 
-- The CLI is **v1.0.2** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
+- The CLI is **v2.0.0** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
 - The user supplies their own wallet address with `--wallet <addr>` (BYO wallet — get it from your harness, e.g. Base MCP `get_wallets`). The CLI builds calldata **for** that address; it never asks for a key.
 - **Every transaction command prints JSON** of this shape:
 
@@ -220,7 +220,7 @@ Once the `create-launch` tx confirms, **always** attach the token's public metad
    - `sign` is the EIP-712 typed data: `{ domain, types, primaryType, message }`.
    - **Logo** is provided one of three ways: `--logo <file>`, `--logo-data <base64-or-dataURL>`, or `--logo-url <url>`.
    - Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`. (Already have the token address? Use `--token <addr>` instead of `--tx`.)
-   - **`--raise-goal` (standard path) must EXCEED the chain's graduation threshold** — the CLI validates it and errors otherwise. The threshold is **5 wETH** on every chain, both paths. Set the standard-path `--raise-goal` above the graduation threshold (which the `launch` output surfaces as the top-level `graduationThreshold`).
+   - **`--raise-goal` (standard path) must EXCEED the chain's graduation threshold** — the CLI validates it and errors otherwise. The threshold is **2.5 wETH** on every chain. It is timelocked per path, so Express and Standard can differ — trust the `graduationThreshold` in the `launch` output over any number written here. Set the standard-path `--raise-goal` above the graduation threshold (which the `launch` output surfaces as the top-level `graduationThreshold`).
 2. **Sign** the `sign` payload (EIP-712 typed-data signing) with the **issuer wallet** — the same wallet that launched. (Base MCP can sign typed data.)
 3. **`submit-metadata`** — POSTs the signed metadata. Pass `--token <token>`, `--signature <hex>`, and `--message <sign.message-json>`. It **auto-retries on 404** to ride out backend indexer lag, so a transient 404 right after launch is expected, not a failure.
 
