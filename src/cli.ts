@@ -26,7 +26,10 @@ import {
 } from "./constants";
 import { formatCliError } from "./cli-error";
 import { SUPPORTED_CHAINS, toNumericChainId } from "./registry/chains";
-import { getLaunchConfig } from "./registry/launch-config";
+import {
+  formatThreshold,
+  getLaunchConfig,
+} from "./registry/launch-config";
 import {
   buildLaunchSteps,
   readLaunchCost,
@@ -62,7 +65,12 @@ import {
 } from "./registry/abis";
 import { assertDeployed, getContracts } from "./registry/contracts";
 import { encodeSteps } from "./flow/encode";
-import { getAuctionUrl, getLaunch, getLaunchAddresses } from "./read/launches";
+import {
+  fetchGraduationThreshold,
+  getAuctionUrl,
+  getLaunch,
+  getLaunchAddresses,
+} from "./read/launches";
 import { buildLaunchMetadataTypedData } from "./metadata/message";
 import { uploadLogo } from "./metadata/upload";
 import { postSignedMetadata } from "./metadata/post";
@@ -307,14 +315,15 @@ program
       },
     });
     const grad = getLaunchConfig(chainId);
+    const thresholdWei = await fetchGraduationThreshold(client, chainId, path);
     const advanced = path === "advanced";
     emitCalls(result.steps, chainId, {
       action: "launch",
       bwlkBurnCost: result.bwlkBurnCost.toString(),
       config: serializeConfig(result.config),
       graduationThreshold: {
-        wei: grad.graduationThresholdWei.toString(),
-        display: grad.graduationDisplay,
+        wei: thresholdWei.toString(),
+        display: formatThreshold(thresholdWei, grad.raiseTokenSymbol),
       },
       next: {
         note:
@@ -644,10 +653,11 @@ program
   .action(async (opts) => {
     const chainId = chainIdOf(opts.chain);
 
+    const { client } = makeClient(opts.chain, opts.rpc);
+
     let token: Address;
     if (opts.tx) {
       const txHash = requireTxHash(opts.tx);
-      const { client } = makeClient(opts.chain, opts.rpc);
       token = (await resolveLaunchedToken(client, txHash, chainId)).token;
     } else if (opts.token) {
       token = requireAddress(opts.token, "token");
@@ -676,11 +686,26 @@ program
     let raiseGoalWei = "0";
     if (opts.raiseGoal) {
       const wei = parseUnits(opts.raiseGoal, 18);
-      const grad = getLaunchConfig(chainId);
-      // Standard-path raise goal must exceed the graduation threshold (mirrors the FE).
-      if (wei <= grad.graduationThresholdWei) {
+      const { raiseTokenSymbol } = getLaunchConfig(chainId);
+      // Standard-path raise goal must exceed the graduation threshold (mirrors
+      // the FE). The launch already exists here, so compare against the value
+      // its own PresaleManager snapshotted rather than the current factory
+      // setting — an admin change never moves an existing launch's bar.
+      const launch = await getLaunch(token, chainId);
+      const thresholdWei = launch.presaleManager
+        ? await client.readContract({
+            abi: presaleManagerAbi,
+            address: launch.presaleManager,
+            functionName: "graduationThreshold",
+          })
+        : await fetchGraduationThreshold(
+            client,
+            chainId,
+            launch.path === "EXPRESS" ? "express" : "advanced",
+          );
+      if (wei <= thresholdWei) {
         fail(
-          `raise goal (${opts.raiseGoal} ${grad.raiseTokenSymbol}) must be greater than the graduation threshold (${formatUnits(grad.graduationThresholdWei, 18)} ${grad.raiseTokenSymbol}) on this chain`,
+          `raise goal (${opts.raiseGoal} ${raiseTokenSymbol}) must be greater than the graduation threshold (${formatUnits(thresholdWei, 18)} ${raiseTokenSymbol}) for this launch`,
         );
       }
       raiseGoalWei = wei.toString();

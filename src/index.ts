@@ -83,7 +83,12 @@ export {
   getBlockExplorerAddressUrl,
 } from "./registry/chains";
 export type { ChainSlug } from "./registry/chains";
-export { getLaunchConfig, chainLaunchConfig } from "./registry/launch-config";
+export {
+  getLaunchConfig,
+  chainLaunchConfig,
+  getGraduationThresholdWei,
+  formatThreshold,
+} from "./registry/launch-config";
 export type { ChainLaunchConfig } from "./registry/launch-config";
 
 // Flow
@@ -149,5 +154,10 @@ export { uploadLogo } from "./metadata/upload";
 export { postSignedMetadata } from "./metadata/post";
 
 // Read
-export { getLaunch, getLaunchAddresses, getAuctionUrl } from "./read/launches";
+export {
+  getLaunch,
+  getLaunchAddresses,
+  getAuctionUrl,
+  fetchGraduationThreshold,
+} from "./read/launches";
 export { apiGet, ApiError } from "./read/client";

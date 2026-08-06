@@ -5,6 +5,7 @@ import { isAddress, zeroAddress, type Address, type PublicClient } from "viem";
 import { APP_BASE_URL } from "../constants";
 import { getContracts } from "../registry/contracts";
 import { launchFactoryAbi } from "../registry/abis";
+import { getGraduationThresholdWei } from "../registry/launch-config";
 import { apiGet } from "./client";
 import type { LaunchAddresses, LaunchStatus, LaunchSummary } from "../types";
 
@@ -86,4 +87,33 @@ export async function getLaunchAddresses(
 /** Canonical Boardwalk auction/profile URL for a launched token. */
 export function getAuctionUrl(token: string, chainId: number): string {
   return `${APP_BASE_URL}/discover/token/auction/${token}?chain=${chainId}`;
+}
+
+/**
+ * Live graduation threshold for `path` on `chainId`, read from the factory.
+ *
+ * `graduationExpress` / `graduationAdvanced` are separate timelocked values, so
+ * reading them keeps the CLI correct across an admin change without a release.
+ * Falls back to the `launch-config` constant if the RPC read fails.
+ *
+ * This is the threshold a NEW launch would get — an existing launch keeps the
+ * value its PresaleManager snapshotted at creation.
+ */
+export async function fetchGraduationThreshold(
+  client: PublicClient,
+  chainId: number,
+  path: "express" | "advanced",
+): Promise<bigint> {
+  try {
+    const value = await client.readContract({
+      abi: launchFactoryAbi,
+      address: getContracts(chainId).launchFactory,
+      functionName:
+        path === "express" ? "graduationExpress" : "graduationAdvanced",
+    });
+    if (typeof value === "bigint" && value > BigInt(0)) return value;
+  } catch {
+    // fall through to the constant
+  }
+  return getGraduationThresholdWei(path);
 }

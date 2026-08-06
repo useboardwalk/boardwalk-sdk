@@ -74,7 +74,7 @@ boardwalk submit-metadata --token 0x<token> --chain base \
   --signature 0x<sig> --message '<sign.message json>'
 ```
 
-Already have the token address? Use `--token 0x…` instead of `--tx`. **Logo** (one of): `--logo <file>` (path on disk) · `--logo-data <base64|dataURL>` (e.g. an agent-generated image) · `--logo-url <url>` (already hosted) — see [Logos](#logos). Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`. **`--raise-goal`** (standard launches) is validated to exceed the chain's graduation threshold (5 wETH on every chain). A launch is valid onchain even if you skip metadata.
+Already have the token address? Use `--token 0x…` instead of `--tx`. **Logo** (one of): `--logo <file>` (path on disk) · `--logo-data <base64|dataURL>` (e.g. an agent-generated image) · `--logo-url <url>` (already hosted) — see [Logos](#logos). Other fields: `--twitter --discord --telegram --homepage --video --description --raise-goal --tos-uri --tos-version`. **`--raise-goal`** (standard launches) is validated to exceed that launch's graduation threshold (2.5 wETH on every chain, read live from the launch's PresaleManager). A launch is valid onchain even if you skip metadata.
 
 ### `contribute`
 
