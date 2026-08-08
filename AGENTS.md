@@ -56,6 +56,15 @@ src/
 - Chain scope. Launch/contribute/claim/refund, visibility, LP, and swap work across all four chains; governance vote, BWLK stake/unstake, reward handling, and participation claims are Ethereum-only (contracts are placeholder elsewhere). Guard chain-specific contracts with `assertDeployed(chainId, key)` so undeployed chains fail loudly.
 - No keys, no signing, no broadcasting anywhere in this package.
 
+## Prose & writing style
+
+Write every piece of prose — PR titles and bodies, review comments, commit messages, code comments, JSDoc, CLI `--help` text, and the README — in plain, unambiguous English. The rules are adapted from ASD-STE100 Simplified Technical English. This package is published to npm, so its prose is the public interface as much as its types are.
+
+- One idea per sentence. 20 words or fewer for instructions, 25 for descriptions. Use a list for 3 or more steps, conditions, or arguments.
+- Active voice and simple tenses. "The builder appends the suffix", not "the suffix is appended"; "we fixed it", not "we have fixed it".
+- One term per concept, reused — don't rotate check / verify / confirm / validate for the same action. Stack at most 3 nouns. Plainest exact word: "use" not "utilize", "about" not "regarding". Cut filler ("essentially", "in order to", "leverage", "robust").
+- Keep identifiers, function and flag names, ABI and event names, error strings, and domain terms (calldata, bps, wei, allowance, chain id) exactly as they are. This is a rule about language, not rigor. Precision beats brevity: never drop a number, condition, or chain-gating caveat to shorten a sentence.
+
 ## Adding an action
 
 1. Add the param and result interfaces to `src/types.ts`.
