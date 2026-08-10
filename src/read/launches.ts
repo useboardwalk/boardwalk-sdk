@@ -12,6 +12,9 @@ import {
 import { apiGet } from "./client";
 import type { LaunchAddresses, LaunchStatus, LaunchSummary } from "../types";
 
+/** Anything past a year is a misconfiguration, not a launch window. */
+const MAX_PLAUSIBLE_DURATION_SECONDS = 365 * 24 * 60 * 60;
+
 interface LaunchDetailResponse {
   token: string;
   chain_id: string;
@@ -107,16 +110,19 @@ export async function fetchGraduationThreshold(
   chainId: number,
   path: "express" | "advanced",
 ): Promise<bigint> {
+  // Resolve the address first: `getContracts` throws for an unsupported chain,
+  // and that must surface rather than be masked as an RPC failure.
+  const { launchFactory } = getContracts(chainId);
   try {
     const value = await client.readContract({
       abi: launchFactoryAbi,
-      address: getContracts(chainId).launchFactory,
+      address: launchFactory,
       functionName:
         path === "express" ? "graduationExpress" : "graduationAdvanced",
     });
     if (typeof value === "bigint" && value > BigInt(0)) return value;
   } catch {
-    // fall through to the constant
+    // RPC unreachable or reverted — fall through to the constant.
   }
   return getGraduationThresholdWei(path);
 }
@@ -137,16 +143,24 @@ export async function fetchAuctionDuration(
   chainId: number,
   path: "express" | "advanced",
 ): Promise<number> {
+  const { launchFactory } = getContracts(chainId);
   try {
     const seconds = await client.readContract({
       abi: launchFactoryAbi,
-      address: getContracts(chainId).launchFactory,
+      address: launchFactory,
       functionName: path === "express" ? "expressDuration" : "advancedDuration",
     });
-    if (typeof seconds === "bigint" && seconds > BigInt(0))
+    // `SET_ADVANCED_DURATION` is bounded to 2-14 days but
+    // `SET_EXPRESS_DURATION` only requires > 0, so cap before `Number()` —
+    // an oversized uint256 would lose precision and poison date math.
+    if (
+      typeof seconds === "bigint" &&
+      seconds > BigInt(0) &&
+      seconds <= BigInt(MAX_PLAUSIBLE_DURATION_SECONDS)
+    )
       return Number(seconds) * 1000;
   } catch {
-    // fall through to the constant
+    // RPC unreachable or reverted — fall through to the constant.
   }
   return getAuctionDurationMs(path);
 }
