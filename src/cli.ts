@@ -238,7 +238,7 @@ program
       "the ordered `calls` array with your own wallet (e.g. Base MCP send_calls).\n" +
       "Boardwalk's ERC-8021 builder code is appended on Base (where it is registered).",
   )
-  .version("2.0.0")
+  .version("2.1.0")
   .showHelpAfterError("(run `boardwalk <command> --help` for usage)");
 
 program
@@ -263,7 +263,7 @@ program
   )
   .option(
     "--path <path>",
-    "launch path: express (24h) | advanced (7d) — \"advanced\" is the standard launch",
+    "launch path: express (24h) | advanced (2d after a 24h start delay) — \"advanced\" is the standard launch",
     "express",
   )
   .option(
@@ -357,7 +357,7 @@ program
   )
   .option(
     "--path <path>",
-    "launch path: express (24h) | advanced (7d) — \"advanced\" is the standard launch",
+    "launch path: express (24h) | advanced (2d after a 24h start delay) — \"advanced\" is the standard launch",
     "express",
   )
   .option("--description <text>", "token description")

@@ -5,7 +5,10 @@ import { isAddress, zeroAddress, type Address, type PublicClient } from "viem";
 import { APP_BASE_URL } from "../constants";
 import { getContracts } from "../registry/contracts";
 import { launchFactoryAbi } from "../registry/abis";
-import { getGraduationThresholdWei } from "../registry/launch-config";
+import {
+  getAuctionDurationMs,
+  getGraduationThresholdWei,
+} from "../registry/launch-config";
 import { apiGet } from "./client";
 import type { LaunchAddresses, LaunchStatus, LaunchSummary } from "../types";
 
@@ -116,4 +119,34 @@ export async function fetchGraduationThreshold(
     // fall through to the constant
   }
   return getGraduationThresholdWei(path);
+}
+
+/**
+ * Live auction window for `path` on `chainId`, in ms, read from the factory.
+ *
+ * `expressDuration` / `advancedDuration` are separate timelocked values
+ * (advanced is admin-tunable between 2 and 14 days), so reading them keeps the
+ * CLI correct across an admin change without a release. Falls back to the
+ * `launch-config` constant if the RPC read fails.
+ *
+ * This is the window a NEW launch would get — an existing launch keeps the
+ * presale start/end its PresaleManager fixed at creation.
+ */
+export async function fetchAuctionDuration(
+  client: PublicClient,
+  chainId: number,
+  path: "express" | "advanced",
+): Promise<number> {
+  try {
+    const seconds = await client.readContract({
+      abi: launchFactoryAbi,
+      address: getContracts(chainId).launchFactory,
+      functionName: path === "express" ? "expressDuration" : "advancedDuration",
+    });
+    if (typeof seconds === "bigint" && seconds > BigInt(0))
+      return Number(seconds) * 1000;
+  } catch {
+    // fall through to the constant
+  }
+  return getAuctionDurationMs(path);
 }
