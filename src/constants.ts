@@ -123,3 +123,12 @@ export const VESTING_LABELS = [
   "publicGood",
   "growthTeam",
 ];
+
+/**
+ * Delay between `createLaunch` and an advanced auction opening, in seconds.
+ *
+ * `PresaleManager.ADVANCED_START_DELAY` is an immutable contract constant — it
+ * carries no timelock and cannot drift, unlike the auction durations, which are
+ * read live via `fetchAuctionDuration`.
+ */
+export const ADVANCED_START_DELAY_SECONDS = 24 * 60 * 60;

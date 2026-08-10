@@ -88,6 +88,8 @@ export {
   chainLaunchConfig,
   getGraduationThresholdWei,
   formatThreshold,
+  getAuctionDurationMs,
+  formatAuctionDuration,
 } from "./registry/launch-config";
 export type { ChainLaunchConfig } from "./registry/launch-config";
 
@@ -159,5 +161,7 @@ export {
   getLaunchAddresses,
   getAuctionUrl,
   fetchGraduationThreshold,
+  fetchAuctionDuration,
+  fetchLaunchParams,
 } from "./read/launches";
 export { apiGet, ApiError } from "./read/client";

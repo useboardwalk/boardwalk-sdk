@@ -32,10 +32,10 @@ This skill is the **executable layer** for Boardwalk. It drives the `boardwalk` 
 
 ```bash
 boardwalk <command> [flags]                          # after: npm i -g @useboardwalk/sdk
-npx -p @useboardwalk/sdk@2.0.0 boardwalk <command> [flags]    # …or zero-install
+npx -p @useboardwalk/sdk@2.1.0 boardwalk <command> [flags]    # …or zero-install
 ```
 
-- The CLI is **v2.0.0** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
+- The CLI is **v2.1.0** (bin `boardwalk`, package `@useboardwalk/sdk`). Reads use a built-in public RPC on every supported chain; **public RPCs rate-limit — on a 429 / timeout, retry with `--rpc <url>`** pointing at a dedicated endpoint.
 - The user supplies their own wallet address with `--wallet <addr>` (BYO wallet — get it from your harness, e.g. Base MCP `get_wallets`). The CLI builds calldata **for** that address; it never asks for a key.
 - **Every transaction command prints JSON** of this shape:
 
@@ -161,15 +161,15 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 
 Builds the launch transaction. Boardwalk requires **burning BWLK** to launch (the burn cost is discounted for Boardwalk NFT members — the NFT is **not** required, it only lowers the cost). The CLI emits a conditional `approve-bwlk` (so the launch contract can pull the burn) followed by `create-launch`. Alongside `calls`, the output carries `bwlkBurnCost` (wei) and the full `config` tuple passed to `createLaunch`.
 
-- **Paths:** `--path express` (24-hour auction, simpler fees, fully distributed supply) or `--path advanced` (7-day auction after a 24-hour start delay, customizable fee breakdown + token vesting).
-- **Naming:** the 7-day path is called a **standard** launch in Boardwalk's docs and UI; the CLI flag, the SDK types, and the onchain contracts all still spell it `advanced`. They are the same path. When a user says "standard launch", pass `--path advanced`; when reporting back, "standard" is the name to use.
+- **Paths:** `--path express` (simpler fees, fully distributed supply, no start delay) or `--path advanced` (24-hour start delay, customizable fee breakdown + token vesting). Both auction windows are timelock-tunable — the `launch` output's `auctionDuration` is the live value.
+- **Naming:** the longer path is called a **standard** launch in Boardwalk's docs and UI; the CLI flag, the SDK types, and the onchain contracts all still spell it `advanced`. They are the same path. When a user says "standard launch", pass `--path advanced`; when reporting back, "standard" is the name to use.
 - **Express-path params:** `--issuer-fee <address>` is **required** (the contract demands exactly one fee recipient; it receives 100% of the issuer fee — typically the issuer wallet). `--fee`, `--vesting`, and `--referrer` are standard-path only.
 - **Prereqs:** the wallet holds **≥ bwlkBurnCost** BWLK, on the right chain.
 - **Standard-path params (`--path advanced`):**
   - `--fee <label:address:percent>` (**repeatable**) — the issuer-fee split across recipients; valid labels: `individual` | `entity` | `publicGood` | `growthTeam`. **1–4 recipients; at least one is required** for `--path advanced`.
   - `--vesting <label:address:percent>` (**repeatable**, up to 5) — token vesting recipients; valid labels: `individual` | `entity` | `referrer` | `publicGood` | `growthTeam`. **Required when `--presale-percent` < 50; not allowed at 50** (full presale leaves nothing to vest).
   - `--presale-percent` is **25–50 in steps of 5**.
-- The `launch` output includes `graduationThreshold { wei, display }` (top-level, alongside `calls`).
+- The `launch` output includes `graduationThreshold { wei, display }` and `auctionDuration { seconds, display, startDelaySeconds }` (top-level, alongside `calls`). Both are read live from the factory — prefer them over any duration or threshold written in this document.
 - **Metadata is required:** once the `create-launch` tx confirms, always complete the **Launch metadata sub-flow** below. A launch with no metadata appears on the Boardwalk UI with no name, logo, or socials — finish it on every launch.
 
 ```bash
@@ -501,7 +501,7 @@ Attribution is **automatic** on **Base**: every transaction the SDK builds there
 
 - "Launch a meme token called Agent Test Token, ticker AGENTX, on Base, express path." → `launch --chain base --path express --name "Agent Test Token" --ticker AGENTX --category meme-culture --wallet <addr> --issuer-fee <addr>`
 - "How much BWLK does it cost me to launch on Base?" → `launch-cost --chain base --wallet <addr>`
-- "Create a standard 7-day launch on Arbitrum with my address as the fee recipient." → `launch --chain arbitrum --path advanced --fee individual:<addr>:100 …` (standard = `--path advanced`)
+- "Create a standard 2-day launch on Arbitrum with my address as the fee recipient." → `launch --chain arbitrum --path advanced --fee individual:<addr>:100 …` (standard = `--path advanced`)
 - "Do I get a launch discount?" → `launch-cost …` (read `isMember` / `discountBps`).
 - "Set the logo and Twitter for my new token and publish its profile." → `launch-metadata --logo … --twitter …` → sign EIP-712 → `submit-metadata`.
 - "Add a description, homepage, and raise goal to token 0xYourToken." → `launch-metadata --description … --homepage … --raise-goal …` → sign → `submit-metadata`.

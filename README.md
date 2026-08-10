@@ -11,7 +11,7 @@ Framework-agnostic builders for **unsigned** [Boardwalk](https://www.useboardwal
 ```bash
 npm install @useboardwalk/sdk                  # library
 npm install -g @useboardwalk/sdk               # CLI, then:  boardwalk --help
-npx -p @useboardwalk/sdk@2.0.0 boardwalk --help   # …or zero-install (pinned)
+npx -p @useboardwalk/sdk@2.1.0 boardwalk --help   # …or zero-install (pinned)
 ```
 
 Requires Node ≥ 18 (uses global `fetch`/`Blob`/`FormData`). The bin is `boardwalk` (the package is `@useboardwalk/sdk`).
@@ -51,9 +51,9 @@ boardwalk launch --chain base --wallet 0xYou \
   --path express --issuer-fee 0xYou
 ```
 
-> **Naming:** the 7-day path is a **standard** launch in Boardwalk's docs and UI. The CLI flag, the SDK types, and the onchain contracts all still spell it `advanced` — same path, two names. Pass `--path advanced` to create one.
+> **Naming:** the longer path is a **standard** launch in Boardwalk's docs and UI. The CLI flag, the SDK types, and the onchain contracts all still spell it `advanced` — same path, two names. Pass `--path advanced` to create one.
 
-Flags: `--name --ticker --category` (required) · `--path express|advanced` (express = 24h, advanced/standard = 7d presale after a 24h start delay) · `--description`. **Express:** `--issuer-fee <addr>` (single recipient, 100%). **Standard (`--path advanced`):** `--presale-percent <25–50, step 5>` · `--fee <label:addr:percent>` (repeatable, 1–4 recipients — the issuer-fee split across `individual|entity|publicGood|growthTeam`) · `--vesting <label:addr:percent>` (repeatable, up to 5; required when presale < 50, not allowed at 50) · `--referrer <addr>`. The output `meta` carries the per-chain `graduationThreshold` (the raise goal you later set in `launch-metadata` must exceed it). Output `calls` = `[approve-bwlk?, create-launch]` plus a `next` step.
+Flags: `--name --ticker --category` (required) · `--path express|advanced` (standard = `advanced`, which adds a 24h start delay) · `--description`. **Express:** `--issuer-fee <addr>` (single recipient, 100%). **Standard (`--path advanced`):** `--presale-percent <25–50, step 5>` · `--fee <label:addr:percent>` (repeatable, 1–4 recipients — the issuer-fee split across `individual|entity|publicGood|growthTeam`) · `--vesting <label:addr:percent>` (repeatable, up to 5; required when presale < 50, not allowed at 50) · `--referrer <addr>`. The output carries the live `graduationThreshold` (the raise goal you later set in `launch-metadata` must exceed it) and `auctionDuration` — both read from the factory, since both are timelock-tunable. Output `calls` = `[approve-bwlk?, create-launch]` plus a `next` step.
 
 ```bash
 # standard launch (--path advanced): fee breakdown + vesting
