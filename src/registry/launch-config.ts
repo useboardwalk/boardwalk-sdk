@@ -45,11 +45,39 @@ export function getAuctionDurationMs(path: "express" | "advanced"): number {
   return AUCTION_DURATION_FALLBACK_MS[path];
 }
 
-/** Human display of an auction window, e.g. "24 Hours" or "2 Days". */
+function plural(n: number, unit: string): string {
+  return `${n} ${unit}${n === 1 ? "" : "s"}`;
+}
+
+/**
+ * Human display of an auction window, e.g. "24 Hours", "2 Days",
+ * "1 Hour 30 Minutes".
+ *
+ * `SET_EXPRESS_DURATION` only requires a value above zero, so the window is not
+ * guaranteed to land on a whole hour — never round, or a 90-minute auction
+ * would advertise itself as two hours. Windows of two days or more lead with
+ * days; shorter ones stay in hours so the established "24 Hours" copy holds.
+ */
 export function formatAuctionDuration(durationMs: number): string {
-  const hours = Math.round(durationMs / (60 * 60 * 1000));
-  if (hours % 24 === 0 && hours >= 48) return `${hours / 24} Days`;
-  return `${hours} Hours`;
+  const totalSeconds = Math.max(0, Math.floor(durationMs / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const parts: string[] = [];
+  if (days >= 2) {
+    parts.push(plural(days, "Day"));
+    if (hours > 0) parts.push(plural(hours, "Hour"));
+    if (minutes > 0) parts.push(plural(minutes, "Minute"));
+    return parts.join(" ");
+  }
+
+  const totalHours = Math.floor(totalSeconds / 3600);
+  if (totalHours > 0) parts.push(plural(totalHours, "Hour"));
+  if (minutes > 0) parts.push(plural(minutes, "Minute"));
+  if (parts.length === 0) parts.push(plural(seconds, "Second"));
+  return parts.join(" ");
 }
 
 function makeLaunchConfig(raiseTokenSymbol: string): ChainLaunchConfig {

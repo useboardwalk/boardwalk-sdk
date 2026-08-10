@@ -161,7 +161,7 @@ Check inputs **before** invoking the CLI — bad input wastes a round-trip or bu
 
 Builds the launch transaction. Boardwalk requires **burning BWLK** to launch (the burn cost is discounted for Boardwalk NFT members — the NFT is **not** required, it only lowers the cost). The CLI emits a conditional `approve-bwlk` (so the launch contract can pull the burn) followed by `create-launch`. Alongside `calls`, the output carries `bwlkBurnCost` (wei) and the full `config` tuple passed to `createLaunch`.
 
-- **Paths:** `--path express` (24-hour auction, simpler fees, fully distributed supply) or `--path advanced` (2-day auction after a 24-hour start delay, customizable fee breakdown + token vesting).
+- **Paths:** `--path express` (simpler fees, fully distributed supply, no start delay) or `--path advanced` (24-hour start delay, customizable fee breakdown + token vesting). Both auction windows are timelock-tunable — the `launch` output's `auctionDuration` is the live value.
 - **Naming:** the longer path is called a **standard** launch in Boardwalk's docs and UI; the CLI flag, the SDK types, and the onchain contracts all still spell it `advanced`. They are the same path. When a user says "standard launch", pass `--path advanced`; when reporting back, "standard" is the name to use.
 - **Express-path params:** `--issuer-fee <address>` is **required** (the contract demands exactly one fee recipient; it receives 100% of the issuer fee — typically the issuer wallet). `--fee`, `--vesting`, and `--referrer` are standard-path only.
 - **Prereqs:** the wallet holds **≥ bwlkBurnCost** BWLK, on the right chain.
@@ -169,7 +169,7 @@ Builds the launch transaction. Boardwalk requires **burning BWLK** to launch (th
   - `--fee <label:address:percent>` (**repeatable**) — the issuer-fee split across recipients; valid labels: `individual` | `entity` | `publicGood` | `growthTeam`. **1–4 recipients; at least one is required** for `--path advanced`.
   - `--vesting <label:address:percent>` (**repeatable**, up to 5) — token vesting recipients; valid labels: `individual` | `entity` | `referrer` | `publicGood` | `growthTeam`. **Required when `--presale-percent` < 50; not allowed at 50** (full presale leaves nothing to vest).
   - `--presale-percent` is **25–50 in steps of 5**.
-- The `launch` output includes `graduationThreshold { wei, display }` (top-level, alongside `calls`).
+- The `launch` output includes `graduationThreshold { wei, display }` and `auctionDuration { seconds, display, startDelaySeconds }` (top-level, alongside `calls`). Both are read live from the factory — prefer them over any duration or threshold written in this document.
 - **Metadata is required:** once the `create-launch` tx confirms, always complete the **Launch metadata sub-flow** below. A launch with no metadata appears on the Boardwalk UI with no name, logo, or socials — finish it on every launch.
 
 ```bash

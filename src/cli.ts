@@ -23,10 +23,12 @@ import {
   TOS_VERSION,
   DEFAULT_RPC_BY_CHAIN,
   MULTICALL3_ADDRESS,
+  ADVANCED_START_DELAY_SECONDS,
 } from "./constants";
 import { formatCliError } from "./cli-error";
 import { SUPPORTED_CHAINS, toNumericChainId } from "./registry/chains";
 import {
+  formatAuctionDuration,
   formatThreshold,
   getLaunchConfig,
 } from "./registry/launch-config";
@@ -66,6 +68,7 @@ import {
 import { assertDeployed, getContracts } from "./registry/contracts";
 import { encodeSteps } from "./flow/encode";
 import {
+  fetchAuctionDuration,
   fetchGraduationThreshold,
   getAuctionUrl,
   getLaunch,
@@ -263,7 +266,7 @@ program
   )
   .option(
     "--path <path>",
-    "launch path: express (24h) | advanced (2d after a 24h start delay) — \"advanced\" is the standard launch",
+    "launch path: express | advanced — \"advanced\" is the standard launch (24h start delay); the launch output reports the live auctionDuration",
     "express",
   )
   .option(
@@ -315,7 +318,10 @@ program
       },
     });
     const grad = getLaunchConfig(chainId);
-    const thresholdWei = await fetchGraduationThreshold(client, chainId, path);
+    const [thresholdWei, auctionDurationMs] = await Promise.all([
+      fetchGraduationThreshold(client, chainId, path),
+      fetchAuctionDuration(client, chainId, path),
+    ]);
     const advanced = path === "advanced";
     emitCalls(result.steps, chainId, {
       action: "launch",
@@ -324,6 +330,13 @@ program
       graduationThreshold: {
         wei: thresholdWei.toString(),
         display: formatThreshold(thresholdWei, grad.raiseTokenSymbol),
+      },
+      // Read live: both durations are timelock-tunable, so help text and docs
+      // go stale. This field is the value the launch will actually get.
+      auctionDuration: {
+        seconds: Math.floor(auctionDurationMs / 1000),
+        display: formatAuctionDuration(auctionDurationMs),
+        startDelaySeconds: advanced ? ADVANCED_START_DELAY_SECONDS : 0,
       },
       next: {
         note:
@@ -357,7 +370,7 @@ program
   )
   .option(
     "--path <path>",
-    "launch path: express (24h) | advanced (2d after a 24h start delay) — \"advanced\" is the standard launch",
+    "launch path: express | advanced — \"advanced\" is the standard launch (24h start delay); the launch output reports the live auctionDuration",
     "express",
   )
   .option("--description <text>", "token description")

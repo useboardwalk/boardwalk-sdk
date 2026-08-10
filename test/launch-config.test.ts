@@ -27,11 +27,33 @@ function clientThrowing(): PublicClient {
 }
 
 describe("formatAuctionDuration", () => {
-  it("renders hours below a day and whole days above", () => {
-    expect(formatAuctionDuration(24 * 60 * 60 * 1000)).toBe("24 Hours");
+  const MIN = 60 * 1000;
+  const HOUR = 60 * MIN;
+
+  it("renders the live defaults and the admin-range bounds", () => {
+    expect(formatAuctionDuration(24 * HOUR)).toBe("24 Hours");
     expect(formatAuctionDuration(2 * DAY_MS)).toBe("2 Days");
-    // Upper bound of the SET_ADVANCED_DURATION admin range.
     expect(formatAuctionDuration(14 * DAY_MS)).toBe("14 Days");
+  });
+
+  it("never rounds a sub-hour window away", () => {
+    // `SET_EXPRESS_DURATION` only requires > 0, so these are all reachable.
+    expect(formatAuctionDuration(30 * MIN)).toBe("30 Minutes");
+    expect(formatAuctionDuration(90 * MIN)).toBe("1 Hour 30 Minutes");
+    expect(formatAuctionDuration(1000)).toBe("1 Second");
+    expect(formatAuctionDuration(45 * 1000)).toBe("45 Seconds");
+  });
+
+  it("uses singular units for one", () => {
+    expect(formatAuctionDuration(HOUR)).toBe("1 Hour");
+    expect(formatAuctionDuration(MIN)).toBe("1 Minute");
+  });
+
+  it("keeps sub-day windows in hours and composes longer ones", () => {
+    expect(formatAuctionDuration(36 * HOUR)).toBe("36 Hours");
+    expect(formatAuctionDuration(2 * DAY_MS + 12 * HOUR)).toBe(
+      "2 Days 12 Hours",
+    );
   });
 });
 
