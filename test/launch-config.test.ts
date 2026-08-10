@@ -8,6 +8,7 @@ import {
 import {
   fetchAuctionDuration,
   fetchGraduationThreshold,
+  fetchLaunchParams,
 } from "../src/read/launches";
 
 const BASE = 8453;
@@ -17,6 +18,17 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** Minimal stub — `fetchAuctionDuration` only ever calls `readContract`. */
 function clientReturning(value: unknown): PublicClient {
   return { readContract: async () => value } as unknown as PublicClient;
+}
+/** Stub for the batched read — `multicall` resolves both values at once. */
+function clientMulticall(values: unknown[]): PublicClient {
+  return { multicall: async () => values } as unknown as PublicClient;
+}
+function clientMulticallThrowing(): PublicClient {
+  return {
+    multicall: async () => {
+      throw new Error("no multicall3");
+    },
+  } as unknown as PublicClient;
 }
 function clientThrowing(): PublicClient {
   return {
@@ -116,6 +128,50 @@ describe("fetchGraduationThreshold", () => {
   it("surfaces an unsupported chain instead of masking it as a fallback", async () => {
     await expect(
       fetchGraduationThreshold(clientReturning(BigInt(1)), UNSUPPORTED, "advanced"),
+    ).rejects.toThrow();
+  });
+});
+
+describe("fetchLaunchParams", () => {
+  const LIVE_THRESHOLD = BigInt("2500000000000000000");
+
+  it("returns both live values from a single multicall", async () => {
+    const r = await fetchLaunchParams(
+      clientMulticall([LIVE_THRESHOLD, BigInt(172800)]),
+      BASE,
+      "advanced",
+    );
+    expect(r.thresholdWei).toBe(LIVE_THRESHOLD);
+    expect(r.durationMs).toBe(2 * DAY_MS);
+  });
+
+  it("falls back per-field when only one value is unusable", async () => {
+    const r = await fetchLaunchParams(
+      clientMulticall([LIVE_THRESHOLD, BigInt(0)]),
+      BASE,
+      "advanced",
+    );
+    expect(r.thresholdWei).toBe(LIVE_THRESHOLD);
+    expect(r.durationMs).toBe(getAuctionDurationMs("advanced"));
+  });
+
+  it("falls back on both when the batched call fails", async () => {
+    const r = await fetchLaunchParams(
+      clientMulticallThrowing(),
+      BASE,
+      "advanced",
+    );
+    expect(r.thresholdWei).toBe(getGraduationThresholdWei("advanced"));
+    expect(r.durationMs).toBe(getAuctionDurationMs("advanced"));
+  });
+
+  it("surfaces an unsupported chain instead of masking it as a fallback", async () => {
+    await expect(
+      fetchLaunchParams(
+        clientMulticall([LIVE_THRESHOLD, BigInt(172800)]),
+        UNSUPPORTED,
+        "advanced",
+      ),
     ).rejects.toThrow();
   });
 });

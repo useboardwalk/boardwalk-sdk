@@ -162,5 +162,6 @@ export {
   getAuctionUrl,
   fetchGraduationThreshold,
   fetchAuctionDuration,
+  fetchLaunchParams,
 } from "./read/launches";
 export { apiGet, ApiError } from "./read/client";

@@ -2,7 +2,7 @@
 // facts the builders/CLI need (presale address, status, path). Also resolves the
 // per-launch contract addresses on-chain (the API does not return them all).
 import { isAddress, zeroAddress, type Address, type PublicClient } from "viem";
-import { APP_BASE_URL } from "../constants";
+import { APP_BASE_URL, MULTICALL3_ADDRESS } from "../constants";
 import { getContracts } from "../registry/contracts";
 import { launchFactoryAbi } from "../registry/abis";
 import {
@@ -14,6 +14,20 @@ import type { LaunchAddresses, LaunchStatus, LaunchSummary } from "../types";
 
 /** Anything past a year is a misconfiguration, not a launch window. */
 const MAX_PLAUSIBLE_DURATION_SECONDS = 365 * 24 * 60 * 60;
+
+function isValidThreshold(value: unknown): value is bigint {
+  return typeof value === "bigint" && value > BigInt(0);
+}
+
+/** `SET_EXPRESS_DURATION` only requires > 0, so cap before `Number()` — an
+ *  oversized uint256 would lose precision and poison date math. */
+function isValidDurationSeconds(value: unknown): value is bigint {
+  return (
+    typeof value === "bigint" &&
+    value > BigInt(0) &&
+    value <= BigInt(MAX_PLAUSIBLE_DURATION_SECONDS)
+  );
+}
 
 interface LaunchDetailResponse {
   token: string;
@@ -120,7 +134,7 @@ export async function fetchGraduationThreshold(
       functionName:
         path === "express" ? "graduationExpress" : "graduationAdvanced",
     });
-    if (typeof value === "bigint" && value > BigInt(0)) return value;
+    if (isValidThreshold(value)) return value;
   } catch {
     // RPC unreachable or reverted — fall through to the constant.
   }
@@ -150,17 +164,62 @@ export async function fetchAuctionDuration(
       address: launchFactory,
       functionName: path === "express" ? "expressDuration" : "advancedDuration",
     });
-    // `SET_ADVANCED_DURATION` is bounded to 2-14 days but
-    // `SET_EXPRESS_DURATION` only requires > 0, so cap before `Number()` —
-    // an oversized uint256 would lose precision and poison date math.
-    if (
-      typeof seconds === "bigint" &&
-      seconds > BigInt(0) &&
-      seconds <= BigInt(MAX_PLAUSIBLE_DURATION_SECONDS)
-    )
-      return Number(seconds) * 1000;
+    if (isValidDurationSeconds(seconds)) return Number(seconds) * 1000;
   } catch {
     // RPC unreachable or reverted — fall through to the constant.
   }
   return getAuctionDurationMs(path);
+}
+
+/**
+ * Live graduation threshold and auction window for `path`, in one multicall.
+ *
+ * Both are timelocked factory values that a new launch inherits, and the
+ * `launch` command needs both — batching keeps it to a single round-trip
+ * against rate-limited public RPCs, per the "Reads" convention in AGENTS.md.
+ *
+ * Each value falls back independently to its `launch-config` constant if the
+ * factory returns something unusable; an unreachable RPC (or a chain without
+ * Multicall3) falls back on both. An unsupported chain still throws.
+ */
+export async function fetchLaunchParams(
+  client: PublicClient,
+  chainId: number,
+  path: "express" | "advanced",
+): Promise<{ thresholdWei: bigint; durationMs: number }> {
+  const { launchFactory } = getContracts(chainId);
+  try {
+    const [threshold, seconds] = await client.multicall({
+      allowFailure: false,
+      multicallAddress: MULTICALL3_ADDRESS,
+      contracts: [
+        {
+          abi: launchFactoryAbi,
+          address: launchFactory,
+          functionName:
+            path === "express" ? "graduationExpress" : "graduationAdvanced",
+        },
+        {
+          abi: launchFactoryAbi,
+          address: launchFactory,
+          functionName:
+            path === "express" ? "expressDuration" : "advancedDuration",
+        },
+      ],
+    });
+    return {
+      thresholdWei: isValidThreshold(threshold)
+        ? threshold
+        : getGraduationThresholdWei(path),
+      durationMs: isValidDurationSeconds(seconds)
+        ? Number(seconds) * 1000
+        : getAuctionDurationMs(path),
+    };
+  } catch {
+    // RPC unreachable, reverted, or no Multicall3 — fall back to the constants.
+  }
+  return {
+    thresholdWei: getGraduationThresholdWei(path),
+    durationMs: getAuctionDurationMs(path),
+  };
 }

@@ -68,8 +68,7 @@ import {
 import { assertDeployed, getContracts } from "./registry/contracts";
 import { encodeSteps } from "./flow/encode";
 import {
-  fetchAuctionDuration,
-  fetchGraduationThreshold,
+  fetchLaunchParams,
   getAuctionUrl,
   getLaunch,
   getLaunchAddresses,
@@ -318,10 +317,10 @@ program
       },
     });
     const grad = getLaunchConfig(chainId);
-    const [thresholdWei, auctionDurationMs] = await Promise.all([
-      fetchGraduationThreshold(client, chainId, path),
-      fetchAuctionDuration(client, chainId, path),
-    ]);
+    // One multicall for both timelocked factory values — see the "Reads"
+    // convention in AGENTS.md; public RPCs rate-limit adjacent round-trips.
+    const { thresholdWei, durationMs: auctionDurationMs } =
+      await fetchLaunchParams(client, chainId, path);
     const advanced = path === "advanced";
     emitCalls(result.steps, chainId, {
       action: "launch",
