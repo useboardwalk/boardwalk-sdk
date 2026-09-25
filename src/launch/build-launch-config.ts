@@ -11,7 +11,12 @@ import {
   validateTokenTicker,
 } from "./token-identity";
 
-/** Converts relative percents among valid-address recipients to bps summing to 10000. */
+/**
+ * Converts relative percents to bps summing to 10000. Only rows with a valid
+ * address and a percent above 0 count, so no 0% row reaches the contract. The
+ * largest row takes the rounding remainder, so it stays positive, and a row
+ * that rounds to 0 bps is dropped.
+ */
 function toProportionalBps(entries: FeeRecipientInput[]): {
   addresses: Address[];
   splits: bigint[];
@@ -19,30 +24,31 @@ function toProportionalBps(entries: FeeRecipientInput[]): {
 } {
   const valid = entries
     .map((e) => ({ ...e, address: e.address.trim() as Address }))
-    .filter((e) => isAddress(e.address));
+    .filter((e) => isAddress(e.address) && e.percent > 0);
   if (valid.length === 0) return { addresses: [], splits: [], labels: [] };
 
   const totalPct = valid.reduce((sum, e) => sum + e.percent, 0);
-  const splits: bigint[] = [];
-  let remaining = BigInt(10000);
-  for (let i = 0; i < valid.length; i++) {
-    const entry = valid[i]!;
-    if (i === valid.length - 1) {
-      splits.push(remaining);
-    } else {
-      const bps =
-        totalPct > 0
-          ? BigInt(Math.round((entry.percent / totalPct) * 10000))
-          : BigInt(Math.round(10000 / valid.length));
-      splits.push(bps);
-      remaining -= bps;
-    }
-  }
+
+  // Convert to bps summing to 10000. The largest row (the first on a tie)
+  // gets the remainder.
+  const splits = valid.map((e) =>
+    BigInt(Math.round((e.percent / totalPct) * 10000)),
+  );
+  const largest = valid.reduce(
+    (best, e, i) => (e.percent > valid[best]!.percent ? i : best),
+    0,
+  );
+  splits[largest]! += BigInt(10000) - splits.reduce((a, b) => a + b, BigInt(0));
+
+  // A share under 0.005% rounds to 0 bps. Drop it; the sum stays 10000.
+  const kept = valid
+    .map((e, i) => ({ ...e, bps: splits[i]! }))
+    .filter((e) => e.bps > BigInt(0));
 
   return {
-    addresses: valid.map((e) => e.address),
-    splits,
-    labels: valid.map((e, i) => e.label ?? `recipient-${i}`),
+    addresses: kept.map((e) => e.address),
+    splits: kept.map((e) => e.bps),
+    labels: kept.map((e, i) => e.label ?? `recipient-${i}`),
   };
 }
 
