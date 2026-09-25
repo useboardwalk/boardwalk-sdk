@@ -69,7 +69,8 @@ export interface LaunchConfig {
 
 export interface FeeRecipientInput {
   address: Address;
-  /** Relative weight; recipients are normalized to bps summing to 10000. */
+  /** Relative weight; recipients are normalized to bps summing to 10000.
+   *  A row at 0%, or one that rounds to 0 bps, is dropped. */
   percent: number;
   label?: string;
 }

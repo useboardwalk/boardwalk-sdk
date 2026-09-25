@@ -5,6 +5,8 @@ import { effectiveCost } from "../src/launch/member-discount";
 
 const A = "0x1111111111111111111111111111111111111111" as Address;
 const B = "0x2222222222222222222222222222222222222222" as Address;
+const C = "0x3333333333333333333333333333333333333333" as Address;
+const D = "0x4444444444444444444444444444444444444444" as Address;
 
 describe("buildLaunchConfig", () => {
   it("builds an express config (50% presale, single issuer fee, no vesting)", () => {
@@ -44,6 +46,71 @@ describe("buildLaunchConfig", () => {
     expect(cfg.issuerFeeSplits.reduce((a, b) => a + b, BigInt(0))).toBe(
       BigInt(10000),
     );
+  });
+
+  it("drops a row that rounds to 0 bps and keeps every split positive", () => {
+    const advanced = (issuerFee: { address: Address; percent: number; label?: string }[]) =>
+      buildLaunchConfig({
+        name: "Adv Token",
+        ticker: "ADV",
+        category: "other",
+        path: "advanced",
+        presaleSupplyPercent: 50,
+        issuerFee,
+      });
+
+    // Before: [10000, 0], so B silently got nothing.
+    const two = advanced([
+      { address: A, percent: 99.999 },
+      { address: B, percent: 0.001 },
+    ]);
+    expect(two.issuerFeeRecipients).toEqual([A]);
+    expect(two.issuerFeeSplits).toEqual([BigInt(10000)]);
+
+    // Before: [3001, 3001, 3999, -1], which viem cannot encode.
+    const four = advanced([
+      { address: A, percent: 30.006, label: "individual" },
+      { address: B, percent: 30.006, label: "entity" },
+      { address: C, percent: 39.986, label: "publicGood" },
+      { address: D, percent: 0.002, label: "growthTeam" },
+    ]);
+    expect(four.issuerFeeRecipients).toEqual([A, B, C]);
+    expect(four.issuerFeeSplits).toEqual([BigInt(3001), BigInt(3001), BigInt(3998)]);
+    expect(four.issuerFeeLabels).toEqual(["individual", "entity", "publicGood"]);
+  });
+
+  it("skips 0% rows and gives the remainder to the largest row (first on a tie)", () => {
+    const cfg = buildLaunchConfig({
+      name: "Adv Token",
+      ticker: "ADV",
+      category: "other",
+      path: "advanced",
+      presaleSupplyPercent: 50,
+      issuerFee: [
+        { address: A, percent: 0 },
+        { address: B, percent: 1 },
+        { address: C, percent: 1 },
+        { address: D, percent: 1 },
+      ],
+    });
+    expect(cfg.issuerFeeRecipients).toEqual([B, C, D]);
+    expect(cfg.issuerFeeSplits).toEqual([BigInt(3334), BigInt(3333), BigInt(3333)]);
+    expect(cfg.issuerFeeLabels).toEqual(["recipient-0", "recipient-1", "recipient-2"]);
+
+    // All rows at 0% leave no recipient, so the launch fails loudly.
+    expect(() =>
+      buildLaunchConfig({
+        name: "Adv Token",
+        ticker: "ADV",
+        category: "other",
+        path: "advanced",
+        presaleSupplyPercent: 50,
+        issuerFee: [
+          { address: A, percent: 0 },
+          { address: B, percent: 0 },
+        ],
+      }),
+    ).toThrow(/issuer-fee/i);
   });
 
   it("rejects an out-of-range / non-divisible advanced presale percent", () => {
